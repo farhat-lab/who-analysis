@@ -1,0 +1,69 @@
+# World Health Organization TB Resistance Mutation Catalog, 2022
+
+## Contributors: Maha Farhat, Yasha Ektefaie, Sanjana Kulkarni
+
+## Genotype Annotations
+
+<ul>
+    <li>p: coding variants</li>
+    <li>c: synonymous or upstream variants</li>
+    <li>n: non-coding variants in <i>rrs/rrl</i></li>
+</ul>
+
+## Phenotype Annotations
+
+<ul>
+    <li>Variant binary status</li>
+        <ul>
+            <li>1 if the variant meets QC and AF > 0.75</li>
+            <li>0 if the variant meets QC, and AF < 0.25</li>
+            <li>NA if the variant does not meet QC or 0.25<=AF<=0.75</li>
+        </ul>
+    <li>Variant allele frequency</li>
+        <ul>
+            <li>AF if the variant meets QC and AF >= 0.25</li>
+            <li>0 if the variant meets QC and AF < 0.25</li>
+            <li>NA if the variant does not meet QC</li>
+        </ul>
+</ul>
+
+
+## Workflow
+
+### Heterozygous Alleles
+
+Heterozygous variants have allele fractions (AF) in the range [0.25, 0.75]. Below this range, alleles are reference (0), and above it, they are alternative (1). 
+
+The options for encoding heterozygous variants are 
+
+<ul>
+    <li>Drop</li>
+    <li>Encode as the float AF value, not a binary</li>
+    <li>Select a threshold to binarize them</li>
+</ul>
+
+Selection is made using a parameter in a YAML file. 
+
+### Missing Data
+
+Isolates with a lot of missingness are far more common than features with a lot of missingness because most of the sequenced regions have high mappability. 
+
+A threshold of <b>1%</b> is being used to drop isolates, i.e. if more than 1% of an isolate's features for a given analysis are NaN, then drop the isolate. 
+
+
+### Make model inputs
+
+
+
+---
+**NOTE**
+
+Insert table of analyses run. Maha said she would update it
+
+---
+
+
+
+## TO-DO:
+
+Visualize numbers of resistant vs. susceptible isolates with each variant. This was suggested in a meeting, still determining how best to do this.
