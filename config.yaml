@@ -1,8 +1,8 @@
 tiers_lst: ['1']
-drug: 'Moxifloxacin'
-drug_WHO_abbr: 'MXF'
+drug: 'Pyrazinamide'
+drug_WHO_abbr: 'PZA'
 out_dir: '/n/data1/hms/dbmi/farhat/ye12/who/analysis/Drugs'
-model_prefix: 'tiers=1_drop_HET'
+model_prefix: 'tiers=1_drop_HET_noPopCorrect'
 
 # model input processing
 missing_thresh: 0.01
@@ -14,6 +14,6 @@ include_synonymous: False
 # analysis
 # filtering threshold for computing the genetic relatedness matrix 
 MAF: 0.01
-num_PCs: 5
+num_PCs: 0
 num_bootstrap: 1000
 alpha: 0.05

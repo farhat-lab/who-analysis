@@ -89,90 +89,108 @@ model_inputs = model_inputs.reset_index()
 
 ############# STEP 3: COMPUTE THE GENETIC RELATEDNESS MATRIX #############
 
+if num_PCs > 0:
+    print(f"Fitting regression with population structure correction with {num_PCs} principal components")
 
-# read in all dataframes in the narrow directory
-print("Reading in dataframes for the genotypes matrix...")
-tidy_dfs_lst = [pd.read_csv(os.path.join(tidy_dir, fName)) for fName in os.listdir(tidy_dir)]
+    # read in all dataframes in the narrow directory
+    print("Reading in dataframes for the genotypes matrix...")
+    tidy_dfs_lst = [pd.read_csv(os.path.join(tidy_dir, fName)) for fName in os.listdir(tidy_dir)]
 
-# concatenate into a single dataframe
-tidy_combined = pd.concat(tidy_dfs_lst, axis=0)
+    # concatenate into a single dataframe
+    tidy_combined = pd.concat(tidy_dfs_lst, axis=0)
 
-# H37Rv full genome genbank file
-genome = SeqIO.read("/n/data1/hms/dbmi/farhat/Sanjana/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
-print(len(genome.seq))
+    # H37Rv full genome genbank file
+    genome = SeqIO.read("/n/data1/hms/dbmi/farhat/Sanjana/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
+    print(len(genome.seq))
 
-# make dataframe mapping positions to reference nucleotides. This is needed to get the reference allele at every site and compare to the data
-pos_unique = tidy_combined.position.unique()
-ref_dict = dict(zip(pos_unique, [genome.seq[int(pos_unique[0]-1)] for pos in pos_unique]))
+    # make dataframe mapping positions to reference nucleotides. This is needed to get the reference allele at every site and compare to the data
+    pos_unique = tidy_combined.position.unique()
+    ref_dict = dict(zip(pos_unique, [genome.seq[int(pos_unique[0]-1)] for pos in pos_unique]))
 
-tidy_combined["ref"] = tidy_combined["position"].map(ref_dict)
-assert sum(pd.isnull(tidy_combined.ref)) == 0
+    tidy_combined["ref"] = tidy_combined["position"].map(ref_dict)
+    assert sum(pd.isnull(tidy_combined.ref)) == 0
 
-# keep only samples that will be used for the model
-tidy_combined = tidy_combined.query("sample_id in @model_inputs.sample_id.values")
+    # keep only samples that will be used for the model
+    tidy_combined = tidy_combined.query("sample_id in @model_inputs.sample_id.values")
 
-# boolean of whether the reference and actual alleles are different
-tidy_combined["diff"] = (tidy_combined["ref"] != tidy_combined["nucleotide"]).astype(int)
-tidy_matrix = tidy_combined.pivot(index="sample_id", columns="position", values="diff").fillna(0)
+    # boolean of whether the reference and actual alleles are different
+    tidy_combined["diff"] = (tidy_combined["ref"] != tidy_combined["nucleotide"]).astype(int)
+    tidy_matrix = tidy_combined.pivot(index="sample_id", columns="position", values="diff").fillna(0)
 
-# should only be 1s and 0s
-assert len(np.unique(tidy_matrix.values)) == 2
-assert 1 in np.unique(tidy_matrix.values)
-assert 0 in np.unique(tidy_matrix.values)
+    # should only be 1s and 0s
+    assert len(np.unique(tidy_matrix.values)) == 2
+    assert 1 in np.unique(tidy_matrix.values)
+    assert 0 in np.unique(tidy_matrix.values)
 
-# check again that positions and isolates are unique
-assert len(np.unique(tidy_matrix.index.values)) == len(tidy_matrix.index)
-assert len(np.unique(tidy_matrix.columns)) == len(tidy_matrix.columns)
+    # check again that positions and isolates are unique
+    assert len(np.unique(tidy_matrix.index.values)) == len(tidy_matrix.index)
+    assert len(np.unique(tidy_matrix.columns)) == len(tidy_matrix.columns)
 
-# MAF filtering and save GRM
-tidy_matrix = tidy_matrix[tidy_matrix.columns[tidy_matrix.mean(axis=0) >= MAF]]
+    # MAF filtering and save GRM
+    tidy_matrix = tidy_matrix[tidy_matrix.columns[tidy_matrix.mean(axis=0) >= MAF]]
 
-grm = np.cov(tidy_matrix.values)
-grm_df = pd.DataFrame(grm)
-grm_df.columns = tidy_matrix.index.values
-grm_df.index = tidy_matrix.index.values
-grm_df.to_pickle(os.path.join(out_dir, drug, model_prefix, "GRM.pkl"))
+    grm = np.cov(tidy_matrix.values)
+    grm_df = pd.DataFrame(grm)
+    grm_df.columns = tidy_matrix.index.values
+    grm_df.index = tidy_matrix.index.values
+    grm_df.to_pickle(os.path.join(out_dir, drug, model_prefix, "GRM.pkl"))
     
     
 ############# STEP 4: RUN PCA ON THE GRM #############
 
 
-pca = PCA(n_components=num_PCs)
-pca.fit(grm)
+    pca = PCA(n_components=num_PCs)
+    pca.fit(grm)
 
-print(f"Explained variance of {num_PCs} principal components: {pca.explained_variance_}")
-print("Saving eigenvectors...")
-eigenvec = pca.components_.T
-eigenvec_df = pd.DataFrame(eigenvec)
-eigenvec_df["sample_id"] = tidy_matrix.index.values
-eigenvec_df.to_csv(os.path.join(out_dir, drug, model_prefix, f"PC_{num_PCs}.csv"), index=False)
+    print(f"Explained variance of {num_PCs} principal components: {pca.explained_variance_}")
+    print("Saving eigenvectors...")
+    eigenvec = pca.components_.T
+    eigenvec_df = pd.DataFrame(eigenvec)
+    eigenvec_df["sample_id"] = tidy_matrix.index.values
+    eigenvec_df.to_csv(os.path.join(out_dir, drug, model_prefix, f"PC_{num_PCs}.csv"), index=False)
 
     
 ############# STEP 5: PREPARE INPUTS TO THE MODEL #############
 
 
-# drop any samples from the phenotypes and genotypes dataframes that are not in the eigenvector dataframe (some samples may not have genotypes)
-# reorder the phenotypes, genotypes, and eigevector dataframes so that they are all in the same sample order
-df_phenos = df_phenos.query("sample_id in @eigenvec_df.sample_id.values").sort_values("sample_id", ascending=True).reset_index(drop=True)
-model_inputs = model_inputs.query("sample_id in @eigenvec_df.sample_id.values").sort_values("sample_id", ascending=True).reset_index(drop=True)
-eigenvec_df = eigenvec_df.sort_values("sample_id", ascending=True).reset_index(drop=True)
+    # drop any samples from the phenotypes and genotypes dataframes that are not in the eigenvector dataframe (some samples may not have genotypes)
+    # reorder the phenotypes, genotypes, and eigevector dataframes so that they are all in the same sample order
+    df_phenos = df_phenos.query("sample_id in @eigenvec_df.sample_id.values").sort_values("sample_id", ascending=True).reset_index(drop=True)
+    model_inputs = model_inputs.query("sample_id in @eigenvec_df.sample_id.values").sort_values("sample_id", ascending=True).reset_index(drop=True)
+    eigenvec_df = eigenvec_df.sort_values("sample_id", ascending=True).reset_index(drop=True)
 
-assert len(df_phenos) == len(eigenvec_df) == len(model_inputs)
+    assert len(df_phenos) == len(eigenvec_df) == len(model_inputs)
 
-# set index for these 2 dataframes so that later only the values can be extracted
-model_inputs = model_inputs.set_index("sample_id")
-eigenvec_df = eigenvec_df.set_index("sample_id")
+    # set index for these 2 dataframes so that later only the values can be extracted
+    model_inputs = model_inputs.set_index("sample_id")
+    eigenvec_df = eigenvec_df.set_index("sample_id")
 
-# save model_inputs to use later. This is the actual matrix used for model fitting, after all filtering steps
-model_inputs.to_pickle(os.path.join(out_dir, drug, model_prefix, "model_matrix.pkl"))
+    # save model_inputs to use later. This is the actual matrix used for model fitting, after all filtering steps
+    model_inputs.to_pickle(os.path.join(out_dir, drug, model_prefix, "model_matrix.pkl"))
 
-print(f"phenotype file shape: {df_phenos.shape}")
-print(f"genotypes matrix shape: {model_inputs.shape}")
-print(f"eigenvectors shape: {eigenvec_df.shape}")
+    print(f"phenotype file shape: {df_phenos.shape}")
+    print(f"genotypes matrix shape: {model_inputs.shape}")
+    print(f"eigenvectors shape: {eigenvec_df.shape}")
 
-# concatenate the eigenvectors to the matrix
-X = np.concatenate([model_inputs.values, eigenvec_df.values], axis=1)
+    # concatenate the eigenvectors to the matrix
+    X = np.concatenate([model_inputs.values, eigenvec_df.values], axis=1)
+    
+else:
+    print("Fitting regression without population structure correction")
+    df_phenos = df_phenos.query("sample_id in @model_inputs.sample_id.values").sort_values("sample_id", ascending=True).reset_index(drop=True)
+    model_inputs = model_inputs.query("sample_id in @df_phenos.sample_id.values").sort_values("sample_id", ascending=True).reset_index(drop=True)
+    
+    assert len(df_phenos) == len(model_inputs)
 
+    # set index so that later only the values can be extracted and save it. This is the actual matrix used for model fitting, after all filtering steps
+    model_inputs = model_inputs.set_index("sample_id")
+    model_inputs.to_pickle(os.path.join(out_dir, drug, model_prefix, "model_matrix.pkl"))
+
+    print(f"phenotype file shape: {df_phenos.shape}")
+    print(f"genotypes matrix shape: {model_inputs.shape}")
+    X = np.concatenate(model_inputs.values)
+
+    
 # scale inputs
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
