@@ -27,20 +27,13 @@ phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 
 
-############# STEP 1: READ IN THE PREVIOUSLY GENERATED PHENOTYPES MATRIX #############
+############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES #############
 
-
-# create the phenotypes matrix
-dfs_list_phenos = []
-
-for fName in os.listdir(phenos_dir):
-    dfs_list_phenos.append(pd.read_csv(os.path.join(phenos_dir, fName)))
-
-df_phenos = pd.concat(dfs_list_phenos)
-df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
 
 model_inputs = pd.read_pickle(os.path.join(out_dir, drug, model_prefix, "filt_matrix.pkl"))
 print(f"Model matrix shape: {model_inputs.shape}")
+
+df_phenos = pd.read_csv(os.path.join(out_dir, drug, model_prefix, "phenos.csv"))
 
 
 ############# STEP 2: IMPUTE NANS IN THE MODEL INPUTS FILE -- NOT GOING TO BE DONE UNLESS THE FULL DATA IS PATHOLOGICAL, BUT LEAVING THE CODE HERE IF IT IS NEEDED #############
@@ -177,7 +170,9 @@ if num_PCs > 0:
     
 else:
     print("Fitting regression without population structure correction")
-    df_phenos = df_phenos.query("sample_id in @model_inputs.sample_id.values").sort_values("sample_id", ascending=True).reset_index(drop=True)    
+    # sort by sample_id so that everything is in the same order
+    model_inputs = model_inputs.sort_values("sample_id", ascending=True).reset_index(drop=True)
+    df_phenos = df_phenos.sort_values("sample_id", ascending=True).reset_index(drop=True)    
     assert len(df_phenos) == len(model_inputs)
 
     # set index so that later only the values can be extracted and save it. This is the actual matrix used for model fitting, after all filtering steps

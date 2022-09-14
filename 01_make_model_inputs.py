@@ -51,6 +51,8 @@ assert len(df_phenos) == len(df_phenos.sample_id.unique())
 # check that there is resistance data for all samples
 assert sum(pd.isnull(df_phenos.phenotype)) == 0
     
+df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
+
 print(f"{len(df_phenos)} samples with phenotypes for {drug}")
 
 
@@ -84,6 +86,7 @@ for i, fName in enumerate(geno_files):
     # read in the dataframe
     df = pd.read_csv(fName)
 
+    # get only genotypes for samples that have a phenotype
     df_avail_isolates = df.loc[df.sample_id.isin(df_phenos.sample_id)]
     
     # keep all variants
@@ -96,6 +99,10 @@ for i, fName in enumerate(geno_files):
                                              (df_avail_isolates.category.astype(str).str[0].isin(['n', 'p']))])
         
 df_model = pd.concat(dfs_lst)
+
+# keep only samples with genotypes available because everything should be represented, including samples without variants
+df_phenos = df_phenos.query("sample_id in @df_model.sample_id.values")
+df_phenos.to_csv(os.path.join(out_dir, drug, model_prefix, "phenos.csv"), index=False)
 
 
 ############# STEP 3: PROCESS HETEROZYGOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #############
@@ -132,7 +139,7 @@ df_model["mutation"] = df_model["gene_symbol"] + "_" + df_model["category"]
 matrix = df_model.pivot(index="sample_id", columns="mutation", values="variant_binary_status")
 
 # in this case, only 3 possible values -- 0 (ref), 1 (alt), NaN (missing)
-if het_mode.upper() in ["WT", "DROP"]:
+if het_mode.upper() in ["BINARY", "DROP"]:
     assert len(np.unique(matrix.values)) <= 3
 
 # save the matrix to compare later (i.e. want to know how many features and isolates were dropped because of too much missingness)  ### CURRENTLY NOT SAVING FOR SPACE

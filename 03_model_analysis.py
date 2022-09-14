@@ -31,7 +31,7 @@ def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
             # t-statistic is the true coefficient divided by the standard deviation of the bootstrapped coefficients
             t = np.abs(row["coef"]) / bootstrap_df[row[col]].std()
             
-            # survival function = 1 - CDF = P(t > t*) = measure of extrema
+            # survival function = 1 - CDF = P(t > t_stat) = measure of extremeness
             pvals.append(st.t.sf(t, df=dof))
         
         # add confidence intervals
@@ -155,7 +155,7 @@ def BH_FDR_correction(coef_df):
 
 
 
-def run_all(drug, drug_abbr, model_prefix, out_dir, alpha=0.05, num_bootstrap=1000, phenos_dir='/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'):
+def run_all(drug, drug_abbr, model_prefix, out_dir, alpha=0.05, num_bootstrap=1000):
     
     # coefficients from L2 regularized regression ("baseline" regression)
     coef_df = pd.read_csv(os.path.join(out_dir, drug, model_prefix, "regression_coef.csv"))
@@ -165,16 +165,7 @@ def run_all(drug, drug_abbr, model_prefix, out_dir, alpha=0.05, num_bootstrap=10
     
     # read in all genotypes and phenotypes
     model_inputs = pd.read_pickle(os.path.join(out_dir, drug, model_prefix, "model_matrix.pkl"))
-    phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
-
-    # create the phenotypes matrix
-    dfs_list_phenos = []
-
-    for fName in os.listdir(phenos_dir):
-        dfs_list_phenos.append(pd.read_csv(os.path.join(phenos_dir, fName)))
-
-    df_phenos = pd.concat(dfs_list_phenos)
-    df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
+    df_phenos = pd.read_csv(os.path.join(out_dir, drug, model_prefix, "phenos.csv"))
 
     # add p-values and confidence intervals to the results dataframe
     pvals = get_pvalues_add_ci(coef_df, bs_df, "variant", len(model_inputs), alpha=alpha)
