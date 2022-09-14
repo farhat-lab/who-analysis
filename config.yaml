@@ -1,19 +1,20 @@
-tiers_lst: ['1']
-drug: 'Pyrazinamide'
-drug_WHO_abbr: 'PZA'
+drug: 'Bedaquiline'
+drug_WHO_abbr: 'BDQ'
 out_dir: '/n/data1/hms/dbmi/farhat/ye12/who/analysis/Drugs'
-model_prefix: 'tiers=1_drop_HET_noPopCorrect'
+model_prefix: 'tiers=1_syn_AF'
 
-# model input processing
+# model inputs
+tiers_lst: ['1']
+pheno_category_lst: ['WHO_current']
 missing_thresh: 0.01
-het_mode: "DROP"
+het_mode: "AF"
 AF_thresh: 0.75
 impute: False
-include_synonymous: False
+include_synonymous: True
 
 # analysis
 # filtering threshold for computing the genetic relatedness matrix 
 MAF: 0.01
-num_PCs: 0
+num_PCs: 5
 num_bootstrap: 1000
 alpha: 0.05

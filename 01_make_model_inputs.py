@@ -17,6 +17,7 @@ missing_thresh = kwargs["missing_thresh"]
 het_mode = kwargs["het_mode"]
 af_thresh = kwargs["AF_thresh"]
 include_synonymous = kwargs["include_synonymous"]
+pheno_category_lst = kwargs["pheno_category_lst"]
 
 print("Tiers for this model:", tiers_lst)
 
@@ -42,6 +43,7 @@ for fName in os.listdir(phenos_dir):
     dfs_list_phenos.append(pd.read_csv(os.path.join(phenos_dir, fName)))
 
 df_phenos = pd.concat(dfs_list_phenos)
+df_phenos = df_phenos.query("category in @pheno_category_lst")
 
 # check that there are no duplicated phenotypes
 assert len(df_phenos) == len(df_phenos.sample_id.unique())
@@ -110,7 +112,7 @@ elif het_mode == "AF":
     print("Encoding heterozygous variants with AF")
     df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= af_thresh), "variant_binary_status"] = df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= af_thresh)]["variant_allele_frequency"].values
 
-# drop all isolates with heterozygous variants with ANY AF below the threshold. Can't drop variants because might drop relevant ones
+# drop all isolates with heterozygous variants with ANY AF below the threshold. DON'T DROP FEATURES BECAUSE MIGHT DROP SOMETHING RELEVANT
 elif het_mode == "DROP":
     print(f"Dropping isolates with any variant with an AF below {af_thresh}")
     drop_isolates = df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= af_thresh)].sample_id.unique()
@@ -120,9 +122,6 @@ else:
     
 # check that the only NaNs in the variant binary status column are also NaN in the variant_allele_frequency column (truly missing data) 
 assert len(df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (~pd.isnull(df_model["variant_allele_frequency"]))]) == 0 
-
-# check that there are no inconsistencies in the expected naming convention (maybe include more later)
-assert len(df_model.loc[(df_model.category.astype(str).str[0] == 'c') & (df_model.category.str.contains('|'.join(['ins', 'del']))) & ~(df_model.category.str.contains('-'))]) == 0
 
 
 ############# STEP 4: PIVOT TO MATRIX AND DROP BAD ISOLATES / FEATURES #############
@@ -136,17 +135,13 @@ matrix = df_model.pivot(index="sample_id", columns="mutation", values="variant_b
 if het_mode.upper() in ["WT", "DROP"]:
     assert len(np.unique(matrix.values)) <= 3
 
-# save the matrix to compare later (i.e. want to know how many features and isolates were dropped because of too much missingness)
-matrix.to_pickle(os.path.join(out_dir, drug, model_prefix, "prefilt_matrix.pkl"))
+# save the matrix to compare later (i.e. want to know how many features and isolates were dropped because of too much missingness)  ### CURRENTLY NOT SAVING FOR SPACE
+# matrix.to_pickle(os.path.join(out_dir, drug, model_prefix, "prefilt_matrix.pkl"))
 
 # drop rows and columns with too much missingness. drop bad isolates first (rows)
 filtered_matrix = matrix.dropna(axis=0, thresh=(1-missing_thresh)*matrix.shape[1])
 
 # then drop features (columns) with anything missing
-filtered_matrix = filtered_matrix.dropna(axis=1, thresh=filtered_matrix.shape[0])
-
-# # check that there are only 1s and 0s now. COULD NEED TO IMPUTE THE TRULY MISSING DATA POINTS LATER, BUT STILL DON'T KNOW IF IMPUTATION IS GOING TO HAPPEN, OR JUST DROP EVERYTHING AMBIGUOUS NOW
-# if het_mode.upper() in ["WT", "DROP"]:
-#     assert sum(np.sort(np.unique(filtered_matrix)) != np.array([0, 1])) == 0
-    
+filtered_matrix = filtered_matrix.dropna(axis=1, thresh=filtered_matrix.shape[0])    
+print(f"Dropped {matrix.shape[0] - filtered_matrix.shape[0]} isolates and {matrix.shape[1] - filtered_matrix.shape[1]} features")
 filtered_matrix.to_pickle(os.path.join(out_dir, drug, model_prefix, "filt_matrix.pkl"))

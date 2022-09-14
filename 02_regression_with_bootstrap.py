@@ -177,9 +177,7 @@ if num_PCs > 0:
     
 else:
     print("Fitting regression without population structure correction")
-    df_phenos = df_phenos.query("sample_id in @model_inputs.sample_id.values").sort_values("sample_id", ascending=True).reset_index(drop=True)
-    model_inputs = model_inputs.query("sample_id in @df_phenos.sample_id.values").sort_values("sample_id", ascending=True).reset_index(drop=True)
-    
+    df_phenos = df_phenos.query("sample_id in @model_inputs.sample_id.values").sort_values("sample_id", ascending=True).reset_index(drop=True)    
     assert len(df_phenos) == len(model_inputs)
 
     # set index so that later only the values can be extracted and save it. This is the actual matrix used for model fitting, after all filtering steps
