@@ -155,7 +155,7 @@ def BH_FDR_correction(coef_df):
 
 
 
-def run_all(drug, drug_abbr, model_prefix, out_dir, alpha=0.05, num_bootstrap=1000):
+def run_all(drug, drug_abbr, model_prefix, out_dir, het_mode, alpha=0.05, num_bootstrap=1000):
     
     # coefficients from L2 regularized regression ("baseline" regression)
     coef_df = pd.read_csv(os.path.join(out_dir, drug, model_prefix, "regression_coef.csv"))
@@ -199,48 +199,51 @@ def run_all(drug, drug_abbr, model_prefix, out_dir, alpha=0.05, num_bootstrap=10
     combined_small = combined[["sample_id", "phenotype"] + list(res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values)]
     assert len(combined_small) == len(combined)
     
-    # get dataframe of predictive values for the non-zero coefficients and add them to the results dataframe
-    full_predict_values = compute_predictive_values(combined_small)
-    res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
+    # can only compute predictive values for binary genotypes. Otherwise there are no true/false positives/negatives
+    if het_mode != "AF":
     
-    print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates...")
-    bs_ppv = pd.DataFrame(columns = res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values).astype(float)
-    bs_npv = pd.DataFrame(columns = res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values).astype(float)
+        # get dataframe of predictive values for the non-zero coefficients and add them to the results dataframe
+        full_predict_values = compute_predictive_values(combined_small)
+        res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
 
-    for i in range(num_bootstrap):
-        
-        # get bootstrap sample
-        bs_idx = np.random.choice(np.arange(0, len(combined_small)), size=len(combined_small), replace=True)
-        bs_combined = combined_small.iloc[bs_idx, :]
+        print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates...")
+        bs_ppv = pd.DataFrame(columns = res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values).astype(float)
+        bs_npv = pd.DataFrame(columns = res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values).astype(float)
 
-        # check ordering
-        assert sum(bs_combined.columns[2:] != bs_ppv.columns) == 0
-        assert sum(bs_combined.columns[2:] != bs_npv.columns) == 0
+        for i in range(num_bootstrap):
 
-        # get predictive values from the dataframe of bootstrapped samples
-        bs_values = compute_predictive_values(bs_combined)
-        bs_ppv = pd.concat([bs_ppv, bs_values.set_index("orig_variant").T.loc[["PPV"]]], axis=0)
-        bs_npv = pd.concat([bs_npv, bs_values.set_index("orig_variant").T.loc[["NPV"]]], axis=0)
+            # get bootstrap sample
+            bs_idx = np.random.choice(np.arange(0, len(combined_small)), size=len(combined_small), replace=True)
+            bs_combined = combined_small.iloc[bs_idx, :]
+
+            # check ordering
+            assert sum(bs_combined.columns[2:] != bs_ppv.columns) == 0
+            assert sum(bs_combined.columns[2:] != bs_npv.columns) == 0
+
+            # get predictive values from the dataframe of bootstrapped samples
+            bs_values = compute_predictive_values(bs_combined)
+            bs_ppv = pd.concat([bs_ppv, bs_values.set_index("orig_variant").T.loc[["PPV"]]], axis=0)
+            bs_npv = pd.concat([bs_npv, bs_values.set_index("orig_variant").T.loc[["NPV"]]], axis=0)
 
 
-    # create dataframes for accurate merging
-    ppv_df = pd.DataFrame(np.nanpercentile(bs_ppv, axis=0, q=[2.5, 97.5]).T)
-    ppv_df.columns = ["PPV_Lower_CI", "PPV_Upper_CI"]
-    ppv_df["orig_variant"] = bs_ppv.columns
+        # create dataframes for accurate merging
+        ppv_df = pd.DataFrame(np.nanpercentile(bs_ppv, axis=0, q=[2.5, 97.5]).T)
+        ppv_df.columns = ["PPV_Lower_CI", "PPV_Upper_CI"]
+        ppv_df["orig_variant"] = bs_ppv.columns
 
-    npv_df = pd.DataFrame(np.nanpercentile(bs_npv, axis=0, q=[2.5, 97.5]).T)
-    npv_df.columns = ["NPV_Lower_CI", "NPV_Upper_CI"]
-    npv_df["orig_variant"] = bs_npv.columns
-    
-    # add to the results dataframe
-    res_df = res_df.merge(ppv_df, on="orig_variant", how="outer").merge(npv_df, on="orig_variant", how="outer")
+        npv_df = pd.DataFrame(np.nanpercentile(bs_npv, axis=0, q=[2.5, 97.5]).T)
+        npv_df.columns = ["NPV_Lower_CI", "NPV_Upper_CI"]
+        npv_df["orig_variant"] = bs_npv.columns
 
-    # sanity checks
-    assert sum(res_df["PPV_Lower_CI"] > res_df["PPV"]) == 0
-    assert sum(res_df["PPV"] > res_df["PPV_Upper_CI"]) == 0
+        # add to the results dataframe
+        res_df = res_df.merge(ppv_df, on="orig_variant", how="outer").merge(npv_df, on="orig_variant", how="outer")
 
-    assert sum(res_df["NPV_Lower_CI"] > res_df["NPV"]) == 0
-    assert sum(res_df["NPV"] > res_df["NPV_Upper_CI"]) == 0
+        # sanity checks
+        assert sum(res_df["PPV_Lower_CI"] > res_df["PPV"]) == 0
+        assert sum(res_df["PPV"] > res_df["PPV_Upper_CI"]) == 0
+
+        assert sum(res_df["NPV_Lower_CI"] > res_df["NPV"]) == 0
+        assert sum(res_df["NPV"] > res_df["NPV_Upper_CI"]) == 0
 
     # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
     del res_df["variant"]
@@ -253,9 +256,17 @@ def run_all(drug, drug_abbr, model_prefix, out_dir, alpha=0.05, num_bootstrap=10
 _, config_file = sys.argv
 kwargs = yaml.safe_load(open(config_file))
 
+drug = kwargs["drug"]
+drug_WHO_abbr = kwargs["drug_WHO_abbr"]
+model_prefix = kwargs["model_prefix"]
+out_dir = kwargs["out_dir"]
+alpha = kwargs["alpha"]
+num_bootstrap = kwargs["num_bootstrap"]
+het_mode = kwargs["het_mode"]
+
 # run analysis
-model_analysis = run_all(kwargs["drug"], kwargs["drug_WHO_abbr"], kwargs["model_prefix"], kwargs["out_dir"], alpha=kwargs["alpha"], num_bootstrap=kwargs["num_bootstrap"])
+model_analysis = run_all(drug, drug_WHO_abbr, model_prefix, out_dir, het_mode, alpha=alpha, num_bootstrap=num_bootstrap)
 
 # save
 print(f"{len(model_analysis.loc[(model_analysis['coef'] > 0) & model_analysis['orig_variant'].str.contains('PC')])} principal components have nominally significant non-zero coefficients")
-model_analysis.to_pickle(os.path.join(kwargs["out_dir"], kwargs["drug"], kwargs["model_prefix"], "model_analysis.pkl"))
+model_analysis.to_pickle(os.path.join(out_dir, drug, model_prefix, "model_analysis.pkl"))

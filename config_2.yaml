@@ -1,7 +1,7 @@
 drug: 'Moxifloxacin'
 drug_WHO_abbr: 'MXF'
 out_dir: '/n/data1/hms/dbmi/farhat/ye12/who/analysis/Drugs'
-model_prefix: 'tiers=1_drop_HET_noPopCorr'
+model_prefix: 'tiers=1_drop_HET'
 
 # model inputs
 tiers_lst: ['1']
@@ -15,6 +15,6 @@ include_synonymous: False
 # analysis
 # filtering threshold for computing the genetic relatedness matrix 
 MAF: 0.01
-num_PCs: 0
+num_PCs: 5
 num_bootstrap: 1000
 alpha: 0.05

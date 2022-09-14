@@ -100,15 +100,11 @@ for i, fName in enumerate(geno_files):
         
 df_model = pd.concat(dfs_lst)
 
-# keep only samples with genotypes available because everything should be represented, including samples without variants
-df_phenos = df_phenos.query("sample_id in @df_model.sample_id.values")
-df_phenos.to_csv(os.path.join(out_dir, drug, model_prefix, "phenos.csv"), index=False)
-
 
 ############# STEP 3: PROCESS HETEROZYGOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #############
 
 
-# set variants with AF <= the threshold (default 0.75) as wild-type
+# set variants with AF <= the threshold as wild-type and AF > the threshold as alternative
 if het_mode == "BINARY":
     print(f"Binarizing heterozygous variants with AF threshold of {af_thresh}")
     df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= af_thresh), "variant_binary_status"] = 0
@@ -128,7 +124,7 @@ else:
     raise ValueError(f"{het_mode} is not a valid mode for handling heterozygous alleles")
     
 # check that the only NaNs in the variant binary status column are also NaN in the variant_allele_frequency column (truly missing data) 
-assert len(df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (~pd.isnull(df_model["variant_allele_frequency"]))]) == 0 
+#assert len(df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (~pd.isnull(df_model["variant_allele_frequency"]))]) == 0 
 
 
 ############# STEP 4: PIVOT TO MATRIX AND DROP BAD ISOLATES / FEATURES #############
@@ -152,3 +148,7 @@ filtered_matrix = matrix.dropna(axis=0, thresh=(1-missing_thresh)*matrix.shape[1
 filtered_matrix = filtered_matrix.dropna(axis=1, thresh=filtered_matrix.shape[0])    
 print(f"Dropped {matrix.shape[0] - filtered_matrix.shape[0]} isolates and {matrix.shape[1] - filtered_matrix.shape[1]} features")
 filtered_matrix.to_pickle(os.path.join(out_dir, drug, model_prefix, "filt_matrix.pkl"))
+
+# keep only samples with genotypes available because everything should be represented, including samples without variants
+df_phenos = df_phenos.query("sample_id in @filtered_matrix.index.values")
+df_phenos.to_csv(os.path.join(out_dir, drug, model_prefix, "phenos.csv"), index=False)

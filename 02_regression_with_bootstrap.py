@@ -181,7 +181,7 @@ else:
 
     print(f"phenotype file shape: {df_phenos.shape}")
     print(f"genotypes matrix shape: {model_inputs.shape}")
-    X = np.concatenate(model_inputs.values)
+    X = model_inputs.values
 
     
 # scale inputs
