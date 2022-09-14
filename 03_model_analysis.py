@@ -14,30 +14,35 @@ from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resistance_variants_all.csv")
 
 
-def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, ci=95):
-    
-    alpha = (100-ci)/100
-    # N - k - 1, where N = number of samples, k = number of features
+def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
+    '''
+    Compute p-values using the Student's t-distribution. 
+    '''
+    # degrees of freedom: N - k - 1, where N = number of samples, k = number of features
     dof = num_samples - len(coef_df) - 1
         
     pvals = []
     for i, row in coef_df.iterrows():
         
-        # compute the t-statistic
+        # compute the t-statistic. Case when everything is 0 because it's an insignificant feature
         if row["coef"] == 0 and bootstrap_df[row[col]].std() == 0:
             pvals.append(1)
         else:
-            t = row["coef"] / bootstrap_df[row[col]].std()
+            # t-statistic is the true coefficient divided by the standard deviation of the bootstrapped coefficients
+            t = np.abs(row["coef"]) / bootstrap_df[row[col]].std()
+            
+            # survival function = 1 - CDF = P(t > t*) = measure of extrema
             pvals.append(st.t.sf(t, df=dof))
         
         # add confidence intervals
+        ci = (1-alpha)*100   # default 95
         diff = (100-ci)/2
         lower, upper = np.percentile(bootstrap_df[row[col]].values, q=(diff, 100-diff))
         coef_df.loc[i, "Lower_CI"] = lower
         coef_df.loc[i, "Upper_CI"] = upper
         
     pvals = np.array(pvals)
-    return pvals, alpha
+    return pvals
 
 
 
@@ -171,8 +176,8 @@ def run_all(drug, drug_abbr, model_prefix, out_dir, alpha=0.05, num_bootstrap=10
     df_phenos = pd.concat(dfs_list_phenos)
     df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
 
-    # add p-values to the results dataframe. Confidence level is based on the alpha argument, default = 95%
-    pvals, alpha = get_pvalues_add_ci(coef_df, bs_df, "variant", len(model_inputs), ci=(1-alpha)*100)
+    # add p-values and confidence intervals to the results dataframe
+    pvals = get_pvalues_add_ci(coef_df, bs_df, "variant", len(model_inputs), alpha=alpha)
     coef_df["pval"] = pvals
     
     # Benjamini-Hochberg correction

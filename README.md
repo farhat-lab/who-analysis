@@ -1,7 +1,5 @@
 # World Health Organization TB Resistance Mutation Catalog, 2022
 
-## Contributors: Maha Farhat, Yasha Ektefaie, Sanjana Kulkarni
-
 ## Genotype Annotations
 
 <ul>
