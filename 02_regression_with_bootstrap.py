@@ -5,9 +5,12 @@ from Bio import SeqIO
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
+import warnings
+warnings.filterwarnings("ignore")
 
 
 ############# STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES #############
+
 
 _, config_file = sys.argv
 
@@ -33,54 +36,14 @@ phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 model_inputs = pd.read_pickle(os.path.join(out_dir, drug, model_prefix, "filt_matrix.pkl"))
 print(f"Model matrix shape: {model_inputs.shape}")
 
-df_phenos = pd.read_csv(os.path.join(out_dir, drug, model_prefix, "phenos.csv"))
-
-
-############# STEP 2: IMPUTE NANS IN THE MODEL INPUTS FILE -- NOT GOING TO BE DONE UNLESS THE FULL DATA IS PATHOLOGICAL, BUT LEAVING THE CODE HERE IF IT IS NEEDED #############
-
-
-if impute:
-    impute_cols = model_inputs.columns[model_inputs.isna().any()]
-    print(f"There are NaNs in {len(impute_cols)}/{model_inputs.shape[1]} genetic features")
-
-    if len(impute_cols) > 0:
-        print("Imputing missing data...")
-        for i, col in enumerate(impute_cols):
-
-            # isolates without a genotype for thsi column
-            missing_isolates = model_inputs.loc[pd.isnull(model_inputs[col]), :].index.values
-
-            susc_isolates = df_phenos.query("phenotype == 0").sample_id.values
-            resist_isolates = df_phenos.query("phenotype == 1").sample_id.values
-
-            # take the average of the genotype across isolates of the same class
-            susc_impute = model_inputs.loc[model_inputs.index.isin(susc_isolates), col].dropna().mean()
-            resist_impute = model_inputs.loc[model_inputs.index.isin(resist_isolates), col].dropna().mean()
-
-            for isolate in missing_isolates:
-
-                if df_phenos.query("sample_id == @isolate").phenotype.values[0] == 1:
-                    model_inputs.loc[isolate, col] = resist_impute
-                else:
-                    model_inputs.loc[isolate, col] = susc_impute
-
-            if i % 100 == 0:
-                print(i)
-# don't impute anything, simply drop all isolates and features with NaNs. dropna drops only rows or columns, not both at the same time
-else:
-    model_inputs.dropna(axis=0, inplace=True, how="any")
-    model_inputs.dropna(axis=1, inplace=True, how="any")
-       
-print(f"Model matrix shape after removing or imputing missing values: {model_inputs.shape}")
-
-# there should not be any more NaNs
-assert sum(pd.isnull(np.unique(model_inputs.values))) == 0
-    
 # reset index so that sample_id is now a column, which makes slicing easier
 model_inputs = model_inputs.reset_index()
 
+df_phenos = pd.read_csv(os.path.join(out_dir, drug, model_prefix, "phenos.csv"))
 
-############# STEP 3: COMPUTE THE GENETIC RELATEDNESS MATRIX #############
+
+############# STEP 2: COMPUTE THE GENETIC RELATEDNESS MATRIX #############
+
 
 if num_PCs > 0:
     print(f"Fitting regression with population structure correction with {num_PCs} principal components")
@@ -129,7 +92,7 @@ if num_PCs > 0:
     grm_df.to_pickle(os.path.join(out_dir, drug, model_prefix, "GRM.pkl"))
     
     
-############# STEP 4: RUN PCA ON THE GRM #############
+############# STEP 3: RUN PCA ON THE GRM #############
 
 
     pca = PCA(n_components=num_PCs)
@@ -143,7 +106,7 @@ if num_PCs > 0:
     eigenvec_df.to_csv(os.path.join(out_dir, drug, model_prefix, f"PC_{num_PCs}.csv"), index=False)
 
     
-############# STEP 5: PREPARE INPUTS TO THE MODEL #############
+############# STEP 4: PREPARE INPUTS TO THE MODEL #############
 
 
     # drop any samples from the phenotypes and genotypes dataframes that are not in the eigenvector dataframe (some samples may not have genotypes)
@@ -192,7 +155,7 @@ y = df_phenos.phenotype.values
 assert len(y) == X.shape[0]
 
 
-############# STEP 6: FIT L2-PENALIZED REGRESSION #############
+############# STEP 5: FIT L2-PENALIZED REGRESSION #############
 
 
 print(f"Performing cross-validation to get regularization parameter...")
@@ -211,7 +174,7 @@ res_df = pd.DataFrame({"variant": np.concatenate([model_inputs.columns, [f"PC{nu
 res_df.to_csv(os.path.join(out_dir, drug, model_prefix, "regression_coef.csv"), index=False)
 
 
-############# STEP 7: BOOTSTRAP COEFFICIENTS #############
+############# STEP 6: BOOTSTRAP COEFFICIENTS #############
 
 # use the regularization parameter determined above
 print(f"Performing bootstrapping for coefficient confidence intervals...")

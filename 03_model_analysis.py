@@ -10,6 +10,8 @@ import sys
 import glob, os, yaml, subprocess, itertools, sparse, vcf
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
+import warnings
+warnings.filterwarnings("ignore")
 
 who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resistance_variants_all.csv")
 
@@ -38,8 +40,8 @@ def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
         ci = (1-alpha)*100   # default 95
         diff = (100-ci)/2
         lower, upper = np.percentile(bootstrap_df[row[col]].values, q=(diff, 100-diff))
-        coef_df.loc[i, "Lower_CI"] = lower
-        coef_df.loc[i, "Upper_CI"] = upper
+        coef_df.loc[i, "coef_LB"] = lower
+        coef_df.loc[i, "coef_UB"] = upper
         
     pvals = np.array(pvals)
     return pvals
@@ -98,10 +100,20 @@ def find_SNVs_in_current_WHO(coef_df, aa_code_dict, drug_abbr):
 
 
 
-def compute_predictive_values(combined_df):
+def compute_predictive_values(combined_df, return_stats=[]):
     '''
-    Compute positive and negative predictive values. 
+    Compute positive predictive value. 
+    Compute sensitivity, specificity, and positive and negative likelihood ratios. 
+    
     PPV = true_positive / all_positive. NPV = true_negative / all_negative
+    Sens = true_positive / (true_positive + false_negative)
+    Spec = true_negative / (true_negative + false_positive)
+    
+    Also return the number of isolates with each variant = all_positive
+    
+    Positive LR = sens / (1 – spec)
+    Negative LR = (1 – sens) / spec
+
     '''
     # make a copy to keep sample_id in one dataframe
     melted = combined_df.melt(id_vars=["sample_id", "phenotype"])
@@ -122,20 +134,29 @@ def compute_predictive_values(combined_df):
     
     # combine the 4 dataframes into a single dataframe (concatenating on axis = 1)
     final = true_pos_df[["orig_variant", "TP"]].merge(
-    false_pos_df[["orig_variant", "FP"]], on="orig_variant", how="outer").merge(
-    true_neg_df[["orig_variant", "TN"]], on="orig_variant", how="outer").merge(
-    false_neg_df[["orig_variant", "FN"]], on="orig_variant", how="outer").fillna(0)
+            false_pos_df[["orig_variant", "FP"]], on="orig_variant", how="outer").merge(
+            true_neg_df[["orig_variant", "TN"]], on="orig_variant", how="outer").merge(
+            false_neg_df[["orig_variant", "FN"]], on="orig_variant", how="outer").fillna(0)
 
     assert len(final) == len(melted["variable"].unique())
     assert len(final) == len(final.drop_duplicates("orig_variant"))
     assert len(np.unique(final[["TP", "FP", "TN", "FN"]].sum(axis=1))) == 1
     
+    final["Num_Isolates"] = final["TP"] + final["FP"]
     final["PPV"] = final["TP"] / (final["TP"] + final["FP"])
-    final["NPV"] = final["TN"] / (final["TN"] + final["FN"])
+    final["Sens"] = final["TP"] / (final["TP"] + final["FN"])
+    final["Spec"] = final["TN"] / (final["TN"] + final["FP"])
+    final["LR+"] = final["Sens"] / (1 - final["Spec"])
+    final["LR-"] = (1 - final["Sens"]) / final["Spec"]
+    #final["NPV"] = final["TN"] / (final["TN"] + final["FN"])
     
     # check that all feature rows have the same numbers of samples
     assert len(np.unique(final[["TP", "FP", "TN", "FN"]].sum(axis=1))) == 1
-    return final[["orig_variant", "PPV", "NPV"]]
+    
+    if len(return_stats) == 0:
+        return final[["orig_variant", "Num_Isolates", "TP", "FP", "TN", "FN", "PPV", "Sens", "Spec", "LR+", "LR-"]]
+    else:
+        return final[return_stats]
 
 
 
@@ -187,11 +208,11 @@ def run_all(drug, drug_abbr, model_prefix, out_dir, het_mode, alpha=0.05, num_bo
     
     # convert to odds ratios
     res_df["Odds_Ratio"] = np.exp(res_df["coef"])
-    res_df["OR_Lower_CI"] = np.exp(res_df["Lower_CI"])
-    res_df["OR_Upper_CI"] = np.exp(res_df["Upper_CI"])
+    res_df["OR_LB"] = np.exp(res_df["coef_LB"])
+    res_df["OR_UB"] = np.exp(res_df["coef_UB"])
     
-    assert sum(res_df["OR_Lower_CI"] > res_df["Odds_Ratio"]) == 0
-    assert sum(res_df["OR_Upper_CI"] < res_df["Odds_Ratio"]) == 0
+    assert sum(res_df["OR_LB"] > res_df["Odds_Ratio"]) == 0
+    assert sum(res_df["OR_UB"] < res_df["Odds_Ratio"]) == 0
     
     combined = model_inputs.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id").reset_index(drop=True)
     
@@ -207,44 +228,43 @@ def run_all(drug, drug_abbr, model_prefix, out_dir, het_mode, alpha=0.05, num_bo
         res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
 
         print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates...")
-        bs_ppv = pd.DataFrame(columns = res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values).astype(float)
-        bs_npv = pd.DataFrame(columns = res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values).astype(float)
-
+        bs_results = pd.DataFrame(columns = res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values).astype(float)
+        
+        # need confidence intervals for 5 stats: PPV, sens, spec, + likelihood ratio, - likelihood ratio
         for i in range(num_bootstrap):
 
             # get bootstrap sample
             bs_idx = np.random.choice(np.arange(0, len(combined_small)), size=len(combined_small), replace=True)
             bs_combined = combined_small.iloc[bs_idx, :]
 
-            # check ordering
-            assert sum(bs_combined.columns[2:] != bs_ppv.columns) == 0
-            assert sum(bs_combined.columns[2:] != bs_npv.columns) == 0
+            # check ordering of features because we're just going to append bootstrap dataframes
+            assert sum(bs_combined.columns[2:] != bs_results.columns) == 0
 
-            # get predictive values from the dataframe of bootstrapped samples
-            bs_values = compute_predictive_values(bs_combined)
-            bs_ppv = pd.concat([bs_ppv, bs_values.set_index("orig_variant").T.loc[["PPV"]]], axis=0)
-            bs_npv = pd.concat([bs_npv, bs_values.set_index("orig_variant").T.loc[["NPV"]]], axis=0)
+            # get predictive values from the dataframe of bootstrapped samples. Only return the 5 we want CI for, and the variant
+            bs_values = compute_predictive_values(bs_combined, return_stats=["orig_variant", "PPV", "Sens", "Spec", "LR+", "LR-"])
+            bs_results = pd.concat([bs_results, bs_values.set_index("orig_variant").T], axis=0)
 
+        # add the confidence intervals to the dataframe
+        for variable in ["PPV", "Sens", "Spec", "LR+", "LR-"]:
 
-        # create dataframes for accurate merging
-        ppv_df = pd.DataFrame(np.nanpercentile(bs_ppv, axis=0, q=[2.5, 97.5]).T)
-        ppv_df.columns = ["PPV_Lower_CI", "PPV_Upper_CI"]
-        ppv_df["orig_variant"] = bs_ppv.columns
+            lower, upper = np.nanpercentile(bs_results.loc[variable], q=[2.5, 97.5], axis=0)
+            
+            # LR+ can be infinite if spec is 1, and after percentile, it will be NaN, so replace with infinity
+            if variable == "LR+":
+                res_df[variable] = res_df[variable].fillna(np.inf)
+                lower[np.isnan(lower)] = np.inf
+                upper[np.isnan(upper)] = np.inf
+                
+            res_df = res_df.merge(pd.DataFrame({"orig_variant": bs_results.columns, 
+                                f"{variable}_LB": lower,
+                                f"{variable}_UB": upper,
+                               }), on="orig_variant", how="outer")
 
-        npv_df = pd.DataFrame(np.nanpercentile(bs_npv, axis=0, q=[2.5, 97.5]).T)
-        npv_df.columns = ["NPV_Lower_CI", "NPV_Upper_CI"]
-        npv_df["orig_variant"] = bs_npv.columns
+            # sanity checks -- lower bounds should be <= true values, and upper bounds should be >= true values
+            assert sum(res_df[variable] < res_df[f"{variable}_LB"]) == 0
+            assert sum(res_df[variable] > res_df[f"{variable}_UB"]) == 0
 
-        # add to the results dataframe
-        res_df = res_df.merge(ppv_df, on="orig_variant", how="outer").merge(npv_df, on="orig_variant", how="outer")
-
-        # sanity checks
-        assert sum(res_df["PPV_Lower_CI"] > res_df["PPV"]) == 0
-        assert sum(res_df["PPV"] > res_df["PPV_Upper_CI"]) == 0
-
-        assert sum(res_df["NPV_Lower_CI"] > res_df["NPV"]) == 0
-        assert sum(res_df["NPV"] > res_df["NPV_Upper_CI"]) == 0
-
+    
     # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
     del res_df["variant"]
     del res_df["gene"]
@@ -263,10 +283,12 @@ out_dir = kwargs["out_dir"]
 alpha = kwargs["alpha"]
 num_bootstrap = kwargs["num_bootstrap"]
 het_mode = kwargs["het_mode"]
+num_PCs = kwargs["num_PCs"]
 
 # run analysis
 model_analysis = run_all(drug, drug_WHO_abbr, model_prefix, out_dir, het_mode, alpha=alpha, num_bootstrap=num_bootstrap)
 
 # save
-print(f"{len(model_analysis.loc[(model_analysis['coef'] > 0) & model_analysis['orig_variant'].str.contains('PC')])} principal components have nominally significant non-zero coefficients")
+if num_PCs > 0:
+    print(f"{len(model_analysis.loc[(model_analysis['coef'] > 0) & model_analysis['orig_variant'].str.contains('PC')])} principal components have nominally significant non-zero coefficients")
 model_analysis.to_pickle(os.path.join(out_dir, drug, model_prefix, "model_analysis.pkl"))
