@@ -1,3 +1,8 @@
 .ipynb_checkpoints
 __pycache__/
+
+# notebook for testing
 sandbox.ipynb
+
+# extra config files made during testing
+config_*.yaml
