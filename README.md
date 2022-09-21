@@ -3,9 +3,21 @@
 ## Genotype Annotations
 
 <ul>
-    <li>p: coding variants</li>
-    <li>c: synonymous or upstream variants</li>
-    <li>n: non-coding variants in <i>rrs/rrl</i></li>
+    <li>resolved_symbol: gene name</li>
+    <li>variant_category</li>
+    <ul>
+        <li>p: coding variants</li>
+        <li>c: synonymous or upstream variants</li>
+        <li>n: non-coding variants in <i>rrs/rrl</i></li>
+        <li>deletion: large-scale deletion of a gene<li>
+    </ul>
+    <li>Effect</li>
+    <ul>
+        <li>upstream_gene_variant</li>
+        <li>missense_variant, synonymous_variant, inframe_deletion, inframe_insertion, stop_lost: self-explanatory</li>
+        <li>lof: any frameshift, large-scale deletion, nonsense, or loss of start mutation
+        <li>initiator_codon_variant: Valine start codon</li>
+        <li>stop_retained_variant: variant in the stop codon that did not change it</li>
 </ul>
 
 ## Phenotype Annotations

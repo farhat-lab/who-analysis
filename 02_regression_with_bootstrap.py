@@ -34,7 +34,6 @@ phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 
 
 model_inputs = pd.read_pickle(os.path.join(out_dir, drug, model_prefix, "filt_matrix.pkl"))
-print(f"Model matrix shape: {model_inputs.shape}")
 
 # reset index so that sample_id is now a column, which makes slicing easier
 model_inputs = model_inputs.reset_index()
@@ -124,10 +123,6 @@ if num_PCs > 0:
     # save model_inputs to use later. This is the actual matrix used for model fitting, after all filtering steps
     model_inputs.to_pickle(os.path.join(out_dir, drug, model_prefix, "model_matrix.pkl"))
 
-    print(f"phenotype file shape: {df_phenos.shape}")
-    print(f"genotypes matrix shape: {model_inputs.shape}")
-    print(f"eigenvectors shape: {eigenvec_df.shape}")
-
     # concatenate the eigenvectors to the matrix
     X = np.concatenate([model_inputs.values, eigenvec_df.values], axis=1)
     
@@ -141,9 +136,6 @@ else:
     # set index so that later only the values can be extracted and save it. This is the actual matrix used for model fitting, after all filtering steps
     model_inputs = model_inputs.set_index("sample_id")
     model_inputs.to_pickle(os.path.join(out_dir, drug, model_prefix, "model_matrix.pkl"))
-
-    print(f"phenotype file shape: {df_phenos.shape}")
-    print(f"genotypes matrix shape: {model_inputs.shape}")
     X = model_inputs.values
 
     
@@ -153,6 +145,7 @@ X = scaler.fit_transform(X)
 y = df_phenos.phenotype.values
 
 assert len(y) == X.shape[0]
+print(f"{X.shape[0]} isolates and {X.shape[1]} features in the model")
 
 
 ############# STEP 5: FIT L2-PENALIZED REGRESSION #############

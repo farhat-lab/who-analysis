@@ -1,16 +1,17 @@
-drug: 'Moxifloxacin'
-drug_WHO_abbr: 'MXF'
+drug: 'Rifampicin'
+drug_WHO_abbr: 'RIF'
 out_dir: '/n/data1/hms/dbmi/farhat/ye12/who/analysis/Drugs'
 model_prefix: 'tiers=1_drop_HET_noPopCorr'
 
 # model inputs
 tiers_lst: ['1']
-pheno_category_lst: ['WHO_current']
+pheno_category_lst: ['WHO']
 missing_thresh: 0.01
 het_mode: "DROP"
 AF_thresh: 0.75
 impute: False
 include_synonymous: False
+pool_lof: False
 
 # analysis
 # filtering threshold for computing the genetic relatedness matrix 
