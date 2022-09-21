@@ -274,7 +274,7 @@ else:
 assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
 
 # this comparison is only for the missing isolates. Treating heterozygous alleles is done above, and that number is not considered here. 
-print(f"Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} nominal features for the model")
+print(f"Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} features for the model")
 filtered_matrix.to_pickle(os.path.join(out_dir, drug, model_prefix, "filt_matrix.pkl"))
 
 # keep only samples with genotypes available because everything should be represented, including samples without variants
