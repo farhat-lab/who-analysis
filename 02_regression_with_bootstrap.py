@@ -48,7 +48,6 @@ if num_PCs > 0:
     print(f"Fitting regression with population structure correction with {num_PCs} principal components")
 
     # read in all dataframes in the narrow directory
-    print("Reading in dataframes for the genotypes matrix...")
     tidy_dfs_lst = [pd.read_csv(os.path.join(tidy_dir, fName)) for fName in os.listdir(tidy_dir)]
 
     # concatenate into a single dataframe
@@ -56,7 +55,6 @@ if num_PCs > 0:
 
     # H37Rv full genome genbank file
     genome = SeqIO.read("/n/data1/hms/dbmi/farhat/Sanjana/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
-    print(len(genome.seq))
 
     # make dataframe mapping positions to reference nucleotides. This is needed to get the reference allele at every site and compare to the data
     pos_unique = tidy_combined.position.unique()
@@ -98,7 +96,7 @@ if num_PCs > 0:
     pca.fit(grm)
 
     print(f"Explained variance of {num_PCs} principal components: {pca.explained_variance_}")
-    print("Saving eigenvectors...")
+    print("    Saving eigenvectors")
     eigenvec = pca.components_.T
     eigenvec_df = pd.DataFrame(eigenvec)
     eigenvec_df["sample_id"] = tidy_matrix.index.values
@@ -127,7 +125,7 @@ if num_PCs > 0:
     X = np.concatenate([model_inputs.values, eigenvec_df.values], axis=1)
     
 else:
-    print("Fitting regression without population structure correction")
+    print("    Fitting regression without population structure correction")
     # sort by sample_id so that everything is in the same order
     model_inputs = model_inputs.sort_values("sample_id", ascending=True).reset_index(drop=True)
     df_phenos = df_phenos.sort_values("sample_id", ascending=True).reset_index(drop=True)    
@@ -145,13 +143,12 @@ X = scaler.fit_transform(X)
 y = df_phenos.phenotype.values
 
 assert len(y) == X.shape[0]
-print(f"{X.shape[0]} isolates and {X.shape[1]} features in the model")
+print(f"    {X.shape[0]} isolates and {X.shape[1]} features in the model")
 
 
 ############# STEP 5: FIT L2-PENALIZED REGRESSION #############
 
 
-print(f"Performing cross-validation to get regularization parameter...")
 model = LogisticRegressionCV(Cs=np.logspace(-4, 4, 9), 
                              cv=5,
                              penalty='l2', 
@@ -160,7 +157,7 @@ model = LogisticRegressionCV(Cs=np.logspace(-4, 4, 9),
                              scoring='neg_log_loss'
                             )
 model.fit(X, y)
-print(f"Regularization parameter: {model.C_[0]}")
+print(f"    Regularization parameter: {model.C_[0]}")
 
 # save coefficients
 res_df = pd.DataFrame({"variant": np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]]), 'coef': np.squeeze(model.coef_)})
@@ -170,7 +167,7 @@ res_df.to_csv(os.path.join(out_dir, drug, model_prefix, "regression_coef.csv"), 
 ############# STEP 6: BOOTSTRAP COEFFICIENTS #############
 
 # use the regularization parameter determined above
-print(f"Performing bootstrapping for coefficient confidence intervals...")
+print(f"    Performing bootstrapping for coefficient confidence intervals")
 coefs = []
 for i in range(num_bootstrap):
    
@@ -185,9 +182,9 @@ for i in range(num_bootstrap):
     bs_model.fit(X_bs, y_bs)
     coefs.append(np.squeeze(bs_model.coef_))
     
-    # print progress
-    if i % (num_bootstrap / 10) == 0:
-        print(i)
+    # # print progress
+    # if i % (num_bootstrap / 10) == 0:
+    #     print("   ", i)
 
     
 # save bootstrapped coefficients and principal components

@@ -23,7 +23,6 @@ pheno_category_lst = kwargs["pheno_category_lst"]
 pool_lof = kwargs["pool_lof"]
 impute = kwargs["impute"]
 
-print("Tiers for this model:", tiers_lst)
 
 if not os.path.isdir(out_dir):
     os.mkdir(out_dir)
@@ -83,8 +82,8 @@ for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
 dfs_lst = []
 for i, fName in enumerate(geno_files):
         
-    print(f"Working on dataframe {i+1}/{len(geno_files)}")
-    print(fName)
+    print(f"    Working on dataframe {i+1}/{len(geno_files)}")
+    print("   ", fName)
 
     # read in the dataframe
     df = pd.read_csv(fName)
@@ -182,7 +181,7 @@ def pool_lof_mutations(df):
 
 
 if pool_lof:
-    print("Pooling LOF mutations")
+    print("    Pooling LOF mutations")
     df_model = pool_lof_mutations(df_model)
 
 
@@ -191,19 +190,19 @@ if pool_lof:
 
 # set variants with AF <= the threshold as wild-type and AF > the threshold as alternative
 if het_mode == "BINARY":
-    print(f"Binarizing heterozygous variants with AF threshold of {af_thresh}")
+    print(f"    Binarizing heterozygous variants with AF threshold of {af_thresh}")
     df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= af_thresh), "variant_binary_status"] = 0
     df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] > af_thresh), "variant_binary_status"] = 1
 
 # use heterozygous AF as the matrix value
 elif het_mode == "AF":
-    print("Encoding heterozygous variants with AF")
+    print("    Encoding heterozygous variants with AF")
     df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= af_thresh), "variant_binary_status"] = df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= af_thresh)]["variant_allele_frequency"].values
 
 # drop all isolates with heterozygous variants with ANY AF below the threshold. DON'T DROP FEATURES BECAUSE MIGHT DROP SOMETHING RELEVANT
 elif het_mode == "DROP":
     drop_isolates = df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= af_thresh)].sample_id.unique()
-    print(f"Dropped {len(drop_isolates)} isolates with any variant with an AF >= 0.25 and <= {af_thresh}")
+    print(f"    Dropped {len(drop_isolates)} isolates with any variant with an AF >= 0.25 and <= {af_thresh}")
     df_model = df_model.query("sample_id not in @drop_isolates")
 else:
     raise ValueError(f"{het_mode} is not a valid mode for handling heterozygous alleles")
@@ -225,7 +224,7 @@ if het_mode.upper() in ["BINARY", "DROP"]:
 
 # drop isolates (rows) with missingness above the threshold (default = 5%)
 filtered_matrix = matrix.dropna(axis=0, thresh=(1-missing_thresh)*matrix.shape[1])
-print(f"Dropped {matrix.shape[0] - filtered_matrix.shape[0]} isolates with >{int(missing_thresh*100)}% missingness")
+print(f"    Dropped {matrix.shape[0] - filtered_matrix.shape[0]} isolates with >{int(missing_thresh*100)}% missingness")
 num_isolates_after_missing_thresh = filtered_matrix.shape[0]
 
 ############# PRINT THE NUMBER OF FEATURES WITH MISSING DATA #############
@@ -240,10 +239,10 @@ if impute:
     df_phenos = df_phenos.query("sample_id in @filtered_matrix.index.values")
     
     impute_cols = filtered_matrix.columns[filtered_matrix.isna().any()]
-    print(f"There are NaNs in {len(impute_cols)}/{filtered_matrix.shape[1]} genetic features")
+    print(f"    There are NaNs in {len(impute_cols)}/{filtered_matrix.shape[1]} genetic features")
 
     if len(impute_cols) > 0:
-        print("Imputing missing data...")
+        print("    Imputing missing data...")
         for i, col in enumerate(impute_cols):
 
             # isolates without a genotype for this column
@@ -268,13 +267,13 @@ if impute:
 # don't impute anything, simply drop all isolates (rows) with NaNs.
 else:
     filtered_matrix.dropna(axis=0, inplace=True, how="any")
-    print(f"Dropped {num_isolates_after_missing_thresh - filtered_matrix.shape[0]} isolates with any remaining missingness")
+    print(f"    Dropped {num_isolates_after_missing_thresh - filtered_matrix.shape[0]} isolates with any remaining missingness")
        
 # there should not be any more NaNs
 assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
 
 # this comparison is only for the missing isolates. Treating heterozygous alleles is done above, and that number is not considered here. 
-print(f"Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} features for the model")
+print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} features for the model")
 filtered_matrix.to_pickle(os.path.join(out_dir, drug, model_prefix, "filt_matrix.pkl"))
 
 # keep only samples with genotypes available because everything should be represented, including samples without variants
