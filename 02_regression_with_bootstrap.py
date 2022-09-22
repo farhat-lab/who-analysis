@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
 import glob, os, yaml, subprocess, sparse, sys
-from Bio import SeqIO
+from Bio import SeqIO, Seq
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
+import itertools
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -20,7 +21,6 @@ drug = kwargs["drug"]
 out_dir = kwargs["out_dir"]
 model_prefix = kwargs["model_prefix"].split(".")[0]
 num_PCs = kwargs["num_PCs"]
-MAF = kwargs["MAF"]
 num_bootstrap = kwargs["num_bootstrap"]
 impute = kwargs["impute"]
 
@@ -41,10 +41,11 @@ model_inputs = model_inputs.reset_index()
 df_phenos = pd.read_csv(os.path.join(out_dir, drug, model_prefix, "phenos.csv"))
 
 
-############# STEP 2: COMPUTE THE GENETIC RELATEDNESS MATRIX #############
+############# STEP 2: COMPUTE THE GENETIC RELATEDNESS MATRIX, REMOVING RESISTANCE LOCI #############
 
 
 if num_PCs > 0:
+    
     print(f"Fitting regression with population structure correction with {num_PCs} principal components")
 
     # read in all dataframes in the narrow directory
@@ -68,7 +69,21 @@ if num_PCs > 0:
 
     # boolean of whether the reference and actual alleles are different
     tidy_combined["diff"] = (tidy_combined["ref"] != tidy_combined["nucleotide"]).astype(int)
-    tidy_matrix = tidy_combined.pivot(index="sample_id", columns="position", values="diff").fillna(0)
+    
+    # read in dataframe of loci associated with drug resistance
+    drugs_loci = pd.read_csv("who-analysis/drugs_loci.csv")
+
+    # add 1 to the start because the start column is it's 0-indexed
+    drugs_loci["Start"] += 1
+    assert sum(drugs_loci["End"] <= drugs_loci["Start"]) == 0
+    
+    # get all positions in resistance loci
+    remove_pos = [list(range(int(row["Start"]), int(row["End"])+1)) for _, row in drugs_loci.iterrows()]
+    remove_pos = list(itertools.chain.from_iterable(remove_pos))
+    
+    # remove resistance loci positions
+    tidy_no_resistance_loci = tidy_combined.query("position not in @remove_pos")
+    tidy_matrix = tidy_no_resistance_loci.pivot(index="sample_id", columns="position", values="diff").fillna(0)
 
     # should only be 1s and 0s
     assert len(np.unique(tidy_matrix.values)) == 2
@@ -79,14 +94,9 @@ if num_PCs > 0:
     assert len(np.unique(tidy_matrix.index.values)) == len(tidy_matrix.index)
     assert len(np.unique(tidy_matrix.columns)) == len(tidy_matrix.columns)
 
-    # MAF filtering and save GRM
+    # MAF filtering and compute GRM
     tidy_matrix = tidy_matrix[tidy_matrix.columns[tidy_matrix.mean(axis=0) >= MAF]]
-
     grm = np.cov(tidy_matrix.values)
-    grm_df = pd.DataFrame(grm)
-    grm_df.columns = tidy_matrix.index.values
-    grm_df.index = tidy_matrix.index.values
-    grm_df.to_pickle(os.path.join(out_dir, drug, model_prefix, "GRM.pkl"))
     
     
 ############# STEP 3: RUN PCA ON THE GRM #############
@@ -100,7 +110,6 @@ if num_PCs > 0:
     eigenvec = pca.components_.T
     eigenvec_df = pd.DataFrame(eigenvec)
     eigenvec_df["sample_id"] = tidy_matrix.index.values
-    eigenvec_df.to_csv(os.path.join(out_dir, drug, model_prefix, f"PC_{num_PCs}.csv"), index=False)
 
     
 ############# STEP 4: PREPARE INPUTS TO THE MODEL #############
@@ -167,7 +176,7 @@ res_df.to_csv(os.path.join(out_dir, drug, model_prefix, "regression_coef.csv"), 
 ############# STEP 6: BOOTSTRAP COEFFICIENTS #############
 
 # use the regularization parameter determined above
-print(f"    Performing bootstrapping for coefficient confidence intervals")
+print(f"Bootstrapping coefficient confidence intervals with {num_bootstrap} replicates")
 coefs = []
 for i in range(num_bootstrap):
    

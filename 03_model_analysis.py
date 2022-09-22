@@ -3,7 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 plt.rcParams['figure.dpi'] = 150
 import seaborn as sns
-from Bio import SeqIO, Seq
 import scipy.stats as st
 import sys
 
@@ -228,7 +227,7 @@ def run_all(drug, drug_abbr, model_prefix, out_dir, het_mode, alpha=0.05, num_bo
         full_predict_values = compute_predictive_values(combined_small)
         res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
 
-        print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates...")
+        print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates")
         bs_results = pd.DataFrame(columns = res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values).astype(float)
         
         # need confidence intervals for 5 stats: PPV, sens, spec, + likelihood ratio, - likelihood ratio

@@ -82,8 +82,8 @@ for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
 dfs_lst = []
 for i, fName in enumerate(geno_files):
         
-    print(f"    Working on dataframe {i+1}/{len(geno_files)}")
-    print("   ", fName)
+    print(f"Working on dataframe {i+1}/{len(geno_files)}")
+    #print("   ", fName)
 
     # read in the dataframe
     df = pd.read_csv(fName)
@@ -181,7 +181,7 @@ def pool_lof_mutations(df):
 
 
 if pool_lof:
-    print("    Pooling LOF mutations")
+    print("Pooling LOF mutations")
     df_model = pool_lof_mutations(df_model)
 
 
@@ -242,7 +242,7 @@ if impute:
     print(f"    There are NaNs in {len(impute_cols)}/{filtered_matrix.shape[1]} genetic features")
 
     if len(impute_cols) > 0:
-        print("    Imputing missing data...")
+        print("Imputing missing data")
         for i, col in enumerate(impute_cols):
 
             # isolates without a genotype for this column
