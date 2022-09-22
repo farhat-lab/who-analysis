@@ -9,13 +9,12 @@ pheno_category_lst: ['WHO']
 missing_thresh: 0.01
 het_mode: "DROP"
 AF_thresh: 0.75
+drop_isolates_before_variants: True
 impute: False
 synonymous: False
 pool_lof: False
 
 # analysis
-# filtering threshold for computing the genetic relatedness matrix 
-MAF: 0.01
 num_PCs: 0
 num_bootstrap: 1000
 alpha: 0.05
