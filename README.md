@@ -76,7 +76,7 @@ Run the numbered scripts in order, with the `config.yaml` file. Arguments in the
 **NOTE**
     
 <ul>
-    <li>`drug`: full drug name</li>
+    <li><code>drug</code>: full drug name</li>
     <li>`drug_WHO_abbr`: 3-letter drug name abbreviation in the WHO catalog</li>
     <li>`out_dir`: output directory (the same for all analyses)</li>
     <li>`model_prefix`: directory name for the current analysis</li>
@@ -85,7 +85,6 @@ Run the numbered scripts in order, with the `config.yaml` file. Arguments in the
     <li>`missing_thresh`: threshold for missing rows/columns (0-1)</li>
     <li>`het_mode`: how to handle heterozygous alleles. Options are DROP, AF, and BINARY. </li>
     <li>AF_thresh: 0.75. Only used if `het_mode` = BINARY. Heterozygous alleles with AF > the threshold will be assigned to 1, the others to 0.</li>
-
     <li>`impute`: boolean for whether missing values should be imputed (if False, then they will be dropped)</li>
     <li>`synonymous`: boolean for whether synonymous variants should be included</li>
     <li>`pool_lof`: boolean for whether or not LOF variants should be pooled</li>
