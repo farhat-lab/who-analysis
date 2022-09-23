@@ -1,0 +1,16 @@
+Drug,Tier,Num_Phenos,Num_Genos,Num_SNP_Matrix
+Moxifloxacin,1,10485,10485,9426
+Levofloxacin,1,17827,17827,16810
+Clofazimine,1,4320,4320,3962
+Isoniazid,1,40077,40077,37739
+Pyrazinamide,1,19589,19589,18246
+Delamanid,1,569,569,335
+Ethionamide,1,10220,10220,9650
+Capreomycin,1,15889,15889,14930
+Streptomycin,1,24122,24122,22255
+Kanamycin,1,14115,14115,12905
+Bedaquiline,1,844,844,508
+Amikacin,1,13032,13032,11862
+Linezolid,1,5944,5944,5456
+Rifampicin,1,38617,38617,36298
+Ethambutol,1,33886,33886,31592

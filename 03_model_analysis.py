@@ -6,7 +6,7 @@ import seaborn as sns
 import scipy.stats as st
 import sys
 
-import glob, os, yaml, subprocess, itertools, sparse, vcf
+import glob, os, yaml, itertools, sparse
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 import warnings

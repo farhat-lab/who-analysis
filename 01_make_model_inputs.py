@@ -211,7 +211,7 @@ else:
     raise ValueError(f"{het_mode} is not a valid mode for handling heterozygous alleles")
     
 
-############# STEP 5: PIVOT TO MATRIX AND DROP ISOLATES WITH A LOT OF MISSINGNESS #############
+############# STEP 5: PIVOT TO MATRIX AND DROP HIGH-FREQUENCY MISSINGNESS #############
 
 
 # 1 = alternative allele, 0 = reference allele, NaN = missing
@@ -262,7 +262,7 @@ else:
     num_isolates_after_thresholding = filtered_matrix.shape[0]
 
 
-############# STEP 6: IMPUTE OR DROP REMAINING NANS IN THE GENOTYPES #############
+############# STEP 6: IMPUTE OR DROP REMAINING NANS IN THE GENOTYPES -- THESE ARE LOW FREQUENCY MISSING DATA #############
 
 
 if impute:
@@ -300,10 +300,12 @@ else:
     filtered_matrix.dropna(axis=0, inplace=True, how="any")
     print(f"    Dropped {num_isolates_after_thresholding - filtered_matrix.shape[0]} isolates with any remaining missingness")
        
+        
 # there should not be any more NaNs
 assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
 print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} features for the model")
 filtered_matrix.to_pickle(os.path.join(out_dir, drug, model_prefix, "filt_matrix.pkl"))
+
 
 # keep only samples with genotypes available because everything should be represented, including samples without variants
 df_phenos = df_phenos.query("sample_id in @filtered_matrix.index.values")

@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, subprocess, sparse, sys
+import glob, os, yaml, sparse, sys
 from Bio import SeqIO, Seq
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
@@ -25,7 +25,7 @@ num_bootstrap = kwargs["num_bootstrap"]
 impute = kwargs["impute"]
 
 # list of directories
-tidy_dir = "/n/data1/hms/dbmi/farhat/ye12/who/narrow_format"
+matrix_dir = "/n/data1/hms/dbmi/farhat/ye12/who/matrix"
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 
@@ -48,55 +48,76 @@ if num_PCs > 0:
     
     print(f"Fitting regression with population structure correction with {num_PCs} principal components")
 
-    # read in all dataframes in the narrow directory
-    tidy_dfs_lst = [pd.read_csv(os.path.join(tidy_dir, fName)) for fName in os.listdir(tidy_dir)]
+    ############# GENERATE THE SNP MATRIX IF IT DOESN'T EXIST #############    
+    if not os.path.isfile("who-analysis/minor_allele_counts.npz"):
+        print("Creating SNP matrix")
+        # read in dataframe of loci associated with drug resistance
+        drugs_loci = pd.read_csv("who-analysis/drugs_loci.csv")
 
-    # concatenate into a single dataframe
-    tidy_combined = pd.concat(tidy_dfs_lst, axis=0)
+        # add 1 to the start because it's 0-indexed
+        drugs_loci["Start"] += 1
+        assert sum(drugs_loci["End"] <= drugs_loci["Start"]) == 0
 
-    # H37Rv full genome genbank file
-    genome = SeqIO.read("/n/data1/hms/dbmi/farhat/Sanjana/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
+        # get all positions in resistance loci
+        remove_pos = [list(range(int(row["Start"]), int(row["End"])+1)) for _, row in drugs_loci.iterrows()]
+        remove_pos = list(itertools.chain.from_iterable(remove_pos))
+        print(f"{len(remove_pos)} positions in resistance-determining regions will be removed")
 
-    # make dataframe mapping positions to reference nucleotides. This is needed to get the reference allele at every site and compare to the data
-    pos_unique = tidy_combined.position.unique()
-    ref_dict = dict(zip(pos_unique, [genome.seq[int(pos_unique[0]-1)] for pos in pos_unique]))
+        matrices = [pd.read_csv(os.path.join(matrix_dir, fName)) for fName in os.listdir(matrix_dir)]
+        matrices_combined = pd.concat(matrices, axis=0).set_index("sample_id")
 
-    tidy_combined["ref"] = tidy_combined["position"].map(ref_dict)
-    assert sum(pd.isnull(tidy_combined.ref)) == 0
+        # convert column names to integers because remove_pos are integers
+        matrices_combined.columns = matrices_combined.columns.astype(int)
 
-    # keep only samples that will be used for the model
-    tidy_combined = tidy_combined.query("sample_id in @model_inputs.sample_id.values")
+        # remove positions in resistance-determining genes
+        matrices_combined = matrices_combined[matrices_combined.columns[~matrices_combined.columns.isin(remove_pos)]]
 
-    # boolean of whether the reference and actual alleles are different
-    tidy_combined["diff"] = (tidy_combined["ref"] != tidy_combined["nucleotide"]).astype(int)
-    
-    # read in dataframe of loci associated with drug resistance
-    drugs_loci = pd.read_csv("who-analysis/drugs_loci.csv")
+        assert np.nan not in matrices_combined.values
 
-    # add 1 to the start because the start column is it's 0-indexed
-    drugs_loci["Start"] += 1
-    assert sum(drugs_loci["End"] <= drugs_loci["Start"]) == 0
-    
-    # get all positions in resistance loci
-    remove_pos = [list(range(int(row["Start"]), int(row["End"])+1)) for _, row in drugs_loci.iterrows()]
-    remove_pos = list(itertools.chain.from_iterable(remove_pos))
-    
-    # remove resistance loci positions
-    tidy_no_resistance_loci = tidy_combined.query("position not in @remove_pos")
-    tidy_matrix = tidy_no_resistance_loci.pivot(index="sample_id", columns="position", values="diff").fillna(0)
+        # get the major alleles. Then compare --> set 1 for minor alleles, 0 for major
+        major_alleles = matrices_combined.mode(axis=0)
 
-    # should only be 1s and 0s
-    assert len(np.unique(tidy_matrix.values)) == 2
-    assert 1 in np.unique(tidy_matrix.values)
-    assert 0 in np.unique(tidy_matrix.values)
+        # put into dataframe to compare with the SNP dataframe
+        major_alleles_df = pd.concat([major_alleles]*len(matrices_combined), ignore_index=True)
+        major_alleles_df.index = matrices_combined.index.values
 
-    # check again that positions and isolates are unique
-    assert len(np.unique(tidy_matrix.index.values)) == len(tidy_matrix.index)
-    assert len(np.unique(tidy_matrix.columns)) == len(tidy_matrix.columns)
+        assert matrices_combined.shape == major_alleles_df.shape
+        minor_allele_counts = (matrices_combined != major_alleles_df).astype(int)
 
-    # MAF filtering and compute GRM
-    tidy_matrix = tidy_matrix[tidy_matrix.columns[tidy_matrix.mean(axis=0) >= MAF]]
-    grm = np.cov(tidy_matrix.values)
+        # to save in sparse format, need to put the column names and indices into the dataframe, everything must be numerical
+        save_matrix = minor_allele_counts.copy()
+        save_matrix.loc[0, :] = save_matrix.columns
+
+        # sort -- the first value is 0, which is a placeholder for the sample_id
+        save_matrix = save_matrix.sort_values("sample_id", ascending=True)
+
+        # put the sample_ids into the main body of the matrix and convert everything to integers
+        save_matrix = save_matrix.reset_index().astype(int)
+
+        # check that numbers of columns and rows have each increased by 1 and save
+        assert sum(np.array(save_matrix.shape) - np.array(minor_allele_counts.shape) == np.ones(2)) == 2
+        sparse.save_npz("who-analysis/minor_allele_counts", sparse.COO(save_matrix.values))
+
+    else:
+        minor_allele_counts = sparse.load_npz("who-analysis/minor_allele_counts.npz").todense()
+        
+        # convert to dataframe
+        minor_allele_counts = pd.DataFrame(minor_allele_counts)
+        minor_allele_counts.columns = minor_allele_counts.iloc[0, :]
+        minor_allele_counts = minor_allele_counts.iloc[1:, :]
+        minor_allele_counts.rename(columns={0:"sample_id"}, inplace=True)
+        minor_allele_counts["sample_id"] = minor_allele_counts["sample_id"].astype(int)
+
+        # make sample ids the index again
+        minor_allele_counts = minor_allele_counts.set_index("sample_id")
+        
+    mean_maf = pd.DataFrame(minor_allele_counts.mean(axis=0))
+    print(f"Min MAF: {round(mean_maf[0].min(), 2)}, Max MAF: {round(mean_maf[0].max(), 2)}")
+
+    # compute GRM using the mino allele counts of only the samples in the model
+    print("Computing genetic relatedness matrix")
+    minor_allele_counts = minor_allele_counts.query("sample_id in @model_inputs.sample_id.values")
+    grm = np.cov(minor_allele_counts.values)
     
     
 ############# STEP 3: RUN PCA ON THE GRM #############
@@ -106,10 +127,9 @@ if num_PCs > 0:
     pca.fit(grm)
 
     print(f"Explained variance of {num_PCs} principal components: {pca.explained_variance_}")
-    print("    Saving eigenvectors")
     eigenvec = pca.components_.T
     eigenvec_df = pd.DataFrame(eigenvec)
-    eigenvec_df["sample_id"] = tidy_matrix.index.values
+    eigenvec_df["sample_id"] = minor_allele_counts.index.values
 
     
 ############# STEP 4: PREPARE INPUTS TO THE MODEL #############
