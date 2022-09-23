@@ -86,7 +86,6 @@ Run the numbered scripts in order, with the `config.yaml` file. Arguments in the
     <li><code>impute</code>: boolean for whether missing values should be imputed (if False, then they will be dropped)</li>
     <li><code>synonymous</code>: boolean for whether synonymous variants should be included</li>
     <li><code>pool_lof</code>: boolean for whether or not LOF variants should be pooled</li>
-    <li><code>MAF</code>: minor allele frequency for computing the genetic relatedness matrix</li>
     <li><code>num_PCs</code>: number of principal components (>= 0)</li>
     <li><code>num_bootstrap</code>: number of bootstrap samples</li>
     <li><code>alpha</code>: significance level</li>
