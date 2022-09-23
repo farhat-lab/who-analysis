@@ -37,6 +37,11 @@
         </ul>
 </ul>
 
+## Description of Files in the Data Directory
+
+1. <code>drugs_loci.csv</code>: Dataframe of resistance loci and their coordinates in H37Rv. The Start column is 0-indexed, and the End column is 1-indexed.
+2. <code>minor_allele_counts.npz</code>: Minor allele counts from the SNP matrices: 1 for a minor allele, 0 for a major allele. The genetic relatedness matrix is computed from this.
+3. <code>num_avail_samples.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, phenotypes, and SNP counts.
 
 ## Running the Analysis
 
