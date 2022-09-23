@@ -77,21 +77,21 @@ Run the numbered scripts in order, with the `config.yaml` file. Arguments in the
     
 <ul>
     <li><code>drug</code>: full drug name</li>
-    <li>`drug_WHO_abbr`: 3-letter drug name abbreviation in the WHO catalog</li>
-    <li>`out_dir`: output directory (the same for all analyses)</li>
-    <li>`model_prefix`: directory name for the current analysis</li>
-    <li>`tiers_lst`: list of tiers to include in the model</li>
-    <li>`pheno_category_lst`: list of phenotype categories to include. The list can include the strings WHO and ALL.</li>
-    <li>`missing_thresh`: threshold for missing rows/columns (0-1)</li>
-    <li>`het_mode`: how to handle heterozygous alleles. Options are DROP, AF, and BINARY. </li>
-    <li>AF_thresh: 0.75. Only used if `het_mode` = BINARY. Heterozygous alleles with AF > the threshold will be assigned to 1, the others to 0.</li>
-    <li>`impute`: boolean for whether missing values should be imputed (if False, then they will be dropped)</li>
-    <li>`synonymous`: boolean for whether synonymous variants should be included</li>
-    <li>`pool_lof`: boolean for whether or not LOF variants should be pooled</li>
-    <li>`MAF`: minor allele frequency for computing the genetic relatedness matrix</li>
-    <li>`num_PCs`: number of principal components (>= 0)</li>
-    <li>`num_bootstrap`: number of bootstrap samples</li>
-    <li>`alpha`: significance level</li>
+    <li><code>drug_WHO_abbr</code>: 3-letter drug name abbreviation in the WHO catalog</li>
+    <li><code>out_dir</code>: output directory (the same for all analyses)</li>
+    <li><code>model_prefix</code>: directory name for the current analysis</li>
+    <li><code>tiers_lst</code>: list of tiers to include in the model</li>
+    <li><code>pheno_category_lst</code>: list of phenotype categories to include. The list can include the strings WHO and ALL.</li>
+    <li><code>missing_thresh</code>: threshold for missing rows/columns (0-1)</li>
+    <li><code>het_mode</code>: how to handle heterozygous alleles. Options are DROP, AF, and BINARY. </li>
+    <li><code>AF_thresh</code>: 0.75. Only used if `het_mode` = BINARY. Heterozygous alleles with AF > the threshold will be assigned to 1, the others to 0.</li>
+    <li><code>impute</code>: boolean for whether missing values should be imputed (if False, then they will be dropped)</li>
+    <li><code>synonymous</code>: boolean for whether synonymous variants should be included</li>
+    <li><code>pool_lof</code>: boolean for whether or not LOF variants should be pooled</li>
+    <li><code>MAF</code>: minor allele frequency for computing the genetic relatedness matrix</li>
+    <li><code>num_PCs</code>: number of principal components (>= 0)</li>
+    <li><code>num_bootstrap</code>: number of bootstrap samples</li>
+    <li><code>alpha</code>: significance level</li>
 </ul>
 
 ---
