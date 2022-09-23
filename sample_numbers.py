@@ -20,10 +20,10 @@ print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
 
 
 # get saved SNP matrix
-if not os.path.isfile("minor_allele_counts.npz"): 
+if not os.path.isfile("data/minor_allele_counts.npz"): 
     print("Creating matrix of minor allele counts")
     # read in dataframe of loci associated with drug resistance
-    drugs_loci = pd.read_csv("drugs_loci.csv")
+    drugs_loci = pd.read_csv("data/drugs_loci.csv")
 
     # add 1 to the start because it's 0-indexed
     drugs_loci["Start"] += 1
@@ -67,9 +67,9 @@ if not os.path.isfile("minor_allele_counts.npz"):
 
     # check that numbers of columns and rows have each increased by 1 and save
     assert sum(np.array(save_matrix.shape) - np.array(minor_allele_counts.shape) == np.ones(2)) == 2
-    sparse.save_npz("minor_allele_counts", sparse.COO(save_matrix.values))
+    sparse.save_npz("data/minor_allele_counts", sparse.COO(save_matrix.values))
 else:
-    minor_allele_counts = sparse.load_npz("minor_allele_counts.npz").todense()
+    minor_allele_counts = sparse.load_npz("data/minor_allele_counts.npz").todense()
 
     # convert to dataframe
     minor_allele_counts = pd.DataFrame(minor_allele_counts)
@@ -115,4 +115,4 @@ for drug in drugs_for_analysis:
     
     
 assert sum(summary_df["Num_Phenos"] != summary_df["Num_Genos"]) == 0
-summary_df.to_csv("num_avail_samples.csv", index=False)
+summary_df.to_csv("data/num_avail_samples.csv", index=False)
