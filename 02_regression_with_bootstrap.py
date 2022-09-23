@@ -49,10 +49,10 @@ if num_PCs > 0:
     print(f"Fitting regression with population structure correction with {num_PCs} principal components")
 
     ############# GENERATE THE SNP MATRIX IF IT DOESN'T EXIST #############    
-    if not os.path.isfile("who-analysis/minor_allele_counts.npz"):
-        print("Creating SNP matrix")
+    if not os.path.isfile("minor_allele_counts.npz"):
+        print("Creating matrix of minor allele counts")
         # read in dataframe of loci associated with drug resistance
-        drugs_loci = pd.read_csv("who-analysis/drugs_loci.csv")
+        drugs_loci = pd.read_csv("drugs_loci.csv")
 
         # add 1 to the start because it's 0-indexed
         drugs_loci["Start"] += 1
@@ -96,10 +96,10 @@ if num_PCs > 0:
 
         # check that numbers of columns and rows have each increased by 1 and save
         assert sum(np.array(save_matrix.shape) - np.array(minor_allele_counts.shape) == np.ones(2)) == 2
-        sparse.save_npz("who-analysis/minor_allele_counts", sparse.COO(save_matrix.values))
+        sparse.save_npz("minor_allele_counts", sparse.COO(save_matrix.values))
 
     else:
-        minor_allele_counts = sparse.load_npz("who-analysis/minor_allele_counts.npz").todense()
+        minor_allele_counts = sparse.load_npz("minor_allele_counts.npz").todense()
         
         # convert to dataframe
         minor_allele_counts = pd.DataFrame(minor_allele_counts)
