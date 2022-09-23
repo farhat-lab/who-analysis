@@ -72,9 +72,6 @@ Then, all remaining features with anything missing are dropped. Imputation can b
 
 Run the numbered scripts in order, with the `config.yaml` file. Arguments in the yaml file are as follows:
     
----
-**NOTE**
-    
 <ul>
     <li><code>drug</code>: full drug name</li>
     <li><code>drug_WHO_abbr</code>: 3-letter drug name abbreviation in the WHO catalog</li>
@@ -93,8 +90,6 @@ Run the numbered scripts in order, with the `config.yaml` file. Arguments in the
     <li><code>num_bootstrap</code>: number of bootstrap samples</li>
     <li><code>alpha</code>: significance level</li>
 </ul>
-
----
     
     
 ---
