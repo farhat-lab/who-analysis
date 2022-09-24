@@ -101,6 +101,5 @@ Insert table of analyses.
 
 ## TO-DO:
 
-1. Check whether we have all samples in the SNP matrices (`/n/data1/hms/dbmi/farhat/ye12/who/matrix`)
-2. Visualize numbers of resistant vs. susceptible isolates with each variant.
-3. Test for whether population structure correction significantly affects results.
+1. Get number of frameshift mutations per gene (add to <code>sample_numbers.py</code>)
+2. Fix SNP matrix generation using the latest narrow_format data. 
