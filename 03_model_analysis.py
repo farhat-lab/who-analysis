@@ -179,14 +179,14 @@ def BH_FDR_correction(coef_df):
 def run_all(drug, drug_abbr, model_prefix, out_dir, het_mode, alpha=0.05, num_bootstrap=1000):
     
     # coefficients from L2 regularized regression ("baseline" regression)
-    coef_df = pd.read_csv(os.path.join(out_dir, drug, model_prefix, "regression_coef.csv"))
+    coef_df = pd.read_csv(os.path.join(out_dir, model_prefix, "regression_coef.csv"))
 
     # coefficients from bootstrap replicates
-    bs_df = pd.read_csv(os.path.join(out_dir, drug, model_prefix, "coef_bootstrap.csv"))
+    bs_df = pd.read_csv(os.path.join(out_dir, model_prefix, "coef_bootstrap.csv"))
     
     # read in all genotypes and phenotypes
-    model_inputs = pd.read_pickle(os.path.join(out_dir, drug, model_prefix, "model_matrix.pkl"))
-    df_phenos = pd.read_csv(os.path.join(out_dir, drug, model_prefix, "phenos.csv"))
+    model_inputs = pd.read_pickle(os.path.join(out_dir, model_prefix, "model_matrix.pkl"))
+    df_phenos = pd.read_csv(os.path.join(out_dir, model_prefix, "phenos.csv"))
 
     # add p-values and confidence intervals to the results dataframe
     pvals = get_pvalues_add_ci(coef_df, bs_df, "variant", len(model_inputs), alpha=alpha)
@@ -274,16 +274,27 @@ def run_all(drug, drug_abbr, model_prefix, out_dir, het_mode, alpha=0.05, num_bo
 
 
 _, config_file = sys.argv
+
 kwargs = yaml.safe_load(open(config_file))
 
+tiers_lst = kwargs["tiers_lst"]
 drug = kwargs["drug"]
 drug_WHO_abbr = kwargs["drug_WHO_abbr"]
+pheno_category_lst = kwargs["pheno_category_lst"]
 model_prefix = kwargs["model_prefix"]
-out_dir = kwargs["out_dir"]
-alpha = kwargs["alpha"]
-num_bootstrap = kwargs["num_bootstrap"]
 het_mode = kwargs["het_mode"]
+
 num_PCs = kwargs["num_PCs"]
+num_bootstrap = kwargs["num_bootstrap"]
+alpha = kwargs["alpha"]
+
+out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
+if "ALL" in pheno_category_lst:
+    phenos_name = "ALL"
+else:
+    phenos_name = "WHO"
+
+out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}")
 
 # run analysis
 model_analysis = run_all(drug, drug_WHO_abbr, model_prefix, out_dir, het_mode, alpha=alpha, num_bootstrap=num_bootstrap)

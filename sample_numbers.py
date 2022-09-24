@@ -116,3 +116,12 @@ for drug in drugs_for_analysis:
     
 assert sum(summary_df["Num_Phenos"] != summary_df["Num_Genos"]) == 0
 summary_df.to_csv("data/num_avail_samples.csv", index=False)
+
+
+# frameshift = df_model.loc[(df_model["variant_category"].str.contains("fs")) & 
+#                           (~pd.isnull(df_model["variant_allele_frequency"])) &
+#                           (df_model["variant_allele_frequency"] > 0)
+#                          ]
+    
+# # (sample, gene) pairs with multiple frameshift mutations
+# lof_multi_fs = pd.DataFrame(frameshift.groupby(["sample_id", "resolved_symbol"])["variant_category"].count()).query("variant_category > 1").reset_index()

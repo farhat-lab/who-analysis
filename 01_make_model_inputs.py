@@ -13,27 +13,31 @@ kwargs = yaml.safe_load(open(config_file))
 
 tiers_lst = kwargs["tiers_lst"]
 drug = kwargs["drug"]
-out_dir = kwargs["out_dir"]
-model_prefix = kwargs["model_prefix"]
+drug_WHO_abbr = kwargs["drug_WHO_abbr"]
 pheno_category_lst = kwargs["pheno_category_lst"]
+model_prefix = kwargs["model_prefix"]
 
-missing_thresh = kwargs["missing_thresh"]
+missing_isolate_thresh = kwargs["missing_isolate_thresh"]
+missing_feature_thresh = kwargs["missing_feature_thresh"]
 het_mode = kwargs["het_mode"]
 af_thresh = kwargs["AF_thresh"]
+impute = kwargs["impute"]
 synonymous = kwargs["synonymous"]
 pool_lof = kwargs["pool_lof"]
-impute = kwargs["impute"]
-drop_isolates_before_variants = kwargs["drop_isolates_before_variants"]
 
+out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
+if "ALL" in pheno_category_lst:
+    phenos_name = "ALL"
+else:
+    phenos_name = "WHO"
+
+out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}")
 
 if not os.path.isdir(out_dir):
-    os.mkdir(out_dir)
+    os.makedirs(out_dir)
 
-if not os.path.isdir(os.path.join(out_dir, drug)):
-    os.mkdir(os.path.join(out_dir, drug))
-    
-if not os.path.isdir(os.path.join(out_dir, drug, model_prefix)):
-    os.mkdir(os.path.join(out_dir, drug, model_prefix))
+if not os.path.isdir(os.path.join(out_dir, model_prefix)):
+    os.mkdir(os.path.join(out_dir, model_prefix))
 
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
@@ -197,19 +201,28 @@ if het_mode == "BINARY":
     df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= af_thresh), "variant_binary_status"] = 0
     df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] > af_thresh), "variant_binary_status"] = 1
 
-# use heterozygous AF as the matrix value
+# use heterozygous AF as the matrix value for variants with AF > 0.25. Below 0.25, the AF measurements aren't reliable
 elif het_mode == "AF":
     print("Encoding heterozygous variants with AF")
-    df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= af_thresh), "variant_binary_status"] = df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= af_thresh)]["variant_allele_frequency"].values
-
+    
+    # encode only heterozygous variants with AF
+    # df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (~pd.isnull(df_model["variant_allele_frequency"])), "variant_binary_status"] = df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (~pd.isnull(df_model["variant_allele_frequency"])), "variant_allele_frequency"].values
+    
+    # encode all variants with AF > 0.25 with their AF
+    df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_binary_status"] = df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_allele_frequency"].values
+   
 # drop all isolates with heterozygous variants with ANY AF below the threshold. DON'T DROP FEATURES BECAUSE MIGHT DROP SOMETHING RELEVANT
 elif het_mode == "DROP":
-    drop_isolates = df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= af_thresh)].sample_id.unique()
+    drop_isolates = df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= 0.75)].sample_id.unique()
     print(f"Dropped {len(drop_isolates)} isolates with any heterozygous variants")
     df_model = df_model.query("sample_id not in @drop_isolates")
 else:
     raise ValueError(f"{het_mode} is not a valid mode for handling heterozygous alleles")
     
+    
+# check after this step that the only NaNs left are truly missing data --> NaN in variant_binary_status must also be NaN in variant_allele_frequency
+assert len(df_model.loc[(~pd.isnull(df_model["variant_allele_frequency"])) & (pd.isnull(df_model["variant_binary_status"]))]) == 0
+
 
 ############# STEP 5: PIVOT TO MATRIX AND DROP HIGH-FREQUENCY MISSINGNESS #############
 
@@ -226,39 +239,42 @@ if het_mode.upper() in ["BINARY", "DROP"]:
 # usually, isolates will be more problematic, but rrs/rrl are very problematic, so for ribosome-targeting drugs, need to drop variants first
     
 # maximum proportion of missing isolates per feature
-max_prop_missing_isolates = matrix.isna().sum(axis=0).max() / matrix.shape[0]
+max_prop_missing_isolates_per_feature = matrix.isna().sum(axis=0).max() / matrix.shape[0]
 # maximum proportion of missing features per isolate
-max_prop_missing_variants = matrix.isna().sum(axis=1).max() / matrix.shape[1]
+max_prop_missing_variants_per_isolate = matrix.isna().sum(axis=1).max() / matrix.shape[1]
 
-if drop_isolates_before_variants or (max_prop_missing_isolates >= max_prop_missing_variants):
+# drop isolates first if there are isolates with a lot of missingness (many variants missing)
+if max_prop_missing_variants_per_isolate >= max_prop_missing_isolates_per_feature:
     print("Dropping isolates first, then variants")
-    print(f"    Up to {round(max_prop_missing_isolates*100)}% of isolates and {round(max_prop_missing_variants*100)}% of variants have missing data")
+    print(f"    Up to {round(max_prop_missing_variants_per_isolate*100, 2)}% of isolates and {round(max_prop_missing_isolates_per_feature*100, 2)}% of variants have missing data")
     
     # drop isolates (rows) with missingness above the threshold (default = 1%)
-    filtered_matrix = matrix.dropna(axis=0, thresh=(1-missing_thresh)*matrix.shape[1])
+    filtered_matrix = matrix.dropna(axis=0, thresh=(1-missing_isolate_thresh)*matrix.shape[1])
     
-    print(f"    Dropped {matrix.shape[0] - filtered_matrix.shape[0]}/{matrix.shape[0]} isolates with >{int(missing_thresh*100)}% missingness")
+    print(f"    Dropped {matrix.shape[0] - filtered_matrix.shape[0]}/{matrix.shape[0]} isolates with >{int(missing_isolate_thresh*100)}% missingness")
     num_isolates_after_isolate_thresh = filtered_matrix.shape[0]
     num_features_after_isolate_thresh = filtered_matrix.shape[1]
     
     # drop features (columns) with missingness above the threshold (default = 1%)
-    filtered_matrix = filtered_matrix.dropna(axis=1, thresh=(1-missing_thresh)*filtered_matrix.shape[0])
-    print(f"    Dropped {num_features_after_isolate_thresh - filtered_matrix.shape[1]}/{num_features_after_isolate_thresh} variants with >{int(missing_thresh*100)}% missingness")
+    filtered_matrix = filtered_matrix.dropna(axis=1, thresh=(1-missing_feature_thresh)*filtered_matrix.shape[0])
+    print(f"    Dropped {num_features_after_isolate_thresh - filtered_matrix.shape[1]}/{num_features_after_isolate_thresh} variants with >{int(missing_feature_thresh*100)}% missingness")
     num_isolates_after_thresholding = filtered_matrix.shape[0]
+    
+# drop variants first if there are variants with a lot of missingness (many isolates missing)
 else:
     print("Dropping variants first, then isolates")
-    print(f"    Up to {round(max_prop_missing_isolates*100)}% of isolates and {round(max_prop_missing_variants*100)}% of variants have missing data")
+    print(f"    Up to {round(max_prop_missing_isolates_per_feature*100, 2)}% of variants and {round(max_prop_missing_variants_per_isolate*100, 2)}% of isolates have missing data")
     
     # drop features (columns) with missingness above the threshold (default = 1%)
-    filtered_matrix = matrix.dropna(axis=1, thresh=(1-missing_thresh)*matrix.shape[0])
+    filtered_matrix = matrix.dropna(axis=1, thresh=(1-missing_feature_thresh)*matrix.shape[0])
     
-    print(f"    Dropped {matrix.shape[1] - filtered_matrix.shape[1]}/{matrix.shape[1]} variants with >{int(missing_thresh*100)}% missingness")
+    print(f"    Dropped {matrix.shape[1] - filtered_matrix.shape[1]}/{matrix.shape[1]} variants with >{int(missing_feature_thresh*100)}% missingness")
     num_isolates_after_variant_thresh = filtered_matrix.shape[0]
     num_variants_after_variant_thresh = filtered_matrix.shape[1]
 
     # drop isolates (rows) with missingness above the threshold (default = 1%)
-    filtered_matrix = filtered_matrix.dropna(axis=0, thresh=(1-missing_thresh)*filtered_matrix.shape[1])
-    print(f"    Dropped {num_isolates_after_variant_thresh - filtered_matrix.shape[0]}/{num_isolates_after_variant_thresh} isolates with >{int(missing_thresh*100)}% missingness")
+    filtered_matrix = filtered_matrix.dropna(axis=0, thresh=(1-missing_isolate_thresh)*filtered_matrix.shape[1])
+    print(f"    Dropped {num_isolates_after_variant_thresh - filtered_matrix.shape[0]}/{num_isolates_after_variant_thresh} isolates with >{int(missing_isolate_thresh*100)}% missingness")
     num_isolates_after_thresholding = filtered_matrix.shape[0]
 
 
@@ -304,9 +320,9 @@ else:
 # there should not be any more NaNs
 assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
 print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} features for the model")
-filtered_matrix.to_pickle(os.path.join(out_dir, drug, model_prefix, "filt_matrix.pkl"))
+filtered_matrix.to_pickle(os.path.join(out_dir, model_prefix, "filt_matrix.pkl"))
 
 
 # keep only samples with genotypes available because everything should be represented, including samples without variants
 df_phenos = df_phenos.query("sample_id in @filtered_matrix.index.values")
-df_phenos.to_csv(os.path.join(out_dir, drug, model_prefix, "phenos.csv"), index=False)
+df_phenos.to_csv(os.path.join(out_dir, model_prefix, "phenos.csv"), index=False)

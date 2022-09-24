@@ -17,15 +17,22 @@ _, config_file = sys.argv
 
 kwargs = yaml.safe_load(open(config_file))
 
+tiers_lst = kwargs["tiers_lst"]
 drug = kwargs["drug"]
-out_dir = kwargs["out_dir"]
-model_prefix = kwargs["model_prefix"].split(".")[0]
+pheno_category_lst = kwargs["pheno_category_lst"]
+model_prefix = kwargs["model_prefix"]
 num_PCs = kwargs["num_PCs"]
 num_bootstrap = kwargs["num_bootstrap"]
-impute = kwargs["impute"]
 
-# list of directories
-matrix_dir = "/n/data1/hms/dbmi/farhat/ye12/who/matrix"
+out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
+if "ALL" in pheno_category_lst:
+    phenos_name = "ALL"
+else:
+    phenos_name = "WHO"
+
+out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}")
+
+genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 
@@ -33,12 +40,12 @@ phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 ############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES #############
 
 
-model_inputs = pd.read_pickle(os.path.join(out_dir, drug, model_prefix, "filt_matrix.pkl"))
+model_inputs = pd.read_pickle(os.path.join(out_dir, model_prefix, "filt_matrix.pkl"))
 
 # reset index so that sample_id is now a column, which makes slicing easier
 model_inputs = model_inputs.reset_index()
 
-df_phenos = pd.read_csv(os.path.join(out_dir, drug, model_prefix, "phenos.csv"))
+df_phenos = pd.read_csv(os.path.join(out_dir, model_prefix, "phenos.csv"))
 
 
 ############# STEP 2: COMPUTE THE GENETIC RELATEDNESS MATRIX, REMOVING RESISTANCE LOCI #############
@@ -148,7 +155,7 @@ if num_PCs > 0:
     eigenvec_df = eigenvec_df.set_index("sample_id")
 
     # save model_inputs to use later. This is the actual matrix used for model fitting, after all filtering steps
-    model_inputs.to_pickle(os.path.join(out_dir, drug, model_prefix, "model_matrix.pkl"))
+    model_inputs.to_pickle(os.path.join(out_dir, model_prefix, "model_matrix.pkl"))
 
     # concatenate the eigenvectors to the matrix
     X = np.concatenate([model_inputs.values, eigenvec_df.values], axis=1)
@@ -162,7 +169,7 @@ else:
 
     # set index so that later only the values can be extracted and save it. This is the actual matrix used for model fitting, after all filtering steps
     model_inputs = model_inputs.set_index("sample_id")
-    model_inputs.to_pickle(os.path.join(out_dir, drug, model_prefix, "model_matrix.pkl"))
+    model_inputs.to_pickle(os.path.join(out_dir, model_prefix, "model_matrix.pkl"))
     X = model_inputs.values
 
     
@@ -190,7 +197,7 @@ print(f"    Regularization parameter: {model.C_[0]}")
 
 # save coefficients
 res_df = pd.DataFrame({"variant": np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]]), 'coef': np.squeeze(model.coef_)})
-res_df.to_csv(os.path.join(out_dir, drug, model_prefix, "regression_coef.csv"), index=False)
+res_df.to_csv(os.path.join(out_dir, model_prefix, "regression_coef.csv"), index=False)
 
 
 ############# STEP 6: BOOTSTRAP COEFFICIENTS #############
@@ -219,4 +226,4 @@ for i in range(num_bootstrap):
 # save bootstrapped coefficients and principal components
 coef_df = pd.DataFrame(coefs)
 coef_df.columns = np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]])
-coef_df.to_csv(os.path.join(out_dir, drug, model_prefix, "coef_bootstrap.csv"), index=False)
+coef_df.to_csv(os.path.join(out_dir, model_prefix, "coef_bootstrap.csv"), index=False)
