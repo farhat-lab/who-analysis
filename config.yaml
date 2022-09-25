@@ -1,8 +1,8 @@
 drug: 'Rifampicin'
 drug_WHO_abbr: 'RIF'
-tiers_lst: ['1', '2']
-pheno_category_lst: ['WHO', 'ALL']
-model_prefix: 'dropHET_noSyn_noPopCorr'
+tiers_lst: ['1']
+pheno_category_lst: ['WHO']
+model_prefix: 'dropAF_noSyn_noPopCorr'
 
 missing_isolate_thresh: 0.01
 missing_feature_thresh: 0.25

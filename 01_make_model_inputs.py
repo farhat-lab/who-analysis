@@ -246,7 +246,7 @@ max_prop_missing_variants_per_isolate = matrix.isna().sum(axis=1).max() / matrix
 # drop isolates first if there are isolates with a lot of missingness (many variants missing)
 if max_prop_missing_variants_per_isolate >= max_prop_missing_isolates_per_feature:
     print("Dropping isolates first, then variants")
-    print(f"    Up to {round(max_prop_missing_variants_per_isolate*100, 2)}% of isolates and {round(max_prop_missing_isolates_per_feature*100, 2)}% of variants have missing data")
+    print(f"    Up to {round(max_prop_missing_variants_per_isolate*100, 2)}% of variants per isolate and {round(max_prop_missing_isolates_per_feature*100, 2)}% of isolates per variant have missing data")
     
     # drop isolates (rows) with missingness above the threshold (default = 1%)
     filtered_matrix = matrix.dropna(axis=0, thresh=(1-missing_isolate_thresh)*matrix.shape[1])
@@ -263,7 +263,7 @@ if max_prop_missing_variants_per_isolate >= max_prop_missing_isolates_per_featur
 # drop variants first if there are variants with a lot of missingness (many isolates missing)
 else:
     print("Dropping variants first, then isolates")
-    print(f"    Up to {round(max_prop_missing_isolates_per_feature*100, 2)}% of variants and {round(max_prop_missing_variants_per_isolate*100, 2)}% of isolates have missing data")
+    print(f"    Up to {round(max_prop_missing_isolates_per_feature*100, 2)}% of isolates per variant and {round(max_prop_missing_variants_per_isolate*100, 2)}% of variants per isolate have missing data")
     
     # drop features (columns) with missingness above the threshold (default = 1%)
     filtered_matrix = matrix.dropna(axis=1, thresh=(1-missing_feature_thresh)*matrix.shape[0])

@@ -302,4 +302,4 @@ model_analysis = run_all(drug, drug_WHO_abbr, model_prefix, out_dir, het_mode, a
 # save
 if num_PCs > 0:
     print(f"{len(model_analysis.loc[(model_analysis['coef'] > 0) & model_analysis['orig_variant'].str.contains('PC')])} principal components have nominally significant non-zero coefficients")
-model_analysis.to_pickle(os.path.join(out_dir, drug, model_prefix, "model_analysis.pkl"))
+model_analysis.to_pickle(os.path.join(out_dir, model_prefix, "model_analysis.pkl"))
