@@ -45,11 +45,9 @@
 
 ## Running the Analysis
 
-Run the numbered scripts in order, with the `config.yaml` file. Arguments in the yaml file are as follows:
+Run the numbered scripts in order, with the `config.yaml` file, the full drug name, and the 3-letter abbreviation used in the 2021 WHO catalog. For example, for isoniazid, the arguments after the script name would be `config.yaml Isoniazid INH`. Parameters in the yaml file are as follows:
     
 <ul>
-    <li><code>drug</code>: full drug name</li>
-    <li><code>drug_WHO_abbr</code>: 3-letter drug name abbreviation in the WHO catalog</li>
     <li><code>out_dir</code>: output directory (the same for all analyses)</li>
     <li><code>model_prefix</code>: directory name for the current analysis</li>
     <li><code>tiers_lst</code>: list of tiers to include in the model</li>
@@ -101,5 +99,4 @@ Insert table of analyses.
 
 ## TO-DO:
 
-1. Get number of frameshift mutations per gene (add to <code>sample_numbers.py</code>)
-2. Fix SNP matrix generation using the latest narrow_format data. 
+1. Run models with population structure correction
