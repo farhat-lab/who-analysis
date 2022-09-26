@@ -7,13 +7,11 @@ warnings.filterwarnings("ignore")
 
 ############# STEP 0: READ IN PARAMETERS FILE AND MAKE OUTPUT DIRECTORIES #############
 
-_, config_file = sys.argv
+_, config_file, drug, drug_WHO_abbr = sys.argv
 
 kwargs = yaml.safe_load(open(config_file))
 
 tiers_lst = kwargs["tiers_lst"]
-drug = kwargs["drug"]
-drug_WHO_abbr = kwargs["drug_WHO_abbr"]
 pheno_category_lst = kwargs["pheno_category_lst"]
 model_prefix = kwargs["model_prefix"]
 
@@ -55,14 +53,21 @@ for fName in os.listdir(phenos_dir):
 df_phenos = pd.concat(dfs_list_phenos)
 df_phenos = df_phenos.query("phenotype_category in @pheno_category_lst")
 
-# check that there are no duplicated phenotypes
-assert len(df_phenos) == len(df_phenos.sample_id.unique())
+# need to figure out why this is going on, but drop them for now
+# get the number of samples that have more than 1 phenotype recorded
+drop_samples = df_phenos.groupby(["sample_id"]).nunique().query("phenotype > 1").index.values
+if len(drop_samples) > 0:
+    print(f"    {len(drop_samples)} isolates are recorded as being both resistant and susceptible to {drug}")
+    df_phenos = df_phenos.query("sample_id not in @drop_samples")
+    
+# then drop any duplicated phenotypes
+df_phenos = df_phenos.drop_duplicates(keep="first").reset_index(drop=True)
 
 # check that there is resistance data for all samples
 assert sum(pd.isnull(df_phenos.phenotype)) == 0
     
 df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
-print(len(df_phenos), "samples with phenotypes")
+print("    ", len(df_phenos), "samples with phenotypes")
 
 
 ############# STEP 2: GET ALL AVAILABLE GENOTYPES #############

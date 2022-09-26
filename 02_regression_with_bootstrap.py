@@ -13,12 +13,11 @@ warnings.filterwarnings("ignore")
 ############# STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES #############
 
 
-_, config_file = sys.argv
+_, config_file, drug = sys.argv
 
 kwargs = yaml.safe_load(open(config_file))
 
 tiers_lst = kwargs["tiers_lst"]
-drug = kwargs["drug"]
 pheno_category_lst = kwargs["pheno_category_lst"]
 model_prefix = kwargs["model_prefix"]
 num_PCs = kwargs["num_PCs"]
@@ -55,56 +54,8 @@ if num_PCs > 0:
     
     print(f"Fitting regression with population structure correction with {num_PCs} principal components")
 
-    ############# GENERATE THE SNP MATRIX IF IT DOESN'T EXIST #############    
     if not os.path.isfile("data/minor_allele_counts.npz"):
-        print("Creating matrix of minor allele counts")
-        # read in dataframe of loci associated with drug resistance
-        drugs_loci = pd.read_csv("data/drugs_loci.csv")
-
-        # add 1 to the start because it's 0-indexed
-        drugs_loci["Start"] += 1
-        assert sum(drugs_loci["End"] <= drugs_loci["Start"]) == 0
-
-        # get all positions in resistance loci
-        remove_pos = [list(range(int(row["Start"]), int(row["End"])+1)) for _, row in drugs_loci.iterrows()]
-        remove_pos = list(itertools.chain.from_iterable(remove_pos))
-        print(f"{len(remove_pos)} positions in resistance-determining regions will be removed")
-
-        matrices = [pd.read_csv(os.path.join(matrix_dir, fName)) for fName in os.listdir(matrix_dir)]
-        matrices_combined = pd.concat(matrices, axis=0).set_index("sample_id")
-
-        # convert column names to integers because remove_pos are integers
-        matrices_combined.columns = matrices_combined.columns.astype(int)
-
-        # remove positions in resistance-determining genes
-        matrices_combined = matrices_combined[matrices_combined.columns[~matrices_combined.columns.isin(remove_pos)]]
-
-        assert np.nan not in matrices_combined.values
-
-        # get the major alleles. Then compare --> set 1 for minor alleles, 0 for major
-        major_alleles = matrices_combined.mode(axis=0)
-
-        # put into dataframe to compare with the SNP dataframe
-        major_alleles_df = pd.concat([major_alleles]*len(matrices_combined), ignore_index=True)
-        major_alleles_df.index = matrices_combined.index.values
-
-        assert matrices_combined.shape == major_alleles_df.shape
-        minor_allele_counts = (matrices_combined != major_alleles_df).astype(int)
-
-        # to save in sparse format, need to put the column names and indices into the dataframe, everything must be numerical
-        save_matrix = minor_allele_counts.copy()
-        save_matrix.loc[0, :] = save_matrix.columns
-
-        # sort -- the first value is 0, which is a placeholder for the sample_id
-        save_matrix = save_matrix.sort_values("sample_id", ascending=True)
-
-        # put the sample_ids into the main body of the matrix and convert everything to integers
-        save_matrix = save_matrix.reset_index().astype(int)
-
-        # check that numbers of columns and rows have each increased by 1 and save
-        assert sum(np.array(save_matrix.shape) - np.array(minor_allele_counts.shape) == np.ones(2)) == 2
-        sparse.save_npz("data/minor_allele_counts", sparse.COO(save_matrix.values))
-
+        raise ValueError("Minor allele counts dataframe does not exist. Please run sample_numbers.py")
     else:
         minor_allele_counts = sparse.load_npz("data/minor_allele_counts.npz").todense()
         
@@ -161,7 +112,7 @@ if num_PCs > 0:
     X = np.concatenate([model_inputs.values, eigenvec_df.values], axis=1)
     
 else:
-    print("    Fitting regression without population structure correction")
+    print("Fitting regression without population structure correction")
     # sort by sample_id so that everything is in the same order
     model_inputs = model_inputs.sort_values("sample_id", ascending=True).reset_index(drop=True)
     df_phenos = df_phenos.sort_values("sample_id", ascending=True).reset_index(drop=True)    
@@ -217,12 +168,7 @@ for i in range(num_bootstrap):
     bs_model = LogisticRegression(C=model.C_[0], penalty='l2', max_iter=10000, multi_class='ovr')
     bs_model.fit(X_bs, y_bs)
     coefs.append(np.squeeze(bs_model.coef_))
-    
-    # # print progress
-    # if i % (num_bootstrap / 10) == 0:
-    #     print("   ", i)
 
-    
 # save bootstrapped coefficients and principal components
 coef_df = pd.DataFrame(coefs)
 coef_df.columns = np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]])

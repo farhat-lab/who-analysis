@@ -1,0 +1,16 @@
+Drug,Phenos,Genos,SNP_Matrix,Tier1_Multi_FS,Tier2_Multi_FS
+Moxifloxacin,10485,10485,10483,0,0.0
+Ethambutol,33886,33886,33884,1,5.0
+Ethionamide,10220,10220,10217,6,0.0
+Pyrazinamide,19589,19589,19587,0,8.0
+Capreomycin,15889,15889,15888,1,1.0
+Streptomycin,24122,24122,24120,4,4.0
+Isoniazid,40077,40077,40073,9,20.0
+Delamanid,569,569,568,0,0.0
+Amikacin,13032,13032,13029,2,1.0
+Clofazimine,4320,4320,4318,1,
+Kanamycin,14115,14115,14113,2,1.0
+Bedaquiline,844,844,843,0,0.0
+Levofloxacin,17827,17827,17824,0,3.0
+Linezolid,5944,5944,5942,0,0.0
+Rifampicin,38617,38617,38614,6,8.0

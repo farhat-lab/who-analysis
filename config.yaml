@@ -1,5 +1,3 @@
-drug: 'Rifampicin'
-drug_WHO_abbr: 'RIF'
 tiers_lst: ['1']
 pheno_category_lst: ['WHO']
 model_prefix: 'dropAF_noSyn_noPopCorr'

@@ -273,13 +273,11 @@ def run_all(drug, drug_abbr, model_prefix, out_dir, het_mode, alpha=0.05, num_bo
     return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
 
 
-_, config_file = sys.argv
+_, config_file, drug, drug_WHO_abbr = sys.argv
 
 kwargs = yaml.safe_load(open(config_file))
 
 tiers_lst = kwargs["tiers_lst"]
-drug = kwargs["drug"]
-drug_WHO_abbr = kwargs["drug_WHO_abbr"]
 pheno_category_lst = kwargs["pheno_category_lst"]
 model_prefix = kwargs["model_prefix"]
 het_mode = kwargs["het_mode"]
