@@ -94,9 +94,7 @@ for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
 dfs_lst = []
 for i, fName in enumerate(geno_files):
         
-    print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
-    #print("   ", fName)
-
+    # print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
     # read in the dataframe
     df = pd.read_csv(fName)
 
@@ -109,7 +107,8 @@ for i, fName in enumerate(geno_files):
     else:
         # P = coding variants, C = synonymous or upstream variants (get only upstream variants by getting only negative positions), and N = non-coding variants on rrs/rrl
         # deletion does not contain the p/c/n prefix
-        dfs_lst.append(df_avail_isolates.query("Effect not in ['synonymous_variant', 'stop_retained_variant']"))
+        # synonymous variants = synonymous, change in start codon that produces V instead of M, and changes in stop codon that preserve stop
+        dfs_lst.append(df_avail_isolates.query("Effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))
         
 
 df_model = pd.concat(dfs_lst)
@@ -158,9 +157,9 @@ def pool_lof_mutations(df):
     
     ###### STEP 2: Assign loss of start, early stop codon, and large-scale deletion to LOF ######
     
-    # criteria for lof are: nonsense mutation, loss of start or stop, single frameshift mutation. Get only those satisfying the first two criteria (last done above)
+    # criteria for lof are: nonsense mutation, loss of start, single frameshift mutation. Get only those satisfying the first two criteria (last done above)
     # "?" = start lost, * = nonsense, deletion is a large-scale deletion
-    lof_criteria = ["nonsense", "\?", "\*", "deletion", "stop_lost"]
+    lof_criteria = ["nonsense", "\?", "\*", "deletion"]
     df_with_lof.loc[df_with_lof["variant_category"].str.contains("|".join(lof_criteria)), "lof"] = 1
     
     # get only variants that are LOF

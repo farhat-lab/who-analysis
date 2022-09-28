@@ -14,7 +14,6 @@ def get_lineages(vcf_dirs_files):
     # keep track of failures
     problem_dirs = []
     
-    isolates = []
     lineages = []
     
     for i, single_dir in enumerate(vcf_dirs_files):
@@ -33,17 +32,28 @@ def get_lineages(vcf_dirs_files):
 
             # the second value is the Freschi et al lineage
             lineages.append(output.split("\t")[1].replace("lineage", ""))
-            isolates.append(os.path.basename(fName).split("-")[0])
             
         if i % 1000 == 0:
             print(i)
         
-    return pd.DataFrame({"Isolate": isolates, "Lineage": lineages}), problem_dirs
+    return pd.DataFrame({"VCF_Dir": vcf_dirs_files, "Lineage": lineages}), problem_dirs
 
 
 lineages, problem_dirs = get_lineages(vcf_dirs_files)
 print(f"{len(lineages)}/{len(vcf_dirs_files)}")
-print(len(problem_dirs), "problematic directories:\n")
+print(len(problem_dirs), "directories contain multiple files:\n")
 print(problem_dirs)
 
+# split multiple lineages per isolate
+split_lineages = lineages["Lineage"].str.split(",", expand=True)
+split_lineages.columns = [f"Lineage_{num}" for num in np.arange(len(split_lineages.columns))+1]
+
+# separate lineage and SNP count for each one
+for col in split_lineages:
+    count_col = f"Count_{col.split('_')[1]}"
+    split_lineages[[col, count_col]] = split_lineages[col].str.split("(", expand=True)
+    split_lineages[count_col] = split_lineages[count_col].str.strip(")")
+
+# save
+lineages = pd.concat([lineages, split_lineages], axis=1)
 lineages.to_csv("data/lineages.csv", index=False)
