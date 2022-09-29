@@ -99,4 +99,4 @@ Insert table of analyses.
 
 ## TO-DO:
 
-1. Ask about dropping sens/spec/likelihood ratio/PPV/NPV computations because they are independent of the regression and take the longest time to run.
+1. Lineage analysis of principal components
