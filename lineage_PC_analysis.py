@@ -23,8 +23,11 @@ model_analysis = pd.read_pickle(os.path.join(out_dir, "model_analysis.pkl"))
 sig_PC_df = model_analysis.loc[(model_analysis["orig_variant"].str.contains("PC")) & 
                               (((model_analysis["coef_LB"] > 0) & (model_analysis["coef_UB"] > 0)) |
                               ((model_analysis["coef_LB"] < 0) & (model_analysis["coef_UB"] < 0)))
-                              ].sort_values("coef", ascending=False)
-sig_PCs = sig_PC_df["orig_variant"].values
+                              ]
+
+# the lower numbered PCs capture the most variation, so plot those.
+# for example, the later PCs tend to separate sublineages of lineage 4
+sig_PCs = np.sort(sig_PC_df["orig_variant"].values)
 print(sig_PCs)
 del model_analysis
 
@@ -90,7 +93,7 @@ fig, ax = plt.subplots()
 if len(sig_PCs) >= 2:
     sns.scatterplot(data=eigenvec_df, x=sig_PCs[0], y=sig_PCs[1], hue="Lineage", hue_order=['1', '2', '3', '4', '5', '6', '7', 'M. bovis'], ax=ax)
 else:
-    sns.scatterplot(data=eigenvec_df, x=sig_PCs[0], y=sig_PCs[-1], hue="Lineage", hue_order=['1', '2', '3', '4', '5', '6', '7', 'M. bovis'], ax=ax)
+    sns.scatterplot(data=eigenvec_df, x=sig_PCs[0], y="PC5", hue="Lineage", hue_order=['1', '2', '3', '4', '5', '6', '7', 'M. bovis'], ax=ax)
 ax.legend(bbox_to_anchor=(1.1, 1.05))
 plt.tight_layout()
 sns.despine()
