@@ -10,3 +10,4 @@ config_*.yaml
 # confidential information
 data/sample_ids_mapping.csv
 data/lineages.csv
+data/combined_lineage_sample_IDs.pkl
