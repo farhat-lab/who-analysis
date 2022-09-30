@@ -84,7 +84,7 @@ Heterozygous variants have allele fractions in the range [0.25, 0.75]. Below thi
 
 Isolates with a lot of missingness are far more common than features with a lot of missingness because most of the sequenced regions have high mappability, except the ribosomal regions. 
     
-<b>Use a threshold of 50% for features to drop only extremely poor features to limit the number that are dropped?</b>
+<b>Use a threshold of 25% for features to drop only extremely poor features to limit the number that are dropped?</b>
 
 A threshold of <b>1%</b> is being used to drop isolates, i.e. if more than 1% of an isolate's features for a given analysis are NA, then drop the isolate. 
 

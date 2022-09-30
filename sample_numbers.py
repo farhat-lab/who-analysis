@@ -21,6 +21,7 @@ geno_drugs = os.listdir(genos_dir)
 drugs_for_analysis = list(set(geno_drugs).intersection(set(pheno_drugs)))
 print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
 
+lineages = pd.read_pickle("data/combined_lineage_sample_IDs.pkl")
 
 # get saved SNP matrix
 if not os.path.isfile("data/minor_allele_counts.npz"): 
@@ -168,7 +169,7 @@ def compute_number_frameshift_by_tier(drug, tiers_lst, synonymous=False):
         return np.nan
     
     
-summary_df = pd.DataFrame(columns=["Drug", "Phenos", "Genos", "SNP_Matrix", "Tier1_Multi_FS", "Tier2_Multi_FS"])
+summary_df = pd.DataFrame(columns=["Drug", "Phenos", "Genos", "Lineages", "SNP_Matrix", "Tier1_Multi_FS", "Tier2_Multi_FS"])
 i = 0
 
 for drug in drugs_for_analysis:
@@ -183,11 +184,10 @@ for drug in drugs_for_analysis:
     # just do tier 1, all samples in tier 1 are represented in tier 2
     geno_files = [os.path.join(genos_dir, drug, "tier=1", fName) for fName in os.listdir(os.path.join(genos_dir, drug, "tier=1"))]
     genos = pd.concat([pd.read_csv(fName, usecols=["sample_id"]) for fName in geno_files], axis=0)
-        
-    if len(genos) < len(phenos):
-        num_with_snps = minor_allele_counts.index.intersection(genos.sample_id.unique())
-    else:
-        num_with_snps = minor_allele_counts.index.intersection(phenos.sample_id.unique())
+    
+    assert len(genos.sample_id.unique()) == len(phenos.sample_id.unique())
+    num_with_snps = minor_allele_counts.index.intersection(genos.sample_id.unique())
+    samples_with_lineages = lineages.loc[lineages["Sample ID"].isin(genos["sample_id"])]
         
     # get the number of isolates with multiple frameshift mutations in them, by tier
     num_fs_tier1 = compute_number_frameshift_by_tier(drug, ['1'], synonymous=False)
@@ -198,6 +198,7 @@ for drug in drugs_for_analysis:
     summary_df.loc[i] = [drug.split("=")[1], 
                          len(phenos.sample_id.unique()), 
                          len(genos.sample_id.unique()), 
+                         len(samples_with_lineages),
                          len(num_with_snps),
                          num_fs_tier1,
                          num_fs_tier2
@@ -206,6 +207,8 @@ for drug in drugs_for_analysis:
         
     print("Finished", drug.split("=")[1])
     
-    
-assert sum(summary_df["Phenos"] != summary_df["Genos"]) == 0
+# already checked that the numbers of samples with genotypes and phenotypes are the same
+# now check that the number of genotypes is equal to the number of lineages 
+# (if so, don't need to keep figuring out the VCF files that don't have sample IDs)
+assert sum(summary_df["Genos"] != summmary_df["Lineages"]) == 0
 summary_df.to_csv("data/samples_summary.csv", index=False)
