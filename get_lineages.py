@@ -56,4 +56,7 @@ for col in split_lineages:
 
 # save
 lineages = pd.concat([lineages, split_lineages], axis=1)
+
+# multiple directories contain the same VCF files?
+#lineages = lineages.drop_duplicates(subset=["Sample Name", "Sample ID", "Lineage"])
 lineages.to_csv("data/lineages.csv", index=False)
