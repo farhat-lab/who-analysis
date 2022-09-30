@@ -6,3 +6,7 @@ sandbox.ipynb
 
 # extra config files made during testing
 config_*.yaml
+
+# confidential information
+data/sample_ids_mapping.csv
+data/lineages.csv
