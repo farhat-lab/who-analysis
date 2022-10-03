@@ -34,10 +34,6 @@ out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-# if not os.path.isdir(os.path.join(out_dir, model_prefix)):
-#     #os.mkdir(os.path.join(out_dir, model_prefix))
-#     os.makedirs(os.path.join(out_dir, model_prefix))
-
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
@@ -88,20 +84,20 @@ for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
         for fName in os.listdir(full_subdir):
             
             # some hidden files (i.e. Git files) are present, so ignore them
-            if fName[0] != ".":
+            if fName[0] != "." and "1664565242065" in fName:
                 geno_files.append(os.path.join(full_subdir, fName))
           
         
 dfs_lst = []
 for i, fName in enumerate(geno_files):
         
-    # print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
+    #print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
     # read in the dataframe
     df = pd.read_csv(fName)
 
     # get only genotypes for samples that have a phenotype
     df_avail_isolates = df.loc[df.sample_id.isin(df_phenos.sample_id)]
-    
+
     # keep all variants
     if synonymous:
         dfs_lst.append(df_avail_isolates)
@@ -109,10 +105,10 @@ for i, fName in enumerate(geno_files):
         # P = coding variants, C = synonymous or upstream variants (get only upstream variants by getting only negative positions), and N = non-coding variants on rrs/rrl
         # deletion does not contain the p/c/n prefix
         # synonymous variants = synonymous, change in start codon that produces V instead of M, and changes in stop codon that preserve stop
-        dfs_lst.append(df_avail_isolates.query("Effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))
-        
+        dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))        
 
-df_model = pd.concat(dfs_lst)
+        
+df_model = pd.concat(dfs_lst).drop_duplicates().reset_index(drop=True)
 
 
 ############# STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #############
@@ -136,32 +132,31 @@ def pool_lof_mutations(df):
     ###### STEP 1: Assign all (sample, gene) pairs with a single frameshift mutation to LOF, and the remaining to not LOF ######
     
     # get all frameshift mutations and separate by the number of frameshifts per gene per sample
-    frameshift = df.loc[df["variant_category"].str.contains("fs")]
-    
+    frameshift = df.query("predicted_effect == 'frameshift'")
+
     # (sample, gene) pairs with a single frameshift mutation are LOF
-    lof_single_fs = pd.DataFrame(frameshift.groupby(["sample_id", "resolved_symbol"])["variant_category"].count()).query("variant_category == 1").reset_index()
+    lof_single_fs = pd.DataFrame(frameshift.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect == 1").reset_index()
 
     # already 1 because variant_category is the counts column now
-    lof_single_fs.rename(columns={"variant_category": "lof"}, inplace=True)
+    lof_single_fs.rename(columns={"predicted_effect": "lof"}, inplace=True)
 
     # lof column now is 1 for (sample, gene) pairs with only 1 frameshift mutation and 0 for those with multiple frameshift mutations
     frameshift = frameshift.merge(lof_single_fs, on=["sample_id", "resolved_symbol"], how="outer")
     frameshift["lof"] = frameshift["lof"].fillna(0)
-    
-    # merge with original dataframe to get the rest of the columns back
+
+    # merge with original dataframe to get the rest of the columns back. predicted_effect is now lof
     df_with_lof = df.merge(frameshift[["sample_id", "resolved_symbol", "variant_category", "lof"]], on=["sample_id", "resolved_symbol", "variant_category"], how="outer")
     assert len(df) == len(df_with_lof)
-    del df
-    
+
     # value_counts drops all the NaNs when computing
-    assert df_with_lof["lof"].value_counts().sum() == len(frameshift)
-    
-    ###### STEP 2: Assign loss of start, early stop codon, and large-scale deletion to LOF ######
-    
+    assert df_with_lof["lof"].value_counts(dropna=True).sum() == len(frameshift)
+
+    ###### STEP 2: Assign loss of start, stop gained, and large-scale deletion to LOF ######
+
     # criteria for lof are: nonsense mutation, loss of start, single frameshift mutation. Get only those satisfying the first two criteria (last done above)
-    # "?" = start lost, * = nonsense, deletion is a large-scale deletion
-    lof_criteria = ["nonsense", "\?", "\*", "deletion"]
-    df_with_lof.loc[df_with_lof["variant_category"].str.contains("|".join(lof_criteria)), "lof"] = 1
+    df_with_lof.loc[(df_with_lof["variant_category"] == 'deletion') | 
+                    (df_with_lof["predicted_effect"].isin(['stop_gained', 'start_lost'])), 'lof'
+                   ] = 1
     
     # get only variants that are LOF
     df_lof = df_with_lof.query("lof == 1")
@@ -176,10 +171,6 @@ def pool_lof_mutations(df):
     
     # concatenate the dataframe without LOF variants with the dataframe of pooled LOF variants
     df_final = pd.concat([df_with_lof.query("lof != 1"), df_lof_pooled], axis=0)
-
-    # there could be some variants with lof = 0 and Effect = lof because these are frameshift mutations that co-occur with other frameshifts
-    # but there will not be any mutations with null in the lof column and whose Effect is lof
-    assert len(df_final.loc[(pd.isnull(df_final["lof"])) & (df_final["Effect"] == 'lof')]) == 0
     
     # the lof column will now be the variant category to use, so 
     # 1. replace non-lof frame-shift mutations (value = 0) with NaN 

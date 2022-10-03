@@ -1,16 +1,16 @@
 tiers_lst: ['1']
 pheno_category_lst: ['WHO']
-model_prefix: 'dropAF_noSyn_noPopCorr'
+model_prefix: 'encodeAF_noSyn'
 
 missing_isolate_thresh: 0.01
 missing_feature_thresh: 0.25
-het_mode: "DROP"
+het_mode: "AF"
 AF_thresh: 0.75
 drop_isolates_before_variants: False
 impute: False
 synonymous: False
 pool_lof: False
 
-num_PCs: 0
+num_PCs: 5
 num_bootstrap: 1000
 alpha: 0.05

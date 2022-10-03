@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore")
 
 # the purpose of this script is to see how much data we have and check if we're missing anything
 
-narrow_dir = '/n/data1/hms/dbmi/farhat/ye12/who/narrow_format' 
+snp_dir = "/n/data1/hms/dbmi/farhat/ye12/who/grm"
 latest_narrow_dir = '/n/data1/hms/dbmi/farhat/ye12/who/latest_narrow_format' 
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
@@ -27,55 +27,16 @@ lineages = pd.read_pickle("data/combined_lineage_sample_IDs.pkl")
 if not os.path.isfile("data/minor_allele_counts.npz"): 
     print("Creating matrix of minor allele counts")
     
-    print("Reading in all files in the narrow directories")
-    narrow_files = [pd.read_csv(os.path.join(narrow_dir, fName)) for fName in os.listdir(narrow_dir)]
-    narrow = pd.concat(narrow_files, axis=0)
-    print(len(narrow_files), "files in the narrow directory")
+    snp_files = [pd.read_csv(os.path.join(snp_dir, fName)) for fName in os.listdir(snp_dir)]
+    print(len(snp_files))
 
-    # ignore last (4th) column
-    latest_narrow_files = [pd.read_csv(os.path.join(latest_narrow_dir, fName), 
-                                       usecols=[0, 1, 2]) for fName in os.listdir(latest_narrow_dir)]
-    latest_narrow = pd.concat(latest_narrow_files, axis=0)
-    print(len(latest_narrow_files), "files in the latest narrow directory")
+    snp_combined = pd.concat(snp_files, axis=0)
+    snp_combined.columns = ["sample_id", "position", "nucleotide", "dp"]
+    snp_combined = snp_combined.drop_duplicates()
     
-    # if this is 0, then it means that narrow is a subset of latest_narrow
-    if len(set(narrow.sample_id) - set(latest_narrow.sample_id)) == 0:
-        print("narrow directory contains a subset of the data in the latest narrow directory")
-        new_samples = list(set(latest_narrow.sample_id) - set(narrow.sample_id))
-        narrow_keep = pd.concat([narrow, latest_narrow.query("sample_id in @new_samples").rename(columns={latest_narrow.columns[-1]: "nucleotide"})], axis=0)
-    # if not, need to concatenate the full dataframes and then drop duplicates
-    else:
-        all_samples = list(set(narrow.sample_id).union(set(latest_narrow.sample_id)))
-        narrow_keep = pd.concat([narrow, latest_narrow.rename(columns={latest_narrow.columns[-1]: "nucleotide"})], axis=0).drop_duplicates()
-    print(len(narrow_keep.position.unique()), "positions before dropping resistance-determing regions")
-
-    # read in dataframe of loci associated with drug resistance
-    drugs_loci = pd.read_csv("data/drugs_loci.csv")
-
-    # add 1 to the start because it's 0-indexed
-    drugs_loci["Start"] += 1
-    assert sum(drugs_loci["End"] <= drugs_loci["Start"]) == 0
-
-    # get all positions in resistance loci
-    remove_pos = [list(range(int(row["Start"]), int(row["End"])+1)) for _, row in drugs_loci.iterrows()]
-    remove_pos = list(itertools.chain.from_iterable(remove_pos))
-    
-    narrow_keep = narrow_keep.query("position not in @remove_pos")
-    print(len(narrow_keep.position.unique()), "positions after dropping resistance-determing regions")
-    
-    # read in the H37Rv reference genome to get reference nucleotides
-    genome = SeqIO.read("/n/data1/hms/dbmi/farhat/Sanjana/GCF_000195955.2_ASM19595v2_genomic.gbff", "genbank")
-    genome_seq = list(genome.seq)
-    
-    # add reference alleles to the dataframe, then get only rows where the allele is not reference
-    pos_ref_dict = dict(zip(narrow_keep.position.unique(), np.array([genome_seq[pos-1] for pos in narrow_keep.position.unique()])))
-    narrow_keep["reference"] = narrow_keep["position"].map(pos_ref_dict)
-    narrow_keep = narrow_keep.query("nucleotide != reference")
-    
-    # pivot to matrix, NaNs with the reference alleles and then get the major allele at every site. This is a very long step
+    # pivot to matrix, NaNs with the reference alleles and then get the major allele at every site.
     print("Pivoting to a matrix")
-    matrix = narrow_keep.pivot(index="sample_id", columns="position", values="nucleotide")
-    matrix = matrix.fillna(pos_ref_dict)
+    matrix = snp_combined.pivot(index="sample_id", columns="position", values="nucleotide")
     assert np.nan not in matrix.values
     major_alleles = matrix.mode(axis=0)
     
@@ -122,8 +83,9 @@ else:
     
 
         
-def compute_number_frameshift_by_tier(drug, tiers_lst, synonymous=False):
+def compute_number_frameshift_by_tier(drug, tiers_lst):
     
+    # first get all the genotype files associated with the drug
     geno_files = []
 
     for subdir in os.listdir(os.path.join(genos_dir, drug)):
@@ -134,39 +96,30 @@ def compute_number_frameshift_by_tier(drug, tiers_lst, synonymous=False):
         # the last character is the tier number
         if subdir[-1] in tiers_lst:
 
-            # the last character is the tier number
             for fName in os.listdir(full_subdir):
 
                 # some hidden files (i.e. Git files) are present, so ignore them
-                if fName[0] != ".":
+                if fName[0] != "." and "1664565242065" in fName:
                     geno_files.append(os.path.join(full_subdir, fName))
 
-    dfs_lst = []
-    for i, fName in enumerate(geno_files):
-        df = pd.read_csv(fName)
-
-        # keep all variants
-        if synonymous:
-            dfs_lst.append(df)
-        else:
-            # P = coding variants, C = synonymous or upstream variants (get only upstream variants by getting only negative positions), and N = non-coding variants on rrs/rrl
-            # deletion does not contain the p/c/n prefix
-            dfs_lst.append(df.query("Effect not in ['synonymous_variant', 'stop_retained_variant']"))
-
+        
+    dfs_lst = [pd.read_csv(fName) for fName in geno_files]
+        
     if len(dfs_lst) > 0:
         df_model = pd.concat(dfs_lst)
 
         # get all frameshift mutations, only those for which variant_allele_frequency != 0
-        frameshift = df_model.loc[(df_model["variant_category"].str.contains("fs")) & 
+        frameshift = df_model.loc[(df_model["predicted_effect"] == "frameshift") & 
                                   (~pd.isnull(df_model["variant_allele_frequency"])) &
                                   (df_model["variant_allele_frequency"] > 0)
                                  ]
 
         # (sample, gene) pairs with multiple frameshift mutations
-        lof_multi_fs = pd.DataFrame(frameshift.groupby(["sample_id", "resolved_symbol"])["variant_category"].count()).query("variant_category > 1").reset_index()
+        lof_multi_fs = pd.DataFrame(frameshift.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect > 1").reset_index()
         return len(lof_multi_fs)
     else:
         return np.nan
+    
     
     
 summary_df = pd.DataFrame(columns=["Drug", "Phenos", "Genos", "Lineages", "SNP_Matrix", "Tier1_Multi_FS", "Tier2_Multi_FS"])
@@ -185,13 +138,14 @@ for drug in drugs_for_analysis:
     geno_files = [os.path.join(genos_dir, drug, "tier=1", fName) for fName in os.listdir(os.path.join(genos_dir, drug, "tier=1"))]
     genos = pd.concat([pd.read_csv(fName, usecols=["sample_id"]) for fName in geno_files], axis=0)
     
-    assert len(genos.sample_id.unique()) == len(phenos.sample_id.unique())
+    # not necessarily true???
+    #assert len(genos.sample_id.unique()) == len(phenos.sample_id.unique())
     num_with_snps = minor_allele_counts.index.intersection(genos.sample_id.unique())
     samples_with_lineages = lineages.loc[lineages["Sample ID"].isin(genos["sample_id"])]
         
     # get the number of isolates with multiple frameshift mutations in them, by tier
-    num_fs_tier1 = compute_number_frameshift_by_tier(drug, ['1'], synonymous=False)
-    num_fs_tier2 = compute_number_frameshift_by_tier(drug, ['2'], synonymous=False)
+    num_fs_tier1 = compute_number_frameshift_by_tier(drug, ['1'])
+    num_fs_tier2 = compute_number_frameshift_by_tier(drug, ['2'])
     
     # might also want to compute the number of heterozygous alleles, by tier
 
@@ -210,5 +164,5 @@ for drug in drugs_for_analysis:
 # already checked that the numbers of samples with genotypes and phenotypes are the same
 # now check that the number of genotypes is equal to the number of lineages 
 # (if so, don't need to keep figuring out the VCF files that don't have sample IDs)
-assert sum(summary_df["Genos"] != summmary_df["Lineages"]) == 0
-summary_df.to_csv("data/samples_summary.csv", index=False)
+# assert sum(summary_df["Genos"] != summary_df["Lineages"]) == 0
+summary_df.to_csv("data/samples_summary_2.csv", index=False)
