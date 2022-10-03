@@ -28,9 +28,15 @@ sig_PC_df = model_analysis.loc[(model_analysis["orig_variant"].str.contains("PC"
 # the lower numbered PCs capture the most variation, so plot those.
 # for example, the later PCs tend to separate sublineages of lineage 4
 sig_PCs = np.sort(sig_PC_df["orig_variant"].values)
-print(sig_PCs)
 del model_analysis
 
+# stop the program if there are no significant principal components
+if len(sig_PCs) == 0:
+    print("There are no significant principal components in this regression model. Exiting...")
+    exit()
+else:
+    print(sig_PCs)
+    
 
 ########## READ IN THE MINOR ALLELE COUNTS DATAFRAME ##########
 
@@ -50,6 +56,7 @@ minor_allele_counts = minor_allele_counts.set_index("sample_id")
 
 ########## READ IN AND CLEAN THE LINEAGES DATAFRAME ##########
 
+
 print("Reading in lineages dataframe")
 
 # the missing ones might be M. cannettii, most similar to L6 based on the other lineage callers
@@ -65,6 +72,7 @@ assert len(lineages.loc[pd.isnull(lineages["Lineage"])]) == 0
 
 
 ########## KEEP ONLY ISOLATES WITH ALL 3 PIECES OF DATA ##########
+
 
 # get only isolates with data for everyting: SNP matrix, in the model, and lineages
 keep_isolates = np.array(list(set(minor_allele_counts.index).intersection(model_matrix.index).intersection(lineages["Sample ID"])))
@@ -90,8 +98,11 @@ eigenvec_df["Sample ID"] = minor_allele_counts.index.values
 eigenvec_df = eigenvec_df.merge(lineages, on="Sample ID")
 
 fig, ax = plt.subplots()
+
+# plot the first 2 principal components in the list of significant ones. Lower numbers explain the data more
 if len(sig_PCs) >= 2:
     sns.scatterplot(data=eigenvec_df, x=sig_PCs[0], y=sig_PCs[1], hue="Lineage", hue_order=['1', '2', '3', '4', '5', '6', '7', 'M. bovis'], ax=ax)
+# if there is only 1 significant PC, then plot it against the 5th PC, which will explain the data the least    
 else:
     sns.scatterplot(data=eigenvec_df, x=sig_PCs[0], y="PC5", hue="Lineage", hue_order=['1', '2', '3', '4', '5', '6', '7', 'M. bovis'], ax=ax)
 ax.legend(bbox_to_anchor=(1.1, 1.05))

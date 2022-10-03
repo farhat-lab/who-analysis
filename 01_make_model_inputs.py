@@ -29,13 +29,14 @@ if "ALL" in pheno_category_lst:
 else:
     phenos_name = "WHO"
 
-out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}")
+out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 
-if not os.path.isdir(os.path.join(out_dir, model_prefix)):
-    os.mkdir(os.path.join(out_dir, model_prefix))
+# if not os.path.isdir(os.path.join(out_dir, model_prefix)):
+#     #os.mkdir(os.path.join(out_dir, model_prefix))
+#     os.makedirs(os.path.join(out_dir, model_prefix))
 
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
@@ -324,9 +325,9 @@ else:
 # there should not be any more NaNs
 assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
 print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} features for the model")
-filtered_matrix.to_pickle(os.path.join(out_dir, model_prefix, "filt_matrix.pkl"))
+filtered_matrix.to_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
 
 
 # keep only samples with genotypes available because everything should be represented, including samples without variants
 df_phenos = df_phenos.query("sample_id in @filtered_matrix.index.values")
-df_phenos.to_csv(os.path.join(out_dir, model_prefix, "phenos.csv"), index=False)
+df_phenos.to_csv(os.path.join(out_dir, "phenos.csv"), index=False)
