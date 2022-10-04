@@ -11,7 +11,6 @@ warnings.filterwarnings("ignore")
 # the purpose of this script is to see how much data we have and check if we're missing anything
 
 snp_dir = "/n/data1/hms/dbmi/farhat/ye12/who/grm"
-latest_narrow_dir = '/n/data1/hms/dbmi/farhat/ye12/who/latest_narrow_format' 
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
 
