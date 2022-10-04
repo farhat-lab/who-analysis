@@ -43,7 +43,7 @@ phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 
 
 # read them all in, concatenate, and get the number of samples
-df_phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, fName)) for fName in os.listdir(phenos_dir) if "1664557624848" in fName], axis=0)
+df_phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, fName)) for fName in os.listdir(phenos_dir) if "run" in fName], axis=0)
 
 df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
 
@@ -66,25 +66,20 @@ print("    ", len(df_phenos), "samples with phenotypes")
 
 
 ############# STEP 2: GET ALL AVAILABLE GENOTYPES #############
-
-
+          
+        
 # first get all the genotype files associated with the drug
 geno_files = []
 
 for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
-    
+
     # subdirectory (tiers)
     full_subdir = os.path.join(genos_dir, f"drug_name={drug}", subdir)
 
     # the last character is the tier number
     if subdir[-1] in tiers_lst:
+        geno_files = [os.path.join(full_subdir, fName) for fName in os.listdir(full_subdir) if "run" in fName]
         
-        for fName in os.listdir(full_subdir):
-            
-            # some hidden files (i.e. Git files) are present, so ignore them
-            if fName[0] != "." and "1664565242065" in fName:
-                geno_files.append(os.path.join(full_subdir, fName))
-          
         
 dfs_lst = []
 for i, fName in enumerate(geno_files):
