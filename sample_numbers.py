@@ -132,10 +132,10 @@ for drug in drugs_for_analysis:
     pheno_files = os.listdir(os.path.join(phenos_dir, drug))
     
     # read them all in, concatenate, and get the number of samples
-    phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, drug, fName), usecols=["sample_id"]) for fName in pheno_files], axis=0)
+    phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, drug, fName), usecols=["sample_id"]) for fName in pheno_files if "1664557624848" in fName], axis=0)
     
     # just do tier 1, all samples in tier 1 are represented in tier 2
-    geno_files = [os.path.join(genos_dir, drug, "tier=1", fName) for fName in os.listdir(os.path.join(genos_dir, drug, "tier=1"))]
+    geno_files = [os.path.join(genos_dir, drug, "tier=1", fName) for fName in os.listdir(os.path.join(genos_dir, drug, "tier=1")) if "1664565242065" in fName]
     genos = pd.concat([pd.read_csv(fName, usecols=["sample_id"]) for fName in geno_files], axis=0)
     
     # not necessarily true???
@@ -165,4 +165,4 @@ for drug in drugs_for_analysis:
 # now check that the number of genotypes is equal to the number of lineages 
 # (if so, don't need to keep figuring out the VCF files that don't have sample IDs)
 # assert sum(summary_df["Genos"] != summary_df["Lineages"]) == 0
-summary_df.to_csv("data/samples_summary_2.csv", index=False)
+summary_df.to_csv("data/samples_summary.csv", index=False)

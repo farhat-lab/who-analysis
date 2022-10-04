@@ -42,13 +42,10 @@ phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 ############# STEP 1: GET ALL AVAILABLE PHENOTYPES #############
 
 
-dfs_list_phenos = []
+# read them all in, concatenate, and get the number of samples
+df_phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, fName)) for fName in os.listdir(phenos_dir) if "1664557624848" in fName], axis=0)
 
-for fName in os.listdir(phenos_dir):
-    dfs_list_phenos.append(pd.read_csv(os.path.join(phenos_dir, fName)))
-
-df_phenos = pd.concat(dfs_list_phenos)
-df_phenos = df_phenos.query("phenotype_category in @pheno_category_lst")
+df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
 
 # need to figure out why this is going on, but drop them for now
 # get the number of samples that have more than 1 phenotype recorded
@@ -62,6 +59,7 @@ df_phenos = df_phenos.drop_duplicates(keep="first").reset_index(drop=True)
 
 # check that there is resistance data for all samples
 assert sum(pd.isnull(df_phenos.phenotype)) == 0
+assert sum(np.unique(df_phenos["phenotype"]) != np.array(['R', 'S'])) == 0
     
 df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
 print("    ", len(df_phenos), "samples with phenotypes")
@@ -210,7 +208,7 @@ elif het_mode == "AF":
 # drop all isolates with heterozygous variants with ANY AF below the threshold. DON'T DROP FEATURES BECAUSE MIGHT DROP SOMETHING RELEVANT
 elif het_mode == "DROP":
     drop_isolates = df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= 0.75)].sample_id.unique()
-    print(f"Dropped {len(drop_isolates)} isolates with any heterozygous variants")
+    print(f"Dropped {len(drop_isolates)} isolates with any heterozygous variants. Remainder are binary")
     df_model = df_model.query("sample_id not in @drop_isolates")
 else:
     raise ValueError(f"{het_mode} is not a valid mode for handling heterozygous alleles")

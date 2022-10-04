@@ -1,10 +1,10 @@
 tiers_lst: ['1']
 pheno_category_lst: ['WHO']
-model_prefix: 'encodeAF_noSyn'
+model_prefix: 'dropAF_noSyn'
 
 missing_isolate_thresh: 0.01
 missing_feature_thresh: 0.25
-het_mode: "AF"
+het_mode: "DROP"
 AF_thresh: 0.75
 drop_isolates_before_variants: False
 impute: False
