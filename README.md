@@ -97,6 +97,5 @@ Insert table of analyses.
 ---
 
 ## TO-DO:
-1. Figure out why there are more phenos than genos. 
+1. Stop model running if it's not different from another model (i.e. if LOF pooling has no effect on the model matrix, stop running to save time). 
 2. Some BDQ and LZD sample IDs have not been found in the sample IDs:VCF names mapping file. 
-3. Check for sites in the GRM matrix that are in resistance-determining regions.  
