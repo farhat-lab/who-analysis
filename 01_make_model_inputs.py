@@ -47,10 +47,11 @@ if pool_lof:
     model_prefix += "_poolLOF"
     
     
-# add to config file for use in the second and third scripts, if not there
-if "model_prefix" not in kwargs.keys():
-    with open(config_file,'a') as file:
-        file.write(f'\n\nmodel_prefix: "{model_prefix}"\n')
+# add to config file for use in the second and third scripts
+kwargs["model_prefix"] = model_prefix
+
+with open(config_file, "w") as file:
+    yaml.dump(kwargs, file, default_flow_style=False, sort_keys=False)
     
 out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
 
@@ -249,6 +250,9 @@ matrix = df_model.pivot(index="sample_id", columns="mutation", values="variant_b
 # in this case, only 3 possible values -- 0 (ref), 1 (alt), NaN (missing)
 if het_mode.upper() in ["BINARY", "DROP"]:
     assert len(np.unique(matrix.values)) <= 3
+# the smallest value will be 0. Check that the second smallest value is greater than 0.25 (below this, AFs are not really reliable)
+else:
+    assert np.sort(np.unique(matrix.values))[1] > 0.25
 
 # compare proportions of missing isolates or variants to determine which is more problematic and drop that first
 # usually, isolates will be more problematic, but rrs/rrl are very problematic, so for ribosome-targeting drugs, need to drop variants first

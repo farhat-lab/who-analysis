@@ -1,18 +1,17 @@
-# params to change
-tiers_lst: ['1']
-pheno_category_lst: ['WHO']
-het_mode: "DROP"
-synonymous: False
-pool_lof: True
-
-# don't change these params (can be changed, but we've decided on these for now)
+tiers_lst:
+- '1'
+- '2'
+pheno_category_lst:
+- WHO
+het_mode: AF
+synonymous: false
+pool_lof: false
 missing_isolate_thresh: 0.01
 missing_feature_thresh: 0.25
 AF_thresh: 0.75
-drop_isolates_before_variants: False
-impute: False
+drop_isolates_before_variants: false
+impute: false
 num_PCs: 5
 num_bootstrap: 1000
 alpha: 0.05
-
-model_prefix: "dropAF_noSyn_poolLOF"
+model_prefix: encodeAF_noSyn
