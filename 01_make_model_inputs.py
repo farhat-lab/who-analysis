@@ -13,7 +13,6 @@ kwargs = yaml.safe_load(open(config_file))
 
 tiers_lst = kwargs["tiers_lst"]
 pheno_category_lst = kwargs["pheno_category_lst"]
-model_prefix = kwargs["model_prefix"]
 
 missing_isolate_thresh = kwargs["missing_isolate_thresh"]
 missing_feature_thresh = kwargs["missing_feature_thresh"]
@@ -29,9 +28,34 @@ if "ALL" in pheno_category_lst:
 else:
     phenos_name = "WHO"
 
+
+if het_mode == "DROP":
+    model_prefix = "dropAF"
+elif het_mode == "AF":
+    model_prefix = "encodeAF"
+elif het_mode == "BINARY":
+    model_prefix = "binarizeAF"
+else:
+    raise ValueError(f"{het_mode} is not a valid mode for handling heterozygous alleles")
+
+if synonymous:
+    model_prefix += "_withSyn"
+else:
+    model_prefix += "_noSyn"
+    
+if pool_lof:
+    model_prefix += "_poolLOF"
+    
+    
+# add to config file for use in the second and third scripts, if not there
+if "model_prefix" not in kwargs.keys():
+    with open(config_file,'a') as file:
+        file.write(f'\n\nmodel_prefix: "{model_prefix}"\n')
+    
 out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
 
 if not os.path.isdir(out_dir):
+    print(f"Saving results to {out_dir}")
     os.makedirs(out_dir)
 
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
@@ -173,6 +197,8 @@ def pool_lof_mutations(df):
     df_final["lof"] = df_final["lof"].replace(0, np.nan)
     df_final["lof"] = df_final["lof"].replace(1, "lof")
     df_final["lof"] = df_final["lof"].fillna(df_final["variant_category"])
+    
+    assert len(df_final["lof"].unique()) <= len(df_final["variant_category"].unique())
     return df_final.rename(columns={"variant_category": "variant_category_unpooled", "lof": "variant_category"})
 
 
