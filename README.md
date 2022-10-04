@@ -97,3 +97,5 @@ Insert table of analyses.
 ---
 
 ## TO-DO:
+1. Figure out why there are more phenos than genos. 
+2. Some BDQ and LZD sample IDs have not been found in the sample IDs:VCF names mapping file. 
