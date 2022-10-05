@@ -97,4 +97,4 @@ Insert table of analyses.
 
 ## TO-DO:
     
-    1. Write a script to split data into train/test splits, fit a predictive model, and compute metrics (i.e. AUC, MAE/RMSE). This would be just for the Farhat lab.
+1. Write a script to split data into train/test splits, fit a predictive model, and compute metrics (i.e. AUC, MAE/RMSE). This would be just for the Farhat lab.
