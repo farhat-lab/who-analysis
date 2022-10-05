@@ -8,10 +8,10 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=skulkarni@g.harvard.edu
 
-python3 -u 01_make_model_inputs.py config.yaml Moxifloxacin MXF
-python3 -u 02_regression_with_bootstrap.py config.yaml Moxifloxacin
-python3 -u 03_model_analysis.py config.yaml Moxifloxacin MXF
+python3 -u 01_make_model_inputs.py config.yaml Bedaquiline BDQ
+python3 -u 02_regression_with_bootstrap.py config.yaml Bedaquiline
+python3 -u 03_model_analysis.py config.yaml Bedaquiline BDQ
 
-python3 -u 01_make_model_inputs.py config_2.yaml Moxifloxacin MXF
-python3 -u 02_regression_with_bootstrap.py config_2.yaml Moxifloxacin
-python3 -u 03_model_analysis.py config_2.yaml Moxifloxacin MXF
+python3 -u 01_make_model_inputs.py config_2.yaml Bedaquiline BDQ
+python3 -u 02_regression_with_bootstrap.py config_2.yaml Bedaquiline
+python3 -u 03_model_analysis.py config_2.yaml Bedaquiline BDQ
