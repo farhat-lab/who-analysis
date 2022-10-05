@@ -96,5 +96,3 @@ Insert table of analyses.
 ---
 
 ## TO-DO:
-1. Run models with LOF pooling last. Add step that checks if the model matrix is the same shape as the corresponding model without LOF pooling (i.e. same synonymous, HET treatment, tiers, and phenotypes), and stops the model if it's the same to save time.
-2. Some BDQ and LZD sample IDs have not been found in the sample IDs:VCF names mapping file. 
