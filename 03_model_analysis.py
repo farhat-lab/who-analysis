@@ -151,7 +151,7 @@ def compute_predictive_values(combined_df, return_stats=[]):
     assert len(np.unique(final[["TP", "FP", "TN", "FN"]].sum(axis=1))) == 1
     
     if len(return_stats) == 0:
-        return final[["orig_variant", "Num_Isolates", "TP", "FP", "TN", "FN", "PPV", "Sens", "Spec", "LR+", "LR-"]]
+        return final[["orig_variant", "Num_Isolates", "Total_Isolates", "TP", "FP", "TN", "FN", "PPV", "Sens", "Spec", "LR+", "LR-"]]
     else:
         return final[return_stats]
 
@@ -173,18 +173,18 @@ def BH_FDR_correction(coef_df):
 
 
 
-def run_all(drug, drug_abbr, model_prefix, out_dir, het_mode, alpha=0.05, num_bootstrap=1000):
+def run_all(drug, drug_abbr, out_dir, het_mode, alpha=0.05, num_bootstrap=1000):
     
     # coefficients from L2 regularized regression ("baseline" regression)
-    coef_df = pd.read_csv(os.path.join(out_dir, model_prefix, "regression_coef.csv"))
+    coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
 
     # coefficients from bootstrap replicates
-    bs_df = pd.read_csv(os.path.join(out_dir, model_prefix, "coef_bootstrap.csv"))
+    bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
     
     # read in all genotypes and phenotypes
-    model_inputs = pd.read_pickle(os.path.join(out_dir, model_prefix, "model_matrix.pkl"))
+    model_inputs = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
     
-    df_phenos = pd.read_csv(os.path.join(out_dir, model_prefix, "phenos.csv"))
+    df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
 
     # add p-values and confidence intervals to the results dataframe
     pvals = get_pvalues_add_ci(coef_df, bs_df, "variant", len(model_inputs), alpha=alpha)
@@ -291,10 +291,14 @@ if "ALL" in pheno_category_lst:
 else:
     phenos_name = "WHO"
 
-out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}")
+out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
+
+if not os.path.isdir(out_dir):
+    print("No model for this analysis")
+    exit()
 
 # run analysis
-model_analysis = run_all(drug, drug_WHO_abbr, model_prefix, out_dir, het_mode, alpha=alpha, num_bootstrap=num_bootstrap)
+model_analysis = run_all(drug, drug_WHO_abbr, out_dir, het_mode, alpha=alpha, num_bootstrap=num_bootstrap)
 
 # save
-model_analysis.to_csv(os.path.join(out_dir, model_prefix, "model_analysis.csv"), index=False)
+model_analysis.to_csv(os.path.join(out_dir, "model_analysis.csv"), index=False)

@@ -209,7 +209,7 @@ def pool_lof_mutations(df):
 if pool_lof:
     print("Pooling LOF mutations")
     df_model = pool_lof_mutations(df_model)
-
+    
 
 ############# STEP 4: PROCESS HETEROZYGOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #############
 
@@ -342,8 +342,17 @@ else:
 # there should not be any more NaNs
 assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
 print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} features for the model")
-filtered_matrix.to_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
 
+# check if the filtered matrix has the same dimensions as the corresponding model without LOF pooling
+# if they have the same shape, it means that LOF pooling did not make 
+if pool_lof:
+    df_model_no_poolLOF = pd.read_pickle(os.path.join(out_dir.replace("_poolLOF", ""), "filt_matrix.pkl"))
+    if (len(df_model_no_poolLOF.index.symmetric_difference(filtered_matrix.index)) == 0) & (df_model_no_poolLOF.shape[1] == filtered_matrix.shape[1]):
+        print("Pooling LOFs does not affect this model. Quitting this model...")
+        os.rmdir(os.path.join(out_dir))
+        exit()
+        
+filtered_matrix.to_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
 
 # keep only samples with genotypes available because everything should be represented, including samples without variants
 df_phenos = df_phenos.query("sample_id in @filtered_matrix.index.values")
