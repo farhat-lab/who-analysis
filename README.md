@@ -76,7 +76,7 @@ Heterozygous variants have allele fractions in the range [0.25, 0.75]. Below thi
 
 <ul>
     <li>Drop</li>
-    <li>Encode as the float AF value, not a binary</li>
+    <li>Encode all variants with AF > 0.25 (including those with AF > 0.75) with their AF, not binary. </li>
     <li>Binarize them using an AF threshold</li>
 </ul>
 
