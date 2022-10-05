@@ -91,7 +91,7 @@ Then, all remaining features with anything missing are dropped. Imputation can b
 ---
 **NOTE**
 
-Insert table of analyses.
+32 <a href="https://docs.google.com/spreadsheets/d/13vdVdzZk053yT-i5LgyFJUBD1T6_nIRgzBAxxa2OOyc/edit#gid=0" target="_blank">analyses</a> run by the Farhat lab, changing each parameter individually.  
 
 ---
 
