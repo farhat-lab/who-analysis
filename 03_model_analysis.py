@@ -2,13 +2,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 plt.rcParams['figure.dpi'] = 150
-import seaborn as sns
 import scipy.stats as st
 import sys
 
-import glob, os, yaml, itertools, sparse
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
+import glob, os, yaml
 import warnings
 warnings.filterwarnings("ignore")
 

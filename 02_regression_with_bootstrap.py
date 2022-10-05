@@ -1,11 +1,9 @@
 import numpy as np
 import pandas as pd
 import glob, os, yaml, sparse, sys
-from Bio import SeqIO, Seq
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
-import itertools
 import warnings
 warnings.filterwarnings("ignore")
 
