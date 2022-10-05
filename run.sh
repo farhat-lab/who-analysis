@@ -58,9 +58,9 @@ printf "\nRunning Tier 1, WHO phenotypic models, encoding HETs with AF\n"
 # encode variants with AF > 0.25 using their AF
 for i in ${!drug_array[@]}; do 
   printf "\n${drug_array[$i]}\n"
-  python3 -u 01_make_model_inputs.py config_AF.yaml "${drug_array[$i]}" "${abbr_array[$i]}"
-  python3 -u 02_regression_with_bootstrap.py config_AF.yaml "${drug_array[$i]}"
-  python3 -u 03_model_analysis.py config_AF.yaml "${drug_array[$i]}" "${abbr_array[$i]}"
+  python3 -u 01_make_model_inputs.py config_2.yaml "${drug_array[$i]}" "${abbr_array[$i]}"
+  python3 -u 02_regression_with_bootstrap.py config_2.yaml "${drug_array[$i]}"
+  python3 -u 03_model_analysis.py config_2.yaml "${drug_array[$i]}" "${abbr_array[$i]}"
 done
 
 
