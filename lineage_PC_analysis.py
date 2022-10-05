@@ -9,6 +9,8 @@ import glob, os, yaml, subprocess, itertools, sparse, sys
 import sklearn.metrics
 from sklearn.decomposition import PCA
 import scipy.stats as st
+import warnings
+warnings.filterwarnings("ignore")
 
 _, out_dir = sys.argv
 
@@ -17,7 +19,7 @@ _, out_dir = sys.argv
 
 print("Reading in model input matrix")
 model_matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
-model_analysis = pd.read_pickle(os.path.join(out_dir, "model_analysis.pkl"))
+model_analysis = pd.read_csv(os.path.join(out_dir, "model_analysis.csv"))
 
 # number of principal components with positive coefficients (OR > 1)
 sig_PC_df = model_analysis.loc[(model_analysis["orig_variant"].str.contains("PC")) & 
@@ -25,9 +27,9 @@ sig_PC_df = model_analysis.loc[(model_analysis["orig_variant"].str.contains("PC"
                               ((model_analysis["coef_LB"] < 0) & (model_analysis["coef_UB"] < 0)))
                               ]
 
-# the lower numbered PCs capture the most variation, so plot those.
-# for example, the later PCs tend to separate sublineages of lineage 4
-sig_PCs = np.sort(sig_PC_df["orig_variant"].values)
+# plot the first 2 PCs that have coefficients with the largest absolute values
+sig_PC_df["abs_coef"] = np.abs(sig_PC_df["coef"])
+sig_PCs = sig_PC_df.sort_values("abs_coef", ascending=False)["orig_variant"].values
 del model_analysis
 
 # stop the program if there are no significant principal components
@@ -102,7 +104,7 @@ fig, ax = plt.subplots()
 # plot the first 2 principal components in the list of significant ones. Lower numbers explain the data more
 if len(sig_PCs) >= 2:
     sns.scatterplot(data=eigenvec_df, x=sig_PCs[0], y=sig_PCs[1], hue="Lineage", hue_order=['1', '2', '3', '4', '5', '6', '7', 'M. bovis'], ax=ax)
-# if there is only 1 significant PC, then plot it against the 5th PC, which will explain the data the least    
+# if there is only 1 significant PC, then plot it against the 5th PC, which will explain the data the least. Basically an arbitrary decision because we only care about the other axis
 else:
     sns.scatterplot(data=eigenvec_df, x=sig_PCs[0], y="PC5", hue="Lineage", hue_order=['1', '2', '3', '4', '5', '6', '7', 'M. bovis'], ax=ax)
 ax.legend(bbox_to_anchor=(1.1, 1.05))

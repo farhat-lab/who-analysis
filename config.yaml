@@ -6,9 +6,9 @@ pheno_category_lst:
 het_mode: AF
 synonymous: false
 pool_lof: false
+AF_thresh: 0.5
 missing_isolate_thresh: 0.01
 missing_feature_thresh: 0.25
-AF_thresh: 0.75
 drop_isolates_before_variants: false
 impute: false
 num_PCs: 5

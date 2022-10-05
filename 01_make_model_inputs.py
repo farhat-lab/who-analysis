@@ -17,7 +17,7 @@ pheno_category_lst = kwargs["pheno_category_lst"]
 missing_isolate_thresh = kwargs["missing_isolate_thresh"]
 missing_feature_thresh = kwargs["missing_feature_thresh"]
 het_mode = kwargs["het_mode"]
-af_thresh = kwargs["AF_thresh"]
+AF_thresh = kwargs["AF_thresh"]
 impute = kwargs["impute"]
 synonymous = kwargs["synonymous"]
 pool_lof = kwargs["pool_lof"]
@@ -87,7 +87,6 @@ assert sum(pd.isnull(df_phenos.phenotype)) == 0
 assert sum(np.unique(df_phenos["phenotype"]) != np.array(['R', 'S'])) == 0
     
 df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
-print("    ", len(df_phenos), "samples with phenotypes")
 
 
 ############# STEP 2: GET ALL AVAILABLE GENOTYPES #############
@@ -102,14 +101,17 @@ for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
     full_subdir = os.path.join(genos_dir, f"drug_name={drug}", subdir)
 
     # the last character is the tier number
-    if subdir[-1] in tiers_lst:
-        geno_files = [os.path.join(full_subdir, fName) for fName in os.listdir(full_subdir) if "run" in fName]
+    if full_subdir[-1] in tiers_lst:
+        for fName in os.listdir(full_subdir):
+            if "run" in fName:
+                geno_files.append(os.path.join(full_subdir, fName))
         
-        
+print(f"    {len(df_phenos)} samples with phenotypes and {len(geno_files)} files with genotypes.")
+
 dfs_lst = []
 for i, fName in enumerate(geno_files):
         
-    #print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
+    # print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
     # read in the dataframe
     df = pd.read_csv(fName)
 
@@ -213,9 +215,9 @@ if pool_lof:
 
 # set variants with AF <= the threshold as wild-type and AF > the threshold as alternative
 if het_mode == "BINARY":
-    print(f"Binarizing heterozygous variants with AF threshold of {af_thresh}")
-    df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= af_thresh), "variant_binary_status"] = 0
-    df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] > af_thresh), "variant_binary_status"] = 1
+    print(f"Binarizing heterozygous variants with AF threshold of {AF_thresh}")
+    df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= AF_thresh), "variant_binary_status"] = 0
+    df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] > AF_thresh), "variant_binary_status"] = 1
 
 # use heterozygous AF as the matrix value for variants with AF > 0.25. Below 0.25, the AF measurements aren't reliable
 elif het_mode == "AF":

@@ -183,50 +183,51 @@ def run_all(drug, drug_abbr, model_prefix, out_dir, het_mode, alpha=0.05, num_bo
     
     # read in all genotypes and phenotypes
     model_inputs = pd.read_pickle(os.path.join(out_dir, model_prefix, "model_matrix.pkl"))
+    
     df_phenos = pd.read_csv(os.path.join(out_dir, model_prefix, "phenos.csv"))
 
     # add p-values and confidence intervals to the results dataframe
     pvals = get_pvalues_add_ci(coef_df, bs_df, "variant", len(model_inputs), alpha=alpha)
     coef_df["pval"] = pvals
-    
+
     # Benjamini-Hochberg correction
     coef_df = BH_FDR_correction(coef_df)
-    
+
     # Bonferroni correction
     coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
-    
+
     # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
     assert len(coef_df.query("pval > BH_pval")) == 0
     assert len(coef_df.query("pval > Bonferroni_pval")) == 0
-        
+
     # return all features with non-zero coefficients. Don't exclude by p-value yet because some variants with large effects are rare
     res_df = coef_df.query("coef != 0").sort_values("coef", ascending=False).reset_index(drop=True)
     res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
-    
+
     # convert to odds ratios
     res_df["Odds_Ratio"] = np.exp(res_df["coef"])
     res_df["OR_LB"] = np.exp(res_df["coef_LB"])
     res_df["OR_UB"] = np.exp(res_df["coef_UB"])
-    
+
     assert sum(res_df["OR_LB"] > res_df["Odds_Ratio"]) == 0
     assert sum(res_df["OR_UB"] < res_df["Odds_Ratio"]) == 0
-    
+
     combined = model_inputs.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id").reset_index(drop=True)
-    
+
     # for tractability, this is done after filtering out features with a logistic coefficient of 0. Also creates a lot of NaNs in those cases.
     combined_small = combined[["sample_id", "phenotype"] + list(res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values)]
     assert len(combined_small) == len(combined)
     
-    # can only compute predictive values for binary genotypes. Otherwise there are no true/false positives/negatives
+    # can only univariate statistics for binary genotypes. Otherwise there are no true/false positives/negatives
     if het_mode != "AF":
-    
+        
         # get dataframe of predictive values for the non-zero coefficients and add them to the results dataframe
         full_predict_values = compute_predictive_values(combined_small)
         res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
 
         print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates")
         bs_results = pd.DataFrame(columns = res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values).astype(float)
-        
+
         # need confidence intervals for 5 stats: PPV, sens, spec, + likelihood ratio, - likelihood ratio
         for i in range(num_bootstrap):
 
@@ -245,13 +246,13 @@ def run_all(drug, drug_abbr, model_prefix, out_dir, het_mode, alpha=0.05, num_bo
         for variable in ["PPV", "Sens", "Spec", "LR+", "LR-"]:
 
             lower, upper = np.nanpercentile(bs_results.loc[variable], q=[2.5, 97.5], axis=0)
-            
+
             # LR+ can be infinite if spec is 1, and after percentile, it will be NaN, so replace with infinity
             if variable == "LR+":
                 res_df[variable] = res_df[variable].fillna(np.inf)
                 lower[np.isnan(lower)] = np.inf
                 upper[np.isnan(upper)] = np.inf
-                
+
             res_df = res_df.merge(pd.DataFrame({"orig_variant": bs_results.columns, 
                                 f"{variable}_LB": lower,
                                 f"{variable}_UB": upper,
@@ -278,6 +279,7 @@ tiers_lst = kwargs["tiers_lst"]
 pheno_category_lst = kwargs["pheno_category_lst"]
 model_prefix = kwargs["model_prefix"]
 het_mode = kwargs["het_mode"]
+AF_thresh = kwargs["AF_thresh"]
 
 num_PCs = kwargs["num_PCs"]
 num_bootstrap = kwargs["num_bootstrap"]
@@ -295,6 +297,4 @@ out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={
 model_analysis = run_all(drug, drug_WHO_abbr, model_prefix, out_dir, het_mode, alpha=alpha, num_bootstrap=num_bootstrap)
 
 # save
-if num_PCs > 0:
-    print(f"{len(model_analysis.loc[(model_analysis['coef'] > 0) & model_analysis['orig_variant'].str.contains('PC')])} principal components have non-zero coefficients")
-model_analysis.to_pickle(os.path.join(out_dir, model_prefix, "model_analysis.pkl"))
+model_analysis.to_csv(os.path.join(out_dir, model_prefix, "model_analysis.csv"), index=False)

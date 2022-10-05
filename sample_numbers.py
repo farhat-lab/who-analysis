@@ -95,8 +95,10 @@ def compute_number_frameshift_by_tier(drug, tiers_lst):
         full_subdir = os.path.join(genos_dir, drug, subdir)
 
         # the last character is the tier number
-        if subdir[-1] in tiers_lst:
-            geno_files = [os.path.join(full_subdir, fName) for fName in os.listdir(full_subdir) if "run" in fName]
+        if full_subdir[-1] in tiers_lst:
+            for fName in os.listdir(full_subdir):
+                if "run" in fName:
+                    geno_files.append(os.path.join(full_subdir, fName))
                     
     dfs_lst = [pd.read_csv(fName) for fName in geno_files]
         
