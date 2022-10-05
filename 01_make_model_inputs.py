@@ -25,6 +25,8 @@ pool_lof = kwargs["pool_lof"]
 out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
 if "ALL" in pheno_category_lst:
     phenos_name = "ALL"
+    # make sure that both phenotypes are included in this case (in case user forgets to include WHO in the list)
+    pheno_category_lst = ["ALL", "WHO"]
 else:
     phenos_name = "WHO"
 
@@ -72,8 +74,7 @@ df_phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, fName)) for fName in
 
 df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
 
-# need to figure out why this is going on, but drop them for now
-# get the number of samples that have more than 1 phenotype recorded
+# get the number of samples that have more than 1 phenotype recorded. Drop such samples (should be 0), but leave as a QC step for now. 
 drop_samples = df_phenos.groupby(["sample_id"]).nunique().query("phenotype > 1").index.values
 if len(drop_samples) > 0:
     print(f"    {len(drop_samples)} isolates are recorded as being both resistant and susceptible to {drug}")
