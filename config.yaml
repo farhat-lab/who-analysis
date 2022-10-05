@@ -6,7 +6,7 @@ pheno_category_lst:
 het_mode: AF
 synonymous: false
 pool_lof: false
-AF_thresh: 0.5
+AF_thresh: 0.75
 missing_isolate_thresh: 0.01
 missing_feature_thresh: 0.25
 drop_isolates_before_variants: false
@@ -14,4 +14,3 @@ impute: false
 num_PCs: 5
 num_bootstrap: 1000
 alpha: 0.05
-model_prefix: encodeAF_noSyn
