@@ -85,7 +85,7 @@ Heterozygous variants have allele fractions in the range [0.25, 0.75]. Below thi
 Isolates with a lot of missingness are far more common than features with a lot of missingness because most of the sequenced regions have high mappability, except the ribosomal regions. 
     
 A threshold of <b>1%</b> is used to drop isolates, i.e. if more than 1% of an isolate's features for a given analysis are NA, then drop the isolate. 
-A threshold of <b>25%</b> is used to drop variants, i.e. if more than 25% of the isolates in a given analysis are missing that feature, then drop the feature. 
+Similarly, if more than <b>25%</b> of the isolates in a given analysis are missing that feature, then drop the feature. 
 
 Then, all remaining features with anything missing are dropped. Imputation can be done instead by setting the argument `impute` to True. This will impute every element in the matrix that is missing by averaging the feature, stratified by resistance phenotype. 
     
