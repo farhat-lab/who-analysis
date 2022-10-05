@@ -50,20 +50,19 @@ Run the numbered scripts in order, with the `config.yaml` file, the full drug na
 <ul>
     <li><code>tiers_lst</code>: list of tiers to include in the model</li>
     <li><code>pheno_category_lst</code>: list of phenotype categories to include. The list can include the strings WHO and ALL.</li>
-    <li><code>model_prefix</code>: directory name for the current analysis</li>
+    <li><code>synonymous</code>: boolean for whether synonymous variants should be included</li>
+    <li><code>pool_lof</code>: boolean for whether or not LOF variants should be pooled</li>
+    <li><code>het_mode</code>: how to handle heterozygous alleles. Options are DROP, AF, and BINARY. </li>
     <li><code>missing_isolate_thresh</code>: threshold for missing isolates (0-1). i.e. if an isolate has more than N% of variants missing, drop it.</li>
     <li><code>missing_feature_thresh</code>: threshold for missing variants (0-1), i.e. if a variant has more than N% of isolates missing, drop it.</li>
-    <li><code>het_mode</code>: how to handle heterozygous alleles. Options are DROP, AF, and BINARY. </li>
     <li><code>AF_thresh</code>: Only used if <code>het_mode</code> = BINARY. Heterozygous alleles with AF > the threshold will be assigned to 1, the others to 0.</li>
     <li><code>drop_isolates_before_variants</code>: boolean to drop isolates with lot of missingness before variants. If this is set to False, the one with more missingness will be dropped first.</li>
     <li><code>impute</code>: boolean for whether missing values should be imputed (if False, then they will be dropped)</li>
-    <li><code>synonymous</code>: boolean for whether synonymous variants should be included</li>
-    <li><code>pool_lof</code>: boolean for whether or not LOF variants should be pooled</li>
     <li><code>num_PCs</code>: number of principal components (>= 0)</li>
     <li><code>num_bootstrap</code>: number of bootstrap samples</li>
     <li><code>alpha</code>: significance level</li>
 </ul>
-    
+        
 ### Pooling LOF Mutations
     
 If the argument `pool_lof` is set to True, then LOF mutations are pooled for each (sample, gene) pair. A custom function is used for this so that genes containing multiple frameshift mutations are not considered LOF. If this is decided against, then pooling can be done on the `Effect` column in the genotypes dataframes. 
