@@ -3,7 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 plt.rcParams['figure.dpi'] = 150
 import seaborn as sns
-from Bio import SeqIO, Seq
 
 import glob, os, yaml, subprocess, itertools, sparse, sys
 import sklearn.metrics
