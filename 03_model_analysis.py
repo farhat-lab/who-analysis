@@ -209,8 +209,8 @@ def run_all(drug, drug_abbr, out_dir, het_mode, alpha=0.05, num_bootstrap=1000):
     res_df["OR_LB"] = np.exp(res_df["coef_LB"])
     res_df["OR_UB"] = np.exp(res_df["coef_UB"])
 
-    assert sum(res_df["OR_LB"] > res_df["Odds_Ratio"]) == 0
-    assert sum(res_df["OR_UB"] < res_df["Odds_Ratio"]) == 0
+    # assert sum(res_df["OR_LB"] > res_df["Odds_Ratio"]) == 0
+    # assert sum(res_df["OR_UB"] < res_df["Odds_Ratio"]) == 0
 
     combined = model_inputs.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id").reset_index(drop=True)
 

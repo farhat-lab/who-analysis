@@ -1,9 +1,10 @@
 tiers_lst:
 - '1'
+- '2'
 pheno_category_lst:
 - WHO
 het_mode: DROP
-synonymous: false
+synonymous: true
 pool_lof: false
 AF_thresh: 0.75
 missing_isolate_thresh: 0.01
@@ -13,4 +14,4 @@ impute: false
 num_PCs: 5
 num_bootstrap: 1000
 alpha: 0.05
-model_prefix: dropAF_noSyn
+model_prefix: dropAF_withSyn
