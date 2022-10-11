@@ -209,6 +209,8 @@ def run_all(drug, drug_abbr, out_dir, het_mode, alpha=0.05, num_bootstrap=1000):
     res_df["OR_LB"] = np.exp(res_df["coef_LB"])
     res_df["OR_UB"] = np.exp(res_df["coef_UB"])
 
+    # because of numerical precision, this is not always technically true. But it's only a problem for coefficients that are close to 0, so they are not important anyway.
+    # could include a threshold for variants to keep, instead of just those that aren't exactly 0. Discuss....
     # assert sum(res_df["OR_LB"] > res_df["Odds_Ratio"]) == 0
     # assert sum(res_df["OR_UB"] < res_df["Odds_Ratio"]) == 0
 
