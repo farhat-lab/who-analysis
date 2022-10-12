@@ -316,4 +316,4 @@ if not os.path.isdir(out_dir):
 model_analysis = run_all(drug_WHO_abbr, **kwargs)
 
 # save
-model_analysis.to_csv(os.path.join(out_dir, "model_analysis_2.csv"), index=False)
+model_analysis.to_csv(os.path.join(out_dir, "model_analysis.csv"), index=False)
