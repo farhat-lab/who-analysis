@@ -6,9 +6,11 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-############# GENERATE TABLE OF NUMBERS OF PHENOTYPES AND GENOTYPES ACROSS TIERS AND DRUGS #############
+############# GENERATE THE MINOR ALLELE COUNTS DATAFRAME AND THE TABLE OF NUMBERS OF PHENOTYPES AND GENOTYPES ACROSS TIERS AND DRUGS #############
 
-# the purpose of this script is to see how much data we have and check if we're missing anything
+# The purpose of this script is to see how much data we have and check if we're missing anything. 
+# It also generates the minor allele counts dataframe from the GRM directory. 
+# Principal components are computed from this dataframe for lineage structure correction.
 
 snp_dir = "/n/data1/hms/dbmi/farhat/ye12/who/grm"
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
@@ -22,7 +24,7 @@ print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
 
 lineages = pd.read_pickle("data/combined_lineage_sample_IDs.pkl")
 
-# remake minor alleles dataframe every time with updated data
+# remake minor alleles dataframe whenever we get new data
 print("Creating matrix of minor allele counts")
 
 snp_files = [pd.read_csv(os.path.join(snp_dir, fName)) for fName in os.listdir(snp_dir)]
@@ -47,20 +49,20 @@ num_pos = len(snp_combined.position.unique())
 snp_combined = snp_combined.query("position not in @remove_pos")
 print(f"Dropped {num_pos-len(snp_combined.position.unique())} positions in resistance-determing regions")
 
-# pivot to matrix, NaNs with the reference alleles and then get the major allele at every site.
+# pivot to matrix. There should not be any NaNs because the data is complete (i.e. reference alleles are included), then get the major allele at every site.
 print("Pivoting to a matrix")
 matrix = snp_combined.pivot(index="sample_id", columns="position", values="nucleotide")
 assert np.nan not in matrix.values
 major_alleles = matrix.mode(axis=0)
 
-# put into dataframe to compare with the SNP dataframe
+# put into dataframe to compare with the SNP dataframe. Most efficient way is to make a dataframe of major alleles where every row is the same. 
 major_alleles_df = pd.concat([major_alleles]*len(matrix), ignore_index=True)
 major_alleles_df.index = matrix.index.values
 
 assert matrix.shape == major_alleles_df.shape
 minor_allele_counts = (matrix != major_alleles_df).astype(int)
 
-# drop any columns that are 0 (major allele everywhere). Easiest to do this with dropna
+# drop any columns that are 0 (major allele everywhere). Easiest to do this with dropna -- convert 0s to NaNs, drop, then back to 0s.
 minor_allele_counts = minor_allele_counts.replace(0, np.nan).dropna(how='all', axis=1).fillna(0).astype(int)
 
 # to save in sparse format, need to put the column names and indices into the dataframe, everything must be numerical
