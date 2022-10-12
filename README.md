@@ -97,7 +97,5 @@ Then, all remaining features with anything missing are dropped. Imputation can b
 
 ## TO-DO:
     
-1. Remove univariate statistic computations because they are the rate-limiting step. Maybe only compute them for some models to save time. 
-2. Numerical precision things in script #3. Can we exclude variants that have odds ratios within some threshold, ie. [0.999, 1.001]?
-3. Write a script to split data into train/test splits, fit a predictive model, and compute metrics (i.e. AUC, MAE/RMSE). This would be just for the Farhat lab.
-4. Any more processing output CSV files?
+1. Compare full model performance with association (i.e. catalog-based) methods. 
+2. Write a script to split data into train/test splits, fit a predictive model, and compute metrics (i.e. AUC, MAE/RMSE). This would be just for the Farhat lab.
