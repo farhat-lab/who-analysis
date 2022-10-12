@@ -136,8 +136,10 @@ def compute_predictive_values(combined_df, return_stats=[]):
 
     assert len(final) == len(melted["variable"].unique())
     assert len(final) == len(final.drop_duplicates("orig_variant"))
-    assert len(np.unique(final[["TP", "FP", "TN", "FN"]].sum(axis=1))) == 1
     
+    # check that all feature rows have the same number of samples    
+    assert len(np.unique(final[["TP", "FP", "TN", "FN"]].sum(axis=1))) == 1
+        
     final["Num_Isolates"] = final["TP"] + final["FP"]
     final["Total_Isolates"] = final["TP"] + final["FP"] + final["TN"] + final["FN"]
     final["PPV"] = final["TP"] / (final["TP"] + final["FP"])
@@ -146,9 +148,6 @@ def compute_predictive_values(combined_df, return_stats=[]):
     final["LR+"] = final["Sens"] / (1 - final["Spec"])
     final["LR-"] = (1 - final["Sens"]) / final["Spec"]
     #final["NPV"] = final["TN"] / (final["TN"] + final["FN"])
-    
-    # check that all feature rows have the same numbers of samples
-    assert len(np.unique(final[["TP", "FP", "TN", "FN"]].sum(axis=1))) == 1
     
     if len(return_stats) == 0:
         return final[["orig_variant", "Num_Isolates", "Total_Isolates", "TP", "FP", "TN", "FN", "PPV", "Sens", "Spec", "LR+", "LR-"]]
@@ -173,7 +172,19 @@ def BH_FDR_correction(coef_df):
 
 
 
-def run_all(drug, drug_abbr, out_dir, het_mode, alpha=0.05, num_bootstrap=1000):
+def run_all(drug_abbr, **kwargs):
+    
+    tiers_lst = kwargs["tiers_lst"]
+    pheno_category_lst = kwargs["pheno_category_lst"]
+    model_prefix = kwargs["model_prefix"]
+    het_mode = kwargs["het_mode"]
+    synonymous = kwargs["synonymous"]
+    pool_lof = kwargs["pool_lof"]
+    AF_thresh = kwargs["AF_thresh"]
+
+    num_PCs = kwargs["num_PCs"]
+    num_bootstrap = kwargs["num_bootstrap"]
+    alpha = kwargs["alpha"]
     
     # coefficients from L2 regularized regression ("baseline" regression)
     coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
@@ -216,15 +227,20 @@ def run_all(drug, drug_abbr, out_dir, het_mode, alpha=0.05, num_bootstrap=1000):
 
     combined = model_inputs.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id").reset_index(drop=True)
 
-    # for tractability, this is done after filtering out features with a logistic coefficient of 0. Also creates a lot of NaNs in those cases.
-    combined_small = combined[["sample_id", "phenotype"] + list(res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values)]
+    # compute univariate stats for only the lof variable
+    if pool_lof:
+        keep_variants = list(res_df.loc[res_df["orig_variant"].str.contains("lof")]["orig_variant"].values)
+    else:
+        keep_variants = list(res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values)
+        
+    # check that all samples were preserved
+    combined_small = combined[["sample_id", "phenotype"] + keep_variants]
     assert len(combined_small) == len(combined)
     
-    #### Compute univariate statistics only for cases where genotypes are binary (no AF), synonymous are included ####
+    #### Compute univariate statistics only for cases where genotypes are binary (no AF), synonymous are included, all features ####
     #### For LOF, only compute univariate stats for the LOF variables. Otherwise, the corresponding non-LOF model contains everything #### 
-    
-    # can only univariate statistics for binary genotypes. Otherwise there are no true/false positives/negatives
-    if (het_mode != "AF") & (include_synonymous == True):
+    #### In the LOF case, if no LOF variants (there is 1 LOF per gene) are significant, then keep_variants = [], and we don't run this block of code ####
+    if (het_mode != "AF") & (synonymous == True) and (len(tiers_lst) != 1) and (len(keep_variants) > 0):
         
         # get dataframe of predictive values for the non-zero coefficients and add them to the results dataframe
         full_predict_values = compute_predictive_values(combined_small)
@@ -265,7 +281,7 @@ def run_all(drug, drug_abbr, out_dir, het_mode, alpha=0.05, num_bootstrap=1000):
 
             # sanity checks -- lower bounds should be <= true values, and upper bounds should be >= true values
             assert sum(res_df[variable] < res_df[f"{variable}_LB"]) == 0
-            assert sum(res_df[variable] > res_df[f"{variable}_UB"]) == 0
+            assert sum(res_df[variable] > res_df[f"{variable}_UB"]) == 0            
 
     
     # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
@@ -283,12 +299,6 @@ kwargs = yaml.safe_load(open(config_file))
 tiers_lst = kwargs["tiers_lst"]
 pheno_category_lst = kwargs["pheno_category_lst"]
 model_prefix = kwargs["model_prefix"]
-het_mode = kwargs["het_mode"]
-AF_thresh = kwargs["AF_thresh"]
-
-num_PCs = kwargs["num_PCs"]
-num_bootstrap = kwargs["num_bootstrap"]
-alpha = kwargs["alpha"]
 
 out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
 if "ALL" in pheno_category_lst:
@@ -303,7 +313,7 @@ if not os.path.isdir(out_dir):
     exit()
 
 # run analysis
-model_analysis = run_all(drug, drug_WHO_abbr, out_dir, het_mode, alpha=alpha, num_bootstrap=num_bootstrap)
+model_analysis = run_all(drug_WHO_abbr, **kwargs)
 
 # save
-model_analysis.to_csv(os.path.join(out_dir, "model_analysis.csv"), index=False)
+model_analysis.to_csv(os.path.join(out_dir, "model_analysis_2.csv"), index=False)
