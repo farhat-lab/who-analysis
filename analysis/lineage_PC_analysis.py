@@ -33,8 +33,7 @@ del model_analysis
 
 # stop the program if there are no significant principal components
 if len(sig_PCs) == 0:
-    print("There are no significant principal components in this regression model. Exiting...")
-    exit()
+    raise ValueError("There are no significant principal components in this regression model. Exiting script...")
 else:
     print(sig_PCs)
     
@@ -42,7 +41,7 @@ else:
 ########## READ IN THE MINOR ALLELE COUNTS DATAFRAME ##########
 
 print("Reading in minor alleles dataframe")
-minor_allele_counts = sparse.load_npz("data/minor_allele_counts.npz").todense()
+minor_allele_counts = sparse.load_npz("../data/minor_allele_counts.npz").todense()
 
 # convert to dataframe
 minor_allele_counts = pd.DataFrame(minor_allele_counts)
@@ -61,7 +60,7 @@ minor_allele_counts = minor_allele_counts.set_index("sample_id")
 print("Reading in lineages dataframe")
 
 # the missing ones might be M. cannettii, most similar to L6 based on the other lineage callers
-lineages = pd.read_pickle("data/combined_lineage_sample_IDs.pkl")
+lineages = pd.read_pickle("../data/combined_lineage_sample_IDs.pkl")
 lineages["Lineage"] = lineages["Lineage"].fillna("6")
 lineages["Lineage_1"] = lineages["Lineage_1"].fillna("6")
 

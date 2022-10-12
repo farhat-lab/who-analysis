@@ -200,8 +200,8 @@ def run_all(drug, drug_abbr, out_dir, het_mode, alpha=0.05, num_bootstrap=1000):
     assert len(coef_df.query("pval > BH_pval")) == 0
     assert len(coef_df.query("pval > Bonferroni_pval")) == 0
 
-    # return all features with non-zero coefficients. Don't exclude by p-value yet because some variants with large effects are rare
-    res_df = coef_df.query("coef != 0").sort_values("coef", ascending=False).reset_index(drop=True)
+    # return all features with non-zero coefficients. Exclude insignificant features now using the FDR rate
+    res_df = coef_df.query("coef != 0 & BH_pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
     res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
 
     # convert to odds ratios
@@ -210,7 +210,7 @@ def run_all(drug, drug_abbr, out_dir, het_mode, alpha=0.05, num_bootstrap=1000):
     res_df["OR_UB"] = np.exp(res_df["coef_UB"])
 
     # because of numerical precision, this is not always technically true. But it's only a problem for coefficients that are close to 0, so they are not important anyway.
-    # could include a threshold for variants to keep, instead of just those that aren't exactly 0. Discuss....
+    # could include a threshold for variants to keep, instead of just those that aren't exactly 0.
     # assert sum(res_df["OR_LB"] > res_df["Odds_Ratio"]) == 0
     # assert sum(res_df["OR_UB"] < res_df["Odds_Ratio"]) == 0
 
@@ -220,8 +220,11 @@ def run_all(drug, drug_abbr, out_dir, het_mode, alpha=0.05, num_bootstrap=1000):
     combined_small = combined[["sample_id", "phenotype"] + list(res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values)]
     assert len(combined_small) == len(combined)
     
+    #### Compute univariate statistics only for cases where genotypes are binary (no AF), synonymous are included ####
+    #### For LOF, only compute univariate stats for the LOF variables. Otherwise, the corresponding non-LOF model contains everything #### 
+    
     # can only univariate statistics for binary genotypes. Otherwise there are no true/false positives/negatives
-    if het_mode != "AF":
+    if (het_mode != "AF") & (include_synonymous == True):
         
         # get dataframe of predictive values for the non-zero coefficients and add them to the results dataframe
         full_predict_values = compute_predictive_values(combined_small)
