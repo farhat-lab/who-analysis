@@ -1,6 +1,6 @@
 # World Health Organization TB Resistance Mutation Catalog, 2022
 
-# Create Environment
+## Create Environment
 
 <code>conda create --name <env_name> --file environment_reqs.txt</code>
 
