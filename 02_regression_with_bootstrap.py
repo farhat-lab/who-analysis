@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, sparse, sys, joblib
+import glob, os, yaml, sparse, sys, pickle
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
@@ -109,6 +109,7 @@ if num_PCs > 0:
 
     # save model_inputs to use later. This is the actual matrix used for model fitting, after all filtering steps
     model_inputs.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
+    eigenvec_df.to_pickle(os.path.join(out_dir, "model_eigenvecs.pkl"))
 
     # concatenate the eigenvectors to the matrix
     X = np.concatenate([model_inputs.values, eigenvec_df.values], axis=1)
@@ -147,8 +148,8 @@ model = LogisticRegressionCV(Cs=np.logspace(-4, 4, 9),
                             )
 model.fit(X, y)
 print(f"    Regularization parameter: {model.C_[0]}")
-# save model
-joblib.dump(model, os.path.join(out_dir, 'logReg_model'))
+# save model. Read it back in with pickle.load(open(os.path.join(out_dir, 'logReg_model'),'rb'))
+pickle.dump(model, open(os.path.join(out_dir, 'logReg_model'),'wb'))
 
 # save coefficients
 res_df = pd.DataFrame({"variant": np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]]), 'coef': np.squeeze(model.coef_)})
