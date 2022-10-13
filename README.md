@@ -2,7 +2,7 @@
 
 # Create Environment
 
-conda create --name <env_name> --file /environment_reqs.txt
+<code>conda create --name <env_name> --file environment_reqs.txt</code>
 
 ## Genotype Annotations
 
