@@ -5,6 +5,8 @@ plt.rcParams['figure.dpi'] = 150
 import scipy.stats as st
 import sys, pickle
 import sklearn.metrics
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 
 import glob, os, yaml
 import warnings
@@ -242,48 +244,48 @@ def run_all(out_dir, drug_abbr, **kwargs):
     #### Compute univariate statistics only for cases where genotypes are binary (no AF), synonymous are included, all features ####
     #### For LOF, only compute univariate stats for the LOF variables. Otherwise, the corresponding non-LOF model contains everything #### 
     #### In the LOF case, if no LOF variants (there is 1 LOF per gene) are significant, then keep_variants = [], and we don't run this block of code ####
-#     if (het_mode != "AF") & (synonymous == True) and (len(tiers_lst) != 1) and (len(keep_variants) > 0):
+    if (het_mode != "AF") & (synonymous == True) and (len(tiers_lst) > 1) and (len(keep_variants) > 0):
         
-#         # get dataframe of predictive values for the non-zero coefficients and add them to the results dataframe
-#         full_predict_values = compute_predictive_values(combined_small)
-#         res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
+        # get dataframe of predictive values for the non-zero coefficients and add them to the results dataframe
+        full_predict_values = compute_predictive_values(combined_small)
+        res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
 
-#         print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates")
-#         bs_results = pd.DataFrame(columns = res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values).astype(float)
+        print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates")
+        bs_results = pd.DataFrame(columns = res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values).astype(float)
 
-#         # need confidence intervals for 5 stats: PPV, sens, spec, + likelihood ratio, - likelihood ratio
-#         for i in range(num_bootstrap):
+        # need confidence intervals for 5 stats: PPV, sens, spec, + likelihood ratio, - likelihood ratio
+        for i in range(num_bootstrap):
 
-#             # get bootstrap sample
-#             bs_idx = np.random.choice(np.arange(0, len(combined_small)), size=len(combined_small), replace=True)
-#             bs_combined = combined_small.iloc[bs_idx, :]
+            # get bootstrap sample
+            bs_idx = np.random.choice(np.arange(0, len(combined_small)), size=len(combined_small), replace=True)
+            bs_combined = combined_small.iloc[bs_idx, :]
 
-#             # check ordering of features because we're just going to append bootstrap dataframes
-#             assert sum(bs_combined.columns[2:] != bs_results.columns) == 0
+            # check ordering of features because we're just going to append bootstrap dataframes
+            assert sum(bs_combined.columns[2:] != bs_results.columns) == 0
 
-#             # get predictive values from the dataframe of bootstrapped samples. Only return the 5 we want CI for, and the variant
-#             bs_values = compute_predictive_values(bs_combined, return_stats=["orig_variant", "PPV", "Sens", "Spec", "LR+", "LR-"])
-#             bs_results = pd.concat([bs_results, bs_values.set_index("orig_variant").T], axis=0)
+            # get predictive values from the dataframe of bootstrapped samples. Only return the 5 we want CI for, and the variant
+            bs_values = compute_predictive_values(bs_combined, return_stats=["orig_variant", "PPV", "Sens", "Spec", "LR+", "LR-"])
+            bs_results = pd.concat([bs_results, bs_values.set_index("orig_variant").T], axis=0)
 
-#         # add the confidence intervals to the dataframe
-#         for variable in ["PPV", "Sens", "Spec", "LR+", "LR-"]:
+        # add the confidence intervals to the dataframe
+        for variable in ["PPV", "Sens", "Spec", "LR+", "LR-"]:
 
-#             lower, upper = np.nanpercentile(bs_results.loc[variable], q=[2.5, 97.5], axis=0)
+            lower, upper = np.nanpercentile(bs_results.loc[variable], q=[2.5, 97.5], axis=0)
 
-#             # LR+ can be infinite if spec is 1, and after percentile, it will be NaN, so replace with infinity
-#             if variable == "LR+":
-#                 res_df[variable] = res_df[variable].fillna(np.inf)
-#                 lower[np.isnan(lower)] = np.inf
-#                 upper[np.isnan(upper)] = np.inf
+            # LR+ can be infinite if spec is 1, and after percentile, it will be NaN, so replace with infinity
+            if variable == "LR+":
+                res_df[variable] = res_df[variable].fillna(np.inf)
+                lower[np.isnan(lower)] = np.inf
+                upper[np.isnan(upper)] = np.inf
 
-#             res_df = res_df.merge(pd.DataFrame({"orig_variant": bs_results.columns, 
-#                                 f"{variable}_LB": lower,
-#                                 f"{variable}_UB": upper,
-#                                }), on="orig_variant", how="outer")
+            res_df = res_df.merge(pd.DataFrame({"orig_variant": bs_results.columns, 
+                                f"{variable}_LB": lower,
+                                f"{variable}_UB": upper,
+                               }), on="orig_variant", how="outer")
 
-#             # sanity checks -- lower bounds should be <= true values, and upper bounds should be >= true values
-#             assert sum(res_df[variable] < res_df[f"{variable}_LB"]) == 0
-#             assert sum(res_df[variable] > res_df[f"{variable}_UB"]) == 0            
+            # sanity checks -- lower bounds should be <= true values, and upper bounds should be >= true values
+            assert sum(res_df[variable] < res_df[f"{variable}_LB"]) == 0
+            assert sum(res_df[variable] > res_df[f"{variable}_UB"]) == 0            
 
     
     # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
@@ -331,10 +333,10 @@ def compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous):
     eigenvec_df = pd.read_pickle(os.path.join(out_dir, "model_eigenvecs.pkl"))
     eigenvec_df.columns = [f"PC{num}" for num in eigenvec_df.columns]
 
-    df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
-    y = df_phenos.sort_values("sample_id").phenotype.values
+    df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv")).sort_values("sample_id").reset_index(drop=True)
+    y = df_phenos.phenotype.values
     
-    if (het_mode != "AF") & (synonymous == True) and (len(tiers_lst) != 1):
+    if (het_mode != "AF") & (synonymous == True) and (len(tiers_lst) > 1):
         
         def compute_balanced_accuracy_score_single_variant(variant):
 
@@ -362,8 +364,11 @@ def compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous):
     
     # get all significant features
     downselect_matrix = model_matrix.merge(eigenvec_df, left_index=True, right_index=True)[model_analysis["orig_variant"]]
+    assert sum(df_phenos["sample_id"] != downselect_matrix.index) == 0
     assert len(model_analysis) == downselect_matrix.shape[1]
-    X = downselect_matrix.values
+    
+    scaler = StandardScaler()
+    X = scaler.fit_transform(downselect_matrix.values)
     
     # fit a logistic regression model on the downselected data (only variants with non-zero coefficients and significant p-values after FDR)
     small_model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
@@ -394,4 +399,4 @@ def compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous):
 
 # run logistic regression model using only significant predictors saved in the model_analysis.csv file
 sens, spec, acc, balanced_acc = compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous)
-pd.DataFrame({"Sens": sens, "Spec": spec, "accuracy": acc, "balanced_accuracy": balanced_acc}, index=[0]).to_csv("logReg_summary.csv", index=False)
+pd.DataFrame({"Sens": sens, "Spec": spec, "accuracy": acc, "balanced_accuracy": balanced_acc}, index=[0]).to_csv(os.path.join(out_dir, "logReg_summary.csv"), index=False)
