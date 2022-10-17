@@ -4,6 +4,7 @@
 
 ### Add required channels
 <code>conda config --add channels bioconda</code>
+
 <code>conda config --add channels conda-forge</code>
 
 ## Build environment from file
