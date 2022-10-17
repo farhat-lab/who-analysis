@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, sparse, sys, pickle
+import glob, os, yaml, sparse, sys
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
@@ -152,7 +152,7 @@ model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13),
                             )
 model.fit(X, y)
 print(f"    Regularization parameter: {model.C_[0]}")
-pickle.dump(model, open(os.path.join(out_dir, 'logReg_model'),'wb'))
+# pickle.dump(model, open(os.path.join(out_dir, 'logReg_model'),'wb'))
 
 # save coefficients
 res_df = pd.DataFrame({"variant": np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]]), 'coef': np.squeeze(model.coef_)})
