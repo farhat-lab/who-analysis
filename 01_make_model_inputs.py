@@ -62,7 +62,6 @@ out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
-print(f"Saving results to {out_dir}")
     
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
@@ -75,6 +74,7 @@ if synonymous:
 if pool_lof:
     model_params += ", Pooling LOF"
 print(model_params)
+print(f"Saving results to {out_dir}")
 
 ############# STEP 1: GET ALL AVAILABLE PHENOTYPES #############
 

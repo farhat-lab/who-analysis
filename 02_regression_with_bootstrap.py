@@ -141,9 +141,9 @@ print(f"    {X.shape[0]} isolates and {X.shape[1]} features in the model")
 ############# STEP 5: FIT L2-PENALIZED REGRESSION #############
 
 
-model = LogisticRegressionCV(Cs=np.logspace(-4, 4, 9), 
+model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
                              cv=5,
-                             penalty='l2', 
+                             penalty='l2',
                              max_iter=10000, 
                              multi_class='ovr',
                              #scoring='neg_log_loss',
@@ -173,7 +173,7 @@ for i in range(num_bootstrap):
     X_bs = X[sample_idx, :]
     y_bs = y[sample_idx]
 
-    bs_model = LogisticRegression(C=model.C_[0], penalty='l2', max_iter=10000, multi_class='ovr')
+    bs_model = LogisticRegression(C=model.C_[0], penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
     bs_model.fit(X_bs, y_bs)
     coefs.append(np.squeeze(bs_model.coef_))
 
