@@ -104,8 +104,3 @@ Then, all remaining features with anything missing are dropped. Imputation can b
 32 <a href="https://docs.google.com/spreadsheets/d/13vdVdzZk053yT-i5LgyFJUBD1T6_nIRgzBAxxa2OOyc/edit#gid=0" target="_blank">analyses</a> run for each drug, changing each parameter individually.  
 
 ---
-
-## TO-DO:
-    
-1. Compare full model performance with association (i.e. catalog-based) methods. 
-2. Write a script to split data into train/test splits, fit a predictive model, and compute metrics (i.e. AUC, MAE/RMSE). This would be just for the Farhat lab.
