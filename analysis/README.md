@@ -1,6 +1,6 @@
 # Compare Logistic Regression to Associative Studies
 
-Associative: also known as catalog-base methods. 
+Associative: also known as catalog-based methods. 
 
 See if logistic regression outperforms a univariate catalog-based method.
 

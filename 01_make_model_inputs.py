@@ -61,15 +61,15 @@ with open(config_file, "w") as file:
 out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
 
 if not os.path.isdir(out_dir):
-    print(f"Saving results to {out_dir}")
     os.makedirs(out_dir)
-
+print(f"Saving results to {out_dir}")
+    
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 
 # print statement for keeping track of progress in log (stdout) files
-model_params = f"{drug}, {af_print_statement}, Tiers: {'+'.join(tiers_lst)}"
+model_params = f"\n{drug}, {af_print_statement}, Tiers: {'+'.join(tiers_lst)}"
 if synonymous:
     model_params += ", with synonymous mutations"
 if pool_lof:

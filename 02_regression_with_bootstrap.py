@@ -111,8 +111,9 @@ if num_PCs > 0:
     model_inputs.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
     eigenvec_df.to_pickle(os.path.join(out_dir, "model_eigenvecs.pkl"))
 
-    # concatenate the eigenvectors to the matrix
-    X = np.concatenate([model_inputs.values, eigenvec_df.values], axis=1)
+    # concatenate the eigenvectors to the matrix and check the index ordering against the phenotypes matrix
+    X = model_inputs.merge(eigenvec_df, left_index=True, right_index=True).values
+    assert sum(model_inputs.merge(eigenvec_df, left_index=True, right_index=True).index != df_phenos["sample_id"]) == 0
     
 else:
     print("Fitting regression without population structure correction")
@@ -125,7 +126,8 @@ else:
     model_inputs = model_inputs.set_index("sample_id")
     model_inputs.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
     X = model_inputs.values
-
+    assert sum(model_inputs.index != df_phenos["sample_id"]) == 0
+    
     
 # scale inputs
 scaler = StandardScaler()
@@ -144,11 +146,12 @@ model = LogisticRegressionCV(Cs=np.logspace(-4, 4, 9),
                              penalty='l2', 
                              max_iter=10000, 
                              multi_class='ovr',
-                             scoring='neg_log_loss'
+                             #scoring='neg_log_loss',
+                             scoring='balanced_accuracy',
+                             class_weight='balanced'
                             )
 model.fit(X, y)
 print(f"    Regularization parameter: {model.C_[0]}")
-# save model. Read it back in with pickle.load(open(os.path.join(out_dir, 'logReg_model'),'rb'))
 pickle.dump(model, open(os.path.join(out_dir, 'logReg_model'),'wb'))
 
 # save coefficients
