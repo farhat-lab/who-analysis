@@ -2,6 +2,11 @@
 
 ## Create Environment
 
+### Add channels
+<code>conda config --add channels conda-forge</code>
+<code>conda config --add channels bioconda</code>
+
+## Build environment from file
 <code>conda create --name <env_name> --file environment_reqs.txt</code>
 
 ## Genotype Annotations
