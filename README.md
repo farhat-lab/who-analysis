@@ -1,4 +1,4 @@
-# World Health Organization TB Resistance Mutation Catalog, 2022
+# WHO MTB Resistance Mutation Catalog, 2022
 
 ## Create Environment
 
