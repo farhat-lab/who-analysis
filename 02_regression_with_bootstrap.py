@@ -146,8 +146,8 @@ model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13),
                              penalty='l2',
                              max_iter=10000, 
                              multi_class='ovr',
-                             #scoring='neg_log_loss',
-                             scoring='balanced_accuracy',
+                             scoring='neg_log_loss',
+                             #scoring='balanced_accuracy',
                              class_weight='balanced'
                             )
 model.fit(X, y)
@@ -162,7 +162,6 @@ res_df.to_csv(os.path.join(out_dir, "regression_coef.csv"), index=False)
 ############# STEP 6: BOOTSTRAP COEFFICIENTS #############
 
 # use the regularization parameter determined above
-print(f"Bootstrapping coefficient confidence intervals with {num_bootstrap} replicates")
 coefs = []
 for i in range(num_bootstrap):
    

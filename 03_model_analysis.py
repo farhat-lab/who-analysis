@@ -3,10 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 plt.rcParams['figure.dpi'] = 150
 import scipy.stats as st
-import sys, pickle
-import sklearn.metrics
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
+import sys
 
 import glob, os, yaml
 import warnings
@@ -224,11 +221,6 @@ def run_all(out_dir, drug_abbr, **kwargs):
     res_df["OR_LB"] = np.exp(res_df["coef_LB"])
     res_df["OR_UB"] = np.exp(res_df["coef_UB"])
 
-    # because of numerical precision, this is not always technically true. But it's only a problem for coefficients that are close to 0, so they are not important anyway.
-    # could include a threshold for variants to keep, instead of just those that aren't exactly 0.
-    # assert sum(res_df["OR_LB"] > res_df["Odds_Ratio"]) == 0
-    # assert sum(res_df["OR_UB"] < res_df["Odds_Ratio"]) == 0
-
     combined = model_inputs.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id").reset_index(drop=True)
 
     # compute univariate stats for only the lof variable
@@ -323,80 +315,3 @@ model_analysis = run_all(out_dir, drug_WHO_abbr, **kwargs)
 
 # save
 model_analysis.to_csv(os.path.join(out_dir, "model_analysis.csv"), index=False)
-
-
-def compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous):
-    
-    model_analysis = pd.read_csv(os.path.join(out_dir, "model_analysis.csv"))
-    model_matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
-
-    eigenvec_df = pd.read_pickle(os.path.join(out_dir, "model_eigenvecs.pkl"))
-    eigenvec_df.columns = [f"PC{num}" for num in eigenvec_df.columns]
-
-    df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv")).sort_values("sample_id").reset_index(drop=True)
-    y = df_phenos.phenotype.values
-    
-    if (het_mode != "AF") & (synonymous == True) and (len(tiers_lst) > 1):
-        
-        def compute_balanced_accuracy_score_single_variant(variant):
-
-            matrix = model_matrix.copy()
-
-            coef = model_analysis.query("orig_variant == @variant")["coef"].values[0]
-            if coef > 0:
-                matrix.loc[model_matrix[variant] == 1, "assoc"] = 1
-                matrix.loc[model_matrix[variant] != 1, "assoc"] = 0
-            else:
-                matrix.loc[model_matrix[variant] == 1, "assoc"] = 0
-                matrix.loc[model_matrix[variant] != 1, "assoc"] = 1
-
-            return sklearn.metrics.accuracy_score(y, matrix["assoc"]), sklearn.metrics.balanced_accuracy_score(y, matrix["assoc"])
-
-
-        # update the model_analysis dataframe with accuracy metrics (sens, spec, ppv are already there)
-        for i, row in model_analysis.iterrows():
-
-            if "PC" not in row["orig_variant"]:
-                model_analysis.loc[i, ["accuracy", "balanced_accuracy"]] = compute_balanced_accuracy_score_single_variant(row["orig_variant"])
-            
-        # save the updated dataframe
-        model_analysis.to_csv(os.path.join(out_dir, "model_analysis.csv"), index=False)
-    
-    # get all significant features
-    downselect_matrix = model_matrix.merge(eigenvec_df, left_index=True, right_index=True)[model_analysis["orig_variant"]]
-    assert sum(df_phenos["sample_id"] != downselect_matrix.index) == 0
-    assert len(model_analysis) == downselect_matrix.shape[1]
-    
-    scaler = StandardScaler()
-    X = scaler.fit_transform(downselect_matrix.values)
-    
-    # fit a logistic regression model on the downselected data (only variants with non-zero coefficients and significant p-values after FDR)
-    small_model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
-                                 cv=5,
-                                 penalty='l2', 
-                                 max_iter=10000, 
-                                 multi_class='ovr',
-                                 #scoring='neg_log_loss',
-                                 scoring='balanced_accuracy',
-                                 class_weight='balanced'
-                                )
-
-    # fit and save the baseline model
-    small_model.fit(X, y)
-    print(f"Regularization parameter: {small_model.C_[0]}")
-    pickle.dump(small_model, open(os.path.join(out_dir, 'logReg_model'),'wb'))
-    
-    # get predictions and compute sensitivity, specificity, and accuracy scores (balanced and unbalanced)
-    y_hat = small_model.predict(X)
-
-    tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y, y_hat).ravel()
-    sens = tp / (tp+fn)
-    spec = tn / (tn+fp)
-    
-    # return the values for the overall model
-    return sens, spec, sklearn.metrics.accuracy_score(y, y_hat), sklearn.metrics.balanced_accuracy_score(y, y_hat)
-
-
-# run logistic regression model using only significant predictors saved in the model_analysis.csv file
-sens, spec, acc, balanced_acc = compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous)
-pd.DataFrame({"Sens": sens, "Spec": spec, "accuracy": acc, "balanced_accuracy": balanced_acc}, index=[0]).to_csv(os.path.join(out_dir, "logReg_summary.csv"), index=False)
