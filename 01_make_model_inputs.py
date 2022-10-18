@@ -60,7 +60,7 @@ out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
-print(f"Saving results to {out_dir}")
+print(f"\nSaving results to {out_dir}")
     
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
