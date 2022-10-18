@@ -75,7 +75,6 @@ if num_PCs > 0:
     print(f"Min MAF: {round(mean_maf[0].min(), 2)}, Max MAF: {round(mean_maf[0].max(), 2)}")
 
     # compute GRM using the mino allele counts of only the samples in the model
-    print("Computing genetic relatedness matrix")
     minor_allele_counts = minor_allele_counts.query("sample_id in @model_inputs.sample_id.values")
     grm = np.cov(minor_allele_counts.values)
     
