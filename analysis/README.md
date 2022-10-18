@@ -1,7 +1,11 @@
-# Compare Logistic Regression to Associative Studies
+# Post-Model Fitting Analysis Steps
 
-Associative: also known as catalog-based methods. 
+## 1. Lineage Analysis for Significant Principal Components
 
-See if logistic regression outperforms a univariate catalog-based method.
+Principal components may have significant coefficients / odds ratios in the logistic regression models. Run the script <code>lineage_PC_analysis.py</code> to plot up to 2 significant eigenvectors, with isolates colored by their primary lineage (1-6 + <i>M. bovis</i>). 
 
-i.e. for a given variant, if it's OR > 1, assign all isolates without it to susceptible and all isolates with it to resistant. Can use the TP, FP, TN, and FN values that have already been computed for each variant. 
+The two-dimensional plot shows 
+
+## 2. Compare Logistic Regression to Associative Studies
+
+The script in this 

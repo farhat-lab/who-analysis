@@ -7,6 +7,7 @@ import seaborn as sns
 import glob, os, yaml, subprocess, itertools, sparse, sys
 import sklearn.metrics
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 import scipy.stats as st
 import warnings
 warnings.filterwarnings("ignore")
@@ -88,8 +89,10 @@ del model_matrix
 print("Computing the GRM and performing PCA")
 grm = np.cov(minor_allele_counts.values)
 
+scaler = StandardScaler()
 n = 5
-pca = PCA(n_components=n).fit(grm)
+PCA(n_components=n).fit(scaler.fit_transform(grm))
+    
 eigenvec = pca.components_.T
 eigenvec_df = pd.DataFrame(eigenvec)
 eigenvec_df.columns = [f"PC{i}" for i in range(n)]

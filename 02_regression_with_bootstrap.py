@@ -37,6 +37,7 @@ genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 
+scaler = StandardScaler()
 
 ############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES #############
 
@@ -83,7 +84,7 @@ if num_PCs > 0:
 
 
     pca = PCA(n_components=num_PCs)
-    pca.fit(grm)
+    pca.fit(scaler.fit_transform(grm))
 
     print(f"Explained variance of {num_PCs} principal components: {pca.explained_variance_}")
     eigenvec = pca.components_.T
@@ -129,7 +130,6 @@ else:
     
     
 # scale inputs
-scaler = StandardScaler()
 X = scaler.fit_transform(X)
 y = df_phenos.phenotype.values
 
@@ -146,12 +146,10 @@ model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13),
                              max_iter=10000, 
                              multi_class='ovr',
                              scoring='neg_log_loss',
-                             #scoring='balanced_accuracy',
                              class_weight='balanced'
                             )
 model.fit(X, y)
 print(f"    Regularization parameter: {model.C_[0]}")
-# pickle.dump(model, open(os.path.join(out_dir, 'logReg_model'),'wb'))
 
 # save coefficients
 res_df = pd.DataFrame({"variant": np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]]), 'coef': np.squeeze(model.coef_)})
