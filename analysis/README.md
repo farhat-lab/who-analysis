@@ -4,7 +4,7 @@
 
 Principal components may have significant coefficients / odds ratios in the logistic regression models. Run the script <code>lineage_PC_analysis.py</code> to plot up to 2 significant eigenvectors, with isolates colored by their primary lineage (1-6 + <i>M. bovis</i>). 
 
-The two-dimensional plot shows 
+The resulting two-dimensional plot shows the eigenvectors with the largest 
 
 ## 2. Compare Logistic Regression to Associative Studies
 

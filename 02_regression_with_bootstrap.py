@@ -86,7 +86,7 @@ if num_PCs > 0:
     pca = PCA(n_components=num_PCs)
     pca.fit(scaler.fit_transform(grm))
 
-    print(f"Explained variance of {num_PCs} principal components: {pca.explained_variance_}")
+    print(f"Explained variance ratios of {num_PCs} principal components: {pca.explained_variance_ratio_}")
     eigenvec = pca.components_.T
     eigenvec_df = pd.DataFrame(eigenvec)
     eigenvec_df["sample_id"] = minor_allele_counts.index.values
