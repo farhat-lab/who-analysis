@@ -33,13 +33,10 @@ else:
 
 if het_mode == "DROP":
     model_prefix = "dropAF"
-    af_print_statement = "dropping HETs"
 elif het_mode == "AF":
     model_prefix = "encodeAF"
-    af_print_statement = "encoding HETs with AF"
 elif het_mode == "BINARY":
     model_prefix = "binarizeAF"
-    af_print_statement = "binarizing AFs"
 else:
     raise ValueError(f"{het_mode} is not a valid mode for handling heterozygous alleles")
 
@@ -47,6 +44,7 @@ if synonymous:
     model_prefix += "_withSyn"
 else:
     model_prefix += "_noSyn"
+    
     
 if pool_lof:
     model_prefix += "_poolLOF"
@@ -62,19 +60,11 @@ out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
+print(f"Saving results to {out_dir}")
     
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
-
-# print statement for keeping track of progress in log (stdout) files
-model_params = f"\n{drug}, {af_print_statement}, Tiers: {'+'.join(tiers_lst)}"
-if synonymous:
-    model_params += ", with synonymous mutations"
-if pool_lof:
-    model_params += ", Pooling LOF"
-print(model_params)
-print(f"Saving results to {out_dir}")
 
 ############# STEP 1: GET ALL AVAILABLE PHENOTYPES #############
 
