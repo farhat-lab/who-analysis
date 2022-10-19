@@ -154,6 +154,10 @@ else:
 
 out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
 
+if not os.path.isdir(out_dir):
+    print("No model for this analysis")
+    exit()
+
 # run logistic regression model using only significant predictors saved in the model_analysis.csv file
 if (het_mode != "AF") & (synonymous == True) and (len(tiers_lst) > 1):
     sens, spec, acc, balanced_acc = compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous)
