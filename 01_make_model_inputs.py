@@ -129,7 +129,11 @@ for i, fName in enumerate(geno_files):
         dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))        
 
         
-df_model = pd.concat(dfs_lst).drop_duplicates().reset_index(drop=True)
+# possible to have duplicated entries because they have different predicted effects
+# example: Met1fs is present in two lines because it has 2 predicted effects: frameshift and start lost
+# sort the dataframe by inverse, which keeps start_lost before frameshift, then drop_duplicates. 
+df_model = pd.concat(dfs_lst)
+df_model = df_model.sort_values("predicted_effect", ascending=False).drop_duplicates(subset=["sample_id", "variant_category", "variant_binary_status", "variant_allele_frequency"], keep="first").reset_index(drop=True)
 
 
 ############# STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #############
