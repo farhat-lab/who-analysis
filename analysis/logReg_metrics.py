@@ -59,25 +59,30 @@ def get_threshold_val(y, y_proba):
 
 
 
-def compute_balanced_accuracy_score_single_variant(model_matrix, model_analysis, y, variant):
+# def compute_balanced_accuracy_score_single_variant(model_matrix, model_analysis, y, variant):
 
-    matrix = model_matrix.copy()
+#     matrix = model_matrix.copy()
 
-    coef = model_analysis.query("orig_variant == @variant")["coef"].values[0]
-    if coef > 0:
-        matrix.loc[model_matrix[variant] == 1, "assoc"] = 1
-        matrix.loc[model_matrix[variant] != 1, "assoc"] = 0
-    else:
-        matrix.loc[model_matrix[variant] == 1, "assoc"] = 0
-        matrix.loc[model_matrix[variant] != 1, "assoc"] = 1
+#     coef = model_analysis.query("orig_variant == @variant")["coef"].values[0]
+#     if coef > 0:
+#         matrix.loc[model_matrix[variant] == 1, "assoc"] = 1
+#         matrix.loc[model_matrix[variant] != 1, "assoc"] = 0
+#     else:
+#         matrix.loc[model_matrix[variant] == 1, "assoc"] = 0
+#         matrix.loc[model_matrix[variant] != 1, "assoc"] = 1
 
-    return sklearn.metrics.accuracy_score(y, matrix["assoc"]), sklearn.metrics.balanced_accuracy_score(y, matrix["assoc"])
+#     return sklearn.metrics.accuracy_score(y, matrix["assoc"]), sklearn.metrics.balanced_accuracy_score(y, matrix["assoc"])
 
 
 
 
 def compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous):
+    '''
+    This model computes a logistic regression model using the significant predictors from the first model.
     
+    The original model was used to assign coefficients/odds ratios and p-values. Using the significant predictors (p < 0.05 after FDR), this function
+    builds another L2-penalized logistic regression to compute sensitivity, specificity, AUC, accuracy, and balanced accuracy. 
+    '''
     model_analysis = pd.read_csv(os.path.join(out_dir, "model_analysis.csv"))
     model_matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
 
@@ -112,14 +117,14 @@ def compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous):
     pickle.dump(small_model, open(os.path.join(out_dir, 'logReg_model'),'wb'))
     
 
-    # update the model_analysis dataframe with accuracy metrics (sens, spec, ppv are already there)
-    for i, row in model_analysis.iterrows():
+#     # update the model_analysis dataframe with accuracy metrics (sens, spec, ppv are already there)
+#     for i, row in model_analysis.iterrows():
 
-        if "PC" not in row["orig_variant"]:
-            model_analysis.loc[i, ["accuracy", "balanced_accuracy"]] = compute_balanced_accuracy_score_single_variant(downselect_matrix, model_analysis, y, row["orig_variant"])
+#         if "PC" not in row["orig_variant"]:
+#             model_analysis.loc[i, ["accuracy", "balanced_accuracy"]] = compute_balanced_accuracy_score_single_variant(downselect_matrix, model_analysis, y, row["orig_variant"])
 
-    # save the updated dataframe
-    model_analysis.to_csv(os.path.join(out_dir, "model_analysis.csv"), index=False)
+#     # save the updated dataframe
+#     model_analysis.to_csv(os.path.join(out_dir, "model_analysis.csv"), index=False)
 
     # get predicted probabilities. The output is N x k dimensions, where N = number of samples, and k = number of classes
     # the second column is the probability of being in the class 1, so compute the classification threshold using that
@@ -132,7 +137,7 @@ def compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous):
     spec = tn / (tn+fp)
 
     # return the values for the overall model
-    return sens, spec, sklearn.metrics.accuracy_score(y, y_hat), sklearn.metrics.balanced_accuracy_score(y, y_hat)
+    return sens, spec, sklearn.metrics.roc_auc_score(y, y_hat), sklearn.metrics.accuracy_score(y, y_hat), sklearn.metrics.balanced_accuracy_score(y, y_hat)
 
 
 
@@ -160,5 +165,7 @@ if not os.path.isdir(out_dir):
 
 # run logistic regression model using only significant predictors saved in the model_analysis.csv file
 if (het_mode != "AF") & (synonymous == True) and (len(tiers_lst) > 1):
-    sens, spec, acc, balanced_acc = compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous)
-    pd.DataFrame({"Sens": sens, "Spec": spec, "accuracy": acc, "balanced_accuracy": balanced_acc}, index=[0]).to_csv(os.path.join(out_dir, "logReg_summary.csv"), index=False)
+    sens, spec, auc, acc, balanced_acc = compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous)
+    pd.DataFrame({"Sens": sens, "Spec": spec, "AUC": auc, 
+                  "accuracy": acc, "balanced_accuracy": balanced_acc
+                 }, index=[0]).to_csv(os.path.join(out_dir, "logReg_summary.csv"), index=False)
