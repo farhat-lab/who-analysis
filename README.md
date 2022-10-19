@@ -1,4 +1,4 @@
-# WHO MTB Resistance Mutation Catalog, 2022
+# WHO <i>M. tuberculosis</i> Resistance Mutation Catalog, 2022
 
 ## Create Environment
 
