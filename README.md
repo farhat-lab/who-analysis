@@ -9,6 +9,8 @@
 
 ## Build environment from file
 <code>conda create --name <env_name> --file environment_reqs.txt</code>
+    
+If `fast-lineage-caller` does not install properly from the environment requirements file, install it with `pip install fast-lineage-caller`. I have had issues in the past installing it with conda. 
 
 ## Genotype Annotations
 
