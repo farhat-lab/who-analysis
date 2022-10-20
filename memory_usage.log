@@ -48,3 +48,176 @@ Line #    Mem usage    Increment  Occurrences   Line Contents
    142   5252.1 MiB    760.8 MiB           1       return df_model.sort_values("predicted_effect", ascending=False).drop_duplicates(subset=["sample_id", "resolved_symbol", "variant_category", "variant_binary_status", "variant_allele_frequency"], keep="first").reset_index(drop=True)
 
 
+Filename: /home/sak0914/who-analysis/02_regression_with_bootstrap.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+    67    279.6 MiB    279.6 MiB           1       @profile(stream=mem_log)
+    68                                             def read_in_matrix_compute_grm(fName):
+    69   2946.9 MiB   2667.3 MiB           1           minor_allele_counts = sparse.load_npz(fName).todense()
+    70                                         
+    71                                                 # convert to dataframe
+    72   2946.9 MiB      0.0 MiB           1           minor_allele_counts = pd.DataFrame(minor_allele_counts)
+    73   2946.9 MiB      0.0 MiB           1           minor_allele_counts.columns = minor_allele_counts.iloc[0, :]
+    74   2946.9 MiB      0.0 MiB           1           minor_allele_counts = minor_allele_counts.iloc[1:, :]
+    75   2947.3 MiB      0.3 MiB           1           minor_allele_counts.rename(columns={0:"sample_id"}, inplace=True)
+    76   2946.9 MiB     -0.4 MiB           1           minor_allele_counts["sample_id"] = minor_allele_counts["sample_id"].astype(int)
+    77                                         
+    78                                                 # make sample ids the index again
+    79   2949.8 MiB      2.9 MiB           1           minor_allele_counts = minor_allele_counts.set_index("sample_id")
+    80                                         
+    81   2952.0 MiB      2.1 MiB           1           mean_maf = pd.DataFrame(minor_allele_counts.mean(axis=0))
+    82   2952.0 MiB      0.0 MiB           1           print(f"Min MAF: {round(mean_maf[0].min(), 2)}, Max MAF: {round(mean_maf[0].max(), 2)}")
+    83                                         
+    84                                                 # compute GRM using the mino allele counts of only the samples in the model
+    85    674.0 MiB  -2278.0 MiB           1           minor_allele_counts = minor_allele_counts.query("sample_id in @model_inputs.sample_id.values")
+    86   1090.0 MiB    416.0 MiB           1           grm = np.cov(minor_allele_counts.values)
+    87                                         
+    88   1090.0 MiB      0.0 MiB           1           minor_allele_counts_samples = minor_allele_counts.index.values
+    89    703.8 MiB   -386.2 MiB           1           del minor_allele_counts
+    90    703.8 MiB      0.0 MiB           1           return grm, minor_allele_counts_samples
+
+
+Filename: /home/sak0914/who-analysis/02_regression_with_bootstrap.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   176    921.2 MiB    921.2 MiB           1   @profile(stream=mem_log)
+   177                                         def bootstrap_coef():
+   178    921.2 MiB      0.0 MiB           1       coefs = []
+   179    921.3 MiB      0.0 MiB        1001       for i in range(num_bootstrap):
+   180                                         
+   181                                                 # randomly draw sample indices
+   182    921.3 MiB      0.0 MiB        1000           sample_idx = np.random.choice(np.arange(0, len(y)), size=len(y), replace=True)
+   183                                         
+   184                                                 # get the X and y matrices
+   185   1022.4 MiB 101007.1 MiB        1000           X_bs = X[sample_idx, :]
+   186   1022.4 MiB   -131.8 MiB        1000           y_bs = y[sample_idx]
+   187                                         
+   188   1022.4 MiB   -131.0 MiB        1000           bs_model = LogisticRegression(C=model.C_[0], penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
+   189    921.3 MiB -101139.8 MiB        1000           bs_model.fit(X_bs, y_bs)
+   190    921.3 MiB      0.0 MiB        1000           coefs.append(np.squeeze(bs_model.coef_))
+   191                                                 
+   192    954.5 MiB     33.3 MiB           1       return pd.DataFrame(coefs)
+
+
+Filename: /home/sak0914/who-analysis/03_model_analysis.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   179    131.6 MiB    131.6 MiB           1   @profile(stream=mem_log)
+   180                                         def run_all(out_dir, drug_abbr, **kwargs):
+   181                                             
+   182    131.6 MiB      0.0 MiB           1       tiers_lst = kwargs["tiers_lst"]
+   183    131.6 MiB      0.0 MiB           1       pheno_category_lst = kwargs["pheno_category_lst"]
+   184    131.6 MiB      0.0 MiB           1       model_prefix = kwargs["model_prefix"]
+   185    131.6 MiB      0.0 MiB           1       het_mode = kwargs["het_mode"]
+   186    131.6 MiB      0.0 MiB           1       synonymous = kwargs["synonymous"]
+   187    131.6 MiB      0.0 MiB           1       pool_lof = kwargs["pool_lof"]
+   188    131.6 MiB      0.0 MiB           1       AF_thresh = kwargs["AF_thresh"]
+   189                                         
+   190    131.6 MiB      0.0 MiB           1       num_PCs = kwargs["num_PCs"]
+   191    131.6 MiB      0.0 MiB           1       num_bootstrap = kwargs["num_bootstrap"]
+   192    131.6 MiB      0.0 MiB           1       alpha = kwargs["alpha"]
+   193                                             
+   194                                             # coefficients from L2 regularized regression ("baseline" regression)
+   195    131.9 MiB      0.3 MiB           1       coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
+   196                                         
+   197                                             # coefficients from bootstrap replicates
+   198    160.2 MiB     28.3 MiB           1       bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
+   199                                             
+   200                                             # read in all genotypes and phenotypes
+   201    261.3 MiB    101.2 MiB           1       model_inputs = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
+   202                                             
+   203    261.6 MiB      0.2 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
+   204                                         
+   205                                             # add p-values and confidence intervals to the results dataframe
+   206    264.2 MiB      2.7 MiB           1       pvals = get_pvalues_add_ci(coef_df, bs_df, "variant", len(model_inputs), alpha=alpha)
+   207    264.2 MiB      0.0 MiB           1       coef_df["pval"] = pvals
+   208                                         
+   209                                             # Benjamini-Hochberg correction
+   210    264.4 MiB      0.1 MiB           1       coef_df = BH_FDR_correction(coef_df)
+   211                                         
+   212                                             # Bonferroni correction
+   213    264.4 MiB      0.0 MiB           1       coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
+   214                                         
+   215                                             # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
+   216    264.5 MiB      0.2 MiB           1       assert len(coef_df.query("pval > BH_pval")) == 0
+   217    264.5 MiB      0.0 MiB           1       assert len(coef_df.query("pval > Bonferroni_pval")) == 0
+   218                                         
+   219                                             # return all features with non-zero coefficients. Exclude insignificant features now using the FDR rate
+   220    264.6 MiB      0.0 MiB           1       res_df = coef_df.query("coef != 0 & BH_pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
+   221    265.0 MiB      0.4 MiB           1       res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
+   222                                         
+   223                                             # convert to odds ratios
+   224    265.0 MiB      0.0 MiB           1       res_df["Odds_Ratio"] = np.exp(res_df["coef"])
+   225    265.0 MiB      0.0 MiB           1       res_df["OR_LB"] = np.exp(res_df["coef_LB"])
+   226    265.0 MiB      0.0 MiB           1       res_df["OR_UB"] = np.exp(res_df["coef_UB"])
+   227                                         
+   228    366.0 MiB    101.0 MiB           1       combined = model_inputs.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id").reset_index(drop=True)
+   229                                         
+   230                                             # compute univariate stats for only the lof variable
+   231    366.0 MiB      0.0 MiB           1       if pool_lof:
+   232                                                 keep_variants = list(res_df.loc[res_df["orig_variant"].str.contains("lof")]["orig_variant"].values)
+   233                                             else:
+   234    366.0 MiB      0.0 MiB           1           keep_variants = list(res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values)
+   235                                                 
+   236                                             # check that all samples were preserved
+   237    366.0 MiB      0.0 MiB           1       combined_small = combined[["sample_id", "phenotype"] + keep_variants]
+   238    366.0 MiB      0.0 MiB           1       assert len(combined_small) == len(combined)
+   239                                             
+   240                                             #### Compute univariate statistics only for cases where genotypes are binary (no AF), synonymous are included, all features ####
+   241                                             #### For LOF, only compute univariate stats for the LOF variables. Otherwise, the corresponding non-LOF model contains everything #### 
+   242                                             #### In the LOF case, if no LOF variants (there is 1 LOF per gene) are significant, then keep_variants = [], and we don't run this block of code ####
+   243    366.0 MiB      0.0 MiB           1       if (het_mode != "AF") & (synonymous == True) and (len(tiers_lst) > 1) and (len(keep_variants) > 0):
+   244                                                 
+   245                                                 # get dataframe of predictive values for the non-zero coefficients and add them to the results dataframe
+   246                                                 full_predict_values = compute_predictive_values(combined_small)
+   247                                                 res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
+   248                                         
+   249                                                 print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates")
+   250                                                 bs_results = pd.DataFrame(columns = res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values).astype(float)
+   251                                         
+   252                                                 # need confidence intervals for 5 stats: PPV, sens, spec, + likelihood ratio, - likelihood ratio
+   253                                                 for i in range(num_bootstrap):
+   254                                         
+   255                                                     # get bootstrap sample
+   256                                                     bs_idx = np.random.choice(np.arange(0, len(combined_small)), size=len(combined_small), replace=True)
+   257                                                     bs_combined = combined_small.iloc[bs_idx, :]
+   258                                         
+   259                                                     # check ordering of features because we're just going to append bootstrap dataframes
+   260                                                     assert sum(bs_combined.columns[2:] != bs_results.columns) == 0
+   261                                         
+   262                                                     # get predictive values from the dataframe of bootstrapped samples. Only return the 5 we want CI for, and the variant
+   263                                                     bs_values = compute_predictive_values(bs_combined, return_stats=["orig_variant", "PPV", "Sens", "Spec", "LR+", "LR-"])
+   264                                                     bs_results = pd.concat([bs_results, bs_values.set_index("orig_variant").T], axis=0)
+   265                                         
+   266                                                 # add the confidence intervals to the dataframe
+   267                                                 for variable in ["PPV", "Sens", "Spec", "LR+", "LR-"]:
+   268                                         
+   269                                                     lower, upper = np.nanpercentile(bs_results.loc[variable], q=[2.5, 97.5], axis=0)
+   270                                         
+   271                                                     # LR+ can be infinite if spec is 1, and after percentile, it will be NaN, so replace with infinity
+   272                                                     if variable == "LR+":
+   273                                                         res_df[variable] = res_df[variable].fillna(np.inf)
+   274                                                         lower[np.isnan(lower)] = np.inf
+   275                                                         upper[np.isnan(upper)] = np.inf
+   276                                         
+   277                                                     res_df = res_df.merge(pd.DataFrame({"orig_variant": bs_results.columns, 
+   278                                                                         f"{variable}_LB": lower,
+   279                                                                         f"{variable}_UB": upper,
+   280                                                                        }), on="orig_variant", how="outer")
+   281                                         
+   282                                                     # sanity checks -- lower bounds should be <= true values, and upper bounds should be >= true values
+   283                                                     assert sum(res_df[variable] < res_df[f"{variable}_LB"]) == 0
+   284                                                     assert sum(res_df[variable] > res_df[f"{variable}_UB"]) == 0            
+   285                                         
+   286                                             
+   287                                             # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
+   288    366.0 MiB      0.0 MiB           1       del res_df["variant"]
+   289    366.0 MiB      0.0 MiB           1       del res_df["gene"]
+   290                                             #del res_df["genome_index"]
+   291                                             
+   292    366.0 MiB      0.0 MiB           1       return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
+
+

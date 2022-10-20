@@ -115,7 +115,6 @@ def compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous):
     small_model.fit(X, y)
     print(f"    Regularization parameter: {small_model.C_[0]}")
     pickle.dump(small_model, open(os.path.join(out_dir, 'logReg_model'),'wb'))
-    
 
 #     # update the model_analysis dataframe with accuracy metrics (sens, spec, ppv are already there)
 #     for i, row in model_analysis.iterrows():
@@ -136,8 +135,15 @@ def compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous):
     sens = tp / (tp+fn)
     spec = tn / (tn+fp)
 
-    # return the values for the overall model
-    return sens, spec, sklearn.metrics.roc_auc_score(y, y_hat), sklearn.metrics.accuracy_score(y, y_hat), sklearn.metrics.balanced_accuracy_score(y, y_hat)
+    # return a dataframe of the summary stats
+    return pd.DataFrame({"Sens": sens,
+                         "Spec": spec,
+                         "AUC": sklearn.metrics.roc_auc_score(y, y_hat),
+                         "F1": sklearn.metrics.f1_score(y, y_hat),
+                         "accuracy": sklearn.metrics.accuracy_score(y, y_hat),
+                         "balanced_accuracy": sklearn.metrics.balanced_accuracy_score(y, y_hat),
+                        }, index=[0]
+                       )
 
 
 
@@ -164,8 +170,6 @@ if not os.path.isdir(out_dir):
     exit()
 
 # run logistic regression model using only significant predictors saved in the model_analysis.csv file
-if (het_mode != "AF") & (synonymous == True) and (len(tiers_lst) > 1):
-    sens, spec, auc, acc, balanced_acc = compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous)
-    pd.DataFrame({"Sens": sens, "Spec": spec, "AUC": auc, 
-                  "accuracy": acc, "balanced_accuracy": balanced_acc
-                 }, index=[0]).to_csv(os.path.join(out_dir, "logReg_summary.csv"), index=False)
+#if (het_mode != "AF") & (synonymous == True) and (len(tiers_lst) > 1):
+summary_df = compute_downselected_logReg_model(out_dir, tiers_lst, het_mode, synonymous)
+summary_df.to_csv(os.path.join(out_dir, "logReg_summary.csv"), index=False)
