@@ -133,7 +133,7 @@ for i, fName in enumerate(geno_files):
 # example: Met1fs is present in two lines because it has 2 predicted effects: frameshift and start lost
 # sort the dataframe by inverse, which keeps start_lost before frameshift, then drop_duplicates. 
 df_model = pd.concat(dfs_lst)
-df_model = df_model.sort_values("predicted_effect", ascending=False).drop_duplicates(subset=["sample_id", "variant_category", "variant_binary_status", "variant_allele_frequency"], keep="first").reset_index(drop=True)
+df_model = df_model.sort_values("predicted_effect", ascending=False).drop_duplicates(subset=["sample_id", "resolved_symbol", "variant_category", "variant_binary_status", "variant_allele_frequency"], keep="first").reset_index(drop=True)
 
 
 ############# STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #############
@@ -246,12 +246,16 @@ else:
 # check after this step that the only NaNs left are truly missing data --> NaN in variant_binary_status must also be NaN in variant_allele_frequency
 assert len(df_model.loc[(~pd.isnull(df_model["variant_allele_frequency"])) & (pd.isnull(df_model["variant_binary_status"]))]) == 0
 
-
 ############# STEP 5: PIVOT TO MATRIX AND DROP HIGH-FREQUENCY MISSINGNESS #############
 
 
 # 1 = alternative allele, 0 = reference allele, NaN = missing
 df_model["mutation"] = df_model["resolved_symbol"] + "_" + df_model["variant_category"]
+
+# drop more duplicates, but I think this might be because we have multiple data pulls at a time
+# NaN is larger than any number, so sort ascending and keep first
+df_model = df_model.sort_values("variant_binary_status").drop_duplicates(["sample_id", "mutation"], keep="first")
+
 matrix = df_model.pivot(index="sample_id", columns="mutation", values="variant_binary_status")
 
 # in this case, only 3 possible values -- 0 (ref), 1 (alt), NaN (missing)
