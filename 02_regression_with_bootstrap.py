@@ -6,6 +6,10 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 import warnings
 warnings.filterwarnings("ignore")
+from memory_profiler import profile
+
+# open file for writing memory logs to. Append to file, not overwrite
+mem_log=open('memory_usage.log','a+')
 
 
 ############# STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES #############
@@ -59,9 +63,11 @@ if num_PCs > 0:
 
     if not os.path.isfile("data/minor_allele_counts.npz"):
         raise ValueError("Minor allele counts dataframe does not exist. Please run sample_numbers.py")
-    else:
-        minor_allele_counts = sparse.load_npz("data/minor_allele_counts.npz").todense()
-        
+
+    @profile(stream=mem_log)
+    def read_in_matrix_compute_grm(fName):
+        minor_allele_counts = sparse.load_npz(fName).todense()
+
         # convert to dataframe
         minor_allele_counts = pd.DataFrame(minor_allele_counts)
         minor_allele_counts.columns = minor_allele_counts.iloc[0, :]
@@ -71,13 +77,21 @@ if num_PCs > 0:
 
         # make sample ids the index again
         minor_allele_counts = minor_allele_counts.set_index("sample_id")
-        
-    mean_maf = pd.DataFrame(minor_allele_counts.mean(axis=0))
-    print(f"Min MAF: {round(mean_maf[0].min(), 2)}, Max MAF: {round(mean_maf[0].max(), 2)}")
 
-    # compute GRM using the mino allele counts of only the samples in the model
-    minor_allele_counts = minor_allele_counts.query("sample_id in @model_inputs.sample_id.values")
-    grm = np.cov(minor_allele_counts.values)
+        mean_maf = pd.DataFrame(minor_allele_counts.mean(axis=0))
+        print(f"Min MAF: {round(mean_maf[0].min(), 2)}, Max MAF: {round(mean_maf[0].max(), 2)}")
+
+        # compute GRM using the mino allele counts of only the samples in the model
+        minor_allele_counts = minor_allele_counts.query("sample_id in @model_inputs.sample_id.values")
+        grm = np.cov(minor_allele_counts.values)
+
+        minor_allele_counts_samples = minor_allele_counts.index.values
+        del minor_allele_counts
+        return grm, minor_allele_counts_samples
+        
+        
+    # compute GRM. delete minor allele counts matrix because it's so big
+    grm, minor_allele_counts_samples = read_in_matrix_compute_grm("data/minor_allele_counts.npz")
     
     
 ############# STEP 3: RUN PCA ON THE GRM #############
@@ -89,7 +103,7 @@ if num_PCs > 0:
     print(f"Explained variance ratios of {num_PCs} principal components: {pca.explained_variance_ratio_}")
     eigenvec = pca.components_.T
     eigenvec_df = pd.DataFrame(eigenvec)
-    eigenvec_df["sample_id"] = minor_allele_counts.index.values
+    eigenvec_df["sample_id"] = minor_allele_counts_samples
 
     
 ############# STEP 4: PREPARE INPUTS TO THE MODEL #############
@@ -134,7 +148,7 @@ X = scaler.fit_transform(X)
 y = df_phenos.phenotype.values
 
 assert len(y) == X.shape[0]
-print(f"    {X.shape[0]} isolates and {X.shape[1]} features in the model")
+print(f"    {X.shape[0]} samples and {X.shape[1]} variables in the model")
 
 
 ############# STEP 5: FIT L2-PENALIZED REGRESSION #############
@@ -159,21 +173,26 @@ res_df.to_csv(os.path.join(out_dir, "regression_coef.csv"), index=False)
 ############# STEP 6: BOOTSTRAP COEFFICIENTS #############
 
 # use the regularization parameter determined above
-coefs = []
-for i in range(num_bootstrap):
-   
-    # randomly draw sample indices
-    sample_idx = np.random.choice(np.arange(0, len(y)), size=len(y), replace=True)
+@profile(stream=mem_log)
+def bootstrap_coef():
+    coefs = []
+    for i in range(num_bootstrap):
 
-    # get the X and y matrices
-    X_bs = X[sample_idx, :]
-    y_bs = y[sample_idx]
+        # randomly draw sample indices
+        sample_idx = np.random.choice(np.arange(0, len(y)), size=len(y), replace=True)
 
-    bs_model = LogisticRegression(C=model.C_[0], penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
-    bs_model.fit(X_bs, y_bs)
-    coefs.append(np.squeeze(bs_model.coef_))
+        # get the X and y matrices
+        X_bs = X[sample_idx, :]
+        y_bs = y[sample_idx]
+
+        bs_model = LogisticRegression(C=model.C_[0], penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
+        bs_model.fit(X_bs, y_bs)
+        coefs.append(np.squeeze(bs_model.coef_))
+        
+    return pd.DataFrame(coefs)
+
 
 # save bootstrapped coefficients and principal components
-coef_df = pd.DataFrame(coefs)
+coef_df = bootstrap_coef()
 coef_df.columns = np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]])
 coef_df.to_csv(os.path.join(out_dir, "coef_bootstrap.csv"), index=False)

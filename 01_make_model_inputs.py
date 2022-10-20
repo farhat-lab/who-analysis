@@ -3,7 +3,10 @@ import pandas as pd
 import glob, os, yaml, sys
 import warnings
 warnings.filterwarnings("ignore")
+from memory_profiler import profile
 
+# open file for writing memory logs to. Overwrite file, otherwise it will become huge
+mem_log=open('memory_usage.log','w+')
 
 ############# STEP 0: READ IN PARAMETERS FILE AND MAKE OUTPUT DIRECTORIES #############
 
@@ -93,52 +96,58 @@ df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
 ############# STEP 2: GET ALL AVAILABLE GENOTYPES #############
           
         
-# first get all the genotype files associated with the drug
-geno_files = []
-
-for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
-
-    # subdirectory (tiers)
-    full_subdir = os.path.join(genos_dir, f"drug_name={drug}", subdir)
-
-    # the last character is the tier number
-    if full_subdir[-1] in tiers_lst:
-        for fName in os.listdir(full_subdir):
-            if "run" in fName:
-                geno_files.append(os.path.join(full_subdir, fName))
+@profile(stream=mem_log)
+def read_in_data():
         
-print(f"    {len(df_phenos)} samples with phenotypes and {len(geno_files)} files with genotypes.")
+    # first get all the genotype files associated with the drug
+    geno_files = []
 
-dfs_lst = []
-for i, fName in enumerate(geno_files):
-        
-    # print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
-    # read in the dataframe
-    df = pd.read_csv(fName)
+    for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
 
-    # get only genotypes for samples that have a phenotype
-    df_avail_isolates = df.loc[df.sample_id.isin(df_phenos.sample_id)]
+        # subdirectory (tiers)
+        full_subdir = os.path.join(genos_dir, f"drug_name={drug}", subdir)
 
-    # keep all variants
-    if synonymous:
-        dfs_lst.append(df_avail_isolates)
-    else:
-        # P = coding variants, C = synonymous or upstream variants (get only upstream variants by getting only negative positions), and N = non-coding variants on rrs/rrl
-        # deletion does not contain the p/c/n prefix
-        # synonymous variants = synonymous, change in start codon that produces V instead of M, and changes in stop codon that preserve stop
-        dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))        
+        # the last character is the tier number
+        if full_subdir[-1] in tiers_lst:
+            for fName in os.listdir(full_subdir):
+                if "run" in fName:
+                    geno_files.append(os.path.join(full_subdir, fName))
 
-        
-# possible to have duplicated entries because they have different predicted effects
-# example: Met1fs is present in two lines because it has 2 predicted effects: frameshift and start lost
-# sort the dataframe by inverse, which keeps start_lost before frameshift, then drop_duplicates. 
-df_model = pd.concat(dfs_lst)
-df_model = df_model.sort_values("predicted_effect", ascending=False).drop_duplicates(subset=["sample_id", "resolved_symbol", "variant_category", "variant_binary_status", "variant_allele_frequency"], keep="first").reset_index(drop=True)
+    print(f"    {len(df_phenos)} samples with phenotypes and {len(geno_files)} files with genotypes.")
+
+    dfs_lst = []
+    for i, fName in enumerate(geno_files):
+
+        # print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
+        # read in the dataframe
+        df = pd.read_csv(fName)
+
+        # get only genotypes for samples that have a phenotype
+        df_avail_isolates = df.loc[df.sample_id.isin(df_phenos.sample_id)]
+
+        # keep all variants
+        if synonymous:
+            dfs_lst.append(df_avail_isolates)
+        else:
+            # P = coding variants, C = synonymous or upstream variants (get only upstream variants by getting only negative positions), and N = non-coding variants on rrs/rrl
+            # deletion does not contain the p/c/n prefix
+            # synonymous variants = synonymous, change in start codon that produces V instead of M, and changes in stop codon that preserve stop
+            dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))        
+
+
+    # possible to have duplicated entries because they have different predicted effects
+    # example: Met1fs is present in two lines because it has 2 predicted effects: frameshift and start lost
+    # sort the dataframe by inverse, which keeps start_lost before frameshift, then drop_duplicates. 
+    df_model = pd.concat(dfs_lst)
+    return df_model.sort_values("predicted_effect", ascending=False).drop_duplicates(subset=["sample_id", "resolved_symbol", "variant_category", "variant_binary_status", "variant_allele_frequency"], keep="first").reset_index(drop=True)
+
+
+df_model = read_in_data()
 
 
 ############# STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #############
 
-
+@profile(stream=mem_log)
 def pool_lof_mutations(df):
     '''
     resolved_symbol = gene
@@ -275,7 +284,6 @@ max_prop_missing_variants_per_isolate = matrix.isna().sum(axis=1).max() / matrix
 
 # drop isolates first if there are isolates with a lot of missingness (many variants missing)
 if max_prop_missing_variants_per_isolate >= max_prop_missing_isolates_per_feature:
-    print("Dropping isolates first, then variants")
     print(f"    Up to {round(max_prop_missing_variants_per_isolate*100, 2)}% of variants per isolate and {round(max_prop_missing_isolates_per_feature*100, 2)}% of isolates per variant have missing data")
     
     # drop isolates (rows) with missingness above the threshold (default = 1%)
@@ -292,7 +300,6 @@ if max_prop_missing_variants_per_isolate >= max_prop_missing_isolates_per_featur
     
 # drop variants first if there are variants with a lot of missingness (many isolates missing)
 else:
-    print("Dropping variants first, then isolates")
     print(f"    Up to {round(max_prop_missing_isolates_per_feature*100, 2)}% of isolates per variant and {round(max_prop_missing_variants_per_isolate*100, 2)}% of variants per isolate have missing data")
     
     # drop features (columns) with missingness above the threshold (default = 1%)
@@ -349,7 +356,7 @@ else:
         
 # there should not be any more NaNs
 assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
-print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} features for the model")
+print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} genetic variants")
 
 # check if the filtered matrix has the same dimensions as the corresponding model without LOF pooling
 # if they have the same shape, it means that LOF pooling did not make 

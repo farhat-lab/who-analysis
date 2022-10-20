@@ -8,6 +8,10 @@ import sys
 import glob, os, yaml
 import warnings
 warnings.filterwarnings("ignore")
+from memory_profiler import profile
+
+# open file for writing memory logs to. Append to file, not overwrite
+mem_log=open('memory_usage.log','a+')
 
 who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resistance_variants_all.csv")
 
@@ -172,7 +176,7 @@ def BH_FDR_correction(coef_df):
 
 
 
-
+@profile(stream=mem_log)
 def run_all(out_dir, drug_abbr, **kwargs):
     
     tiers_lst = kwargs["tiers_lst"]
