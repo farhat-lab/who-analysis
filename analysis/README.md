@@ -8,4 +8,4 @@ The resulting two-dimensional plot shows the eigenvectors with the largest magni
 
 ## 2. Compare Logistic Regression to Associative Studies
 
-The script in this 
+The `logReg_metrics.py` script performs a logistic regression on only the features that were significant in the original model. The metrics for this model are the ones that will be presented. 
