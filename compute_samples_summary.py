@@ -47,7 +47,7 @@ remove_pos = list(itertools.chain.from_iterable(remove_pos))
 
 num_pos = len(snp_combined.position.unique())
 snp_combined = snp_combined.query("position not in @remove_pos")
-print(f"Dropped {num_pos-len(snp_combined.position.unique())} positions in resistance-determing regions")
+print(f"Dropped {num_pos-len(snp_combined.position.unique())} positions in resistance-determining regions")
 
 # pivot to matrix. There should not be any NaNs because the data is complete (i.e. reference alleles are included), then get the major allele at every site.
 print("Pivoting to a matrix")
@@ -139,6 +139,8 @@ for drug in drugs_for_analysis:
     
     assert len(genos.sample_id.unique()) == len(phenos.sample_id.unique())
     num_with_snps = set(minor_allele_counts_samples).intersection(genos.sample_id.unique())
+    assert len(genos.sample_id.unique()) == num_with_snps
+    
     samples_with_lineages = lineages.loc[lineages["Sample ID"].isin(genos["sample_id"])]
         
     # get the number of isolates with multiple frameshift mutations in them, by tier
@@ -158,11 +160,6 @@ for drug in drugs_for_analysis:
     i += 1
         
     print("Finished", drug.split("=")[1])
-        
-# already checked that the numbers of samples with genotypes and phenotypes are the same
-# now check that the number of genotypes is equal to the number of lineages 
-
-# BDQ and LZD have fewer lineages. Not all VCF files have been mapped though. Need to troubleshoot!
-# assert sum(summary_df["Genos"] != summary_df["Lineages"]) == 0
-
+    
+# save
 summary_df.to_csv("data/samples_summary.csv", index=False)

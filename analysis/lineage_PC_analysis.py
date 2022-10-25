@@ -61,7 +61,7 @@ minor_allele_counts = minor_allele_counts.set_index("sample_id")
 
 print("Reading in lineages dataframe")
 
-# the missing ones might be M. cannettii, most similar to L6 based on the other lineage callers
+# the missing ones might be M. cannettii, most similar to L6 based on the other lineage callers. This file has 70,567 samples
 lineages = pd.read_pickle("data/combined_lineage_sample_IDs.pkl")
 lineages["Lineage"] = lineages["Lineage"].fillna("6")
 lineages["Lineage_1"] = lineages["Lineage_1"].fillna("6")

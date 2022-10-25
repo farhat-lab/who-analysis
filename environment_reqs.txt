@@ -1,6 +1,7 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
+biopython=1.79
 fast-lineage-caller=0.3.1
 glob2=0.7
 matplotlib=3.5.1
