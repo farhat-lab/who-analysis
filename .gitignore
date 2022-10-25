@@ -4,9 +4,9 @@ __pycache__/
 # notebook for testing
 sandbox.ipynb
 
-# extra config files made during testing. Also remove bash scripts to clean up the directory
+# extra config and bash files made during testing
 config_*.yaml
-*.sh
+run_*.sh
 
 # confidential information
 data/sample_ids_mapping.csv
