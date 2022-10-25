@@ -75,6 +75,9 @@ phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 # read them all in, concatenate, and get the number of samples
 df_phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, fName)) for fName in os.listdir(phenos_dir) if "run" in fName], axis=0)
 
+if len(df_phenos.phenotypic_category.unique()) > 2:
+    raise ValueError("More than 2 phenotypic categories in the dataframe!")
+
 df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
 
 # get the number of samples that have more than 1 phenotype recorded. Drop such samples (should be 0), but leave as a QC step for now. 
