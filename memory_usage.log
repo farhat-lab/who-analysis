@@ -48,3 +48,56 @@ Line #    Mem usage    Increment  Occurrences   Line Contents
    142  16335.5 MiB   4632.8 MiB           1       return df_model.sort_values("predicted_effect", ascending=False).drop_duplicates(subset=["sample_id", "resolved_symbol", "variant_category", "variant_binary_status", "variant_allele_frequency"], keep="first").reset_index(drop=True)
 
 
+Filename: /home/sak0914/who-analysis/02_regression_with_bootstrap.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+    67    778.3 MiB    778.3 MiB           1       @profile(stream=mem_log)
+    68                                             def read_in_matrix_compute_grm(fName):
+    69   3464.0 MiB   2685.7 MiB           1           minor_allele_counts = sparse.load_npz(fName).todense()
+    70                                         
+    71                                                 # convert to dataframe
+    72   3464.0 MiB      0.0 MiB           1           minor_allele_counts = pd.DataFrame(minor_allele_counts)
+    73   3464.1 MiB      0.0 MiB           1           minor_allele_counts.columns = minor_allele_counts.iloc[0, :]
+    74   3464.1 MiB      0.0 MiB           1           minor_allele_counts = minor_allele_counts.iloc[1:, :]
+    75   3464.3 MiB      0.3 MiB           1           minor_allele_counts.rename(columns={0:"sample_id"}, inplace=True)
+    76   3464.0 MiB     -0.3 MiB           1           minor_allele_counts["sample_id"] = minor_allele_counts["sample_id"].astype(int)
+    77                                         
+    78                                                 # make sample ids the index again
+    79   3466.9 MiB      2.9 MiB           1           minor_allele_counts = minor_allele_counts.set_index("sample_id")
+    80                                         
+    81   3469.0 MiB      2.1 MiB           1           mean_maf = pd.DataFrame(minor_allele_counts.mean(axis=0))
+    82   3469.0 MiB      0.0 MiB           1           print(f"Min MAF: {round(mean_maf[0].min(), 2)}, Max MAF: {round(mean_maf[0].max(), 2)}")
+    83                                         
+    84                                                 # compute GRM using the mino allele counts of only the samples in the model
+    85   1882.5 MiB  -1586.5 MiB           1           minor_allele_counts = minor_allele_counts.query("sample_id in @model_inputs.sample_id.values")
+    86   5286.8 MiB   3404.3 MiB           1           grm = np.cov(minor_allele_counts.values)
+    87                                         
+    88   5286.8 MiB      0.0 MiB           1           minor_allele_counts_samples = minor_allele_counts.index.values
+    89   4190.4 MiB  -1096.4 MiB           1           del minor_allele_counts
+    90   4190.4 MiB      0.0 MiB           1           return grm, minor_allele_counts_samples
+
+
+Filename: /home/sak0914/who-analysis/02_regression_with_bootstrap.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   176   5485.9 MiB   5485.9 MiB           1   @profile(stream=mem_log)
+   177                                         def bootstrap_coef():
+   178   5485.9 MiB      0.0 MiB           1       coefs = []
+   179   5515.2 MiB      0.0 MiB        1001       for i in range(num_bootstrap):
+   180                                         
+   181                                                 # randomly draw sample indices
+   182   5515.2 MiB      0.1 MiB        1000           sample_idx = np.random.choice(np.arange(0, len(y)), size=len(y), replace=True)
+   183                                         
+   184                                                 # get the X and y matrices
+   185   6153.1 MiB 637912.9 MiB        1000           X_bs = X[sample_idx, :]
+   186   6153.1 MiB     -2.3 MiB        1000           y_bs = y[sample_idx]
+   187                                         
+   188   6153.1 MiB    -22.8 MiB        1000           bs_model = LogisticRegression(C=model.C_[0], penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
+   189   5515.2 MiB -637976.0 MiB        1000           bs_model.fit(X_bs, y_bs)
+   190   5515.2 MiB      0.0 MiB        1000           coefs.append(np.squeeze(bs_model.coef_))
+   191                                                 
+   192   5604.2 MiB     89.0 MiB           1       return pd.DataFrame(coefs)
+
+
