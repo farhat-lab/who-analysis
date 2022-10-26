@@ -3,7 +3,7 @@ import pandas as pd
 import glob, os, yaml, sparse, sys
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import warnings
 warnings.filterwarnings("ignore")
 from memory_profiler import profile
@@ -24,6 +24,7 @@ pheno_category_lst = kwargs["pheno_category_lst"]
 model_prefix = kwargs["model_prefix"]
 num_PCs = kwargs["num_PCs"]
 num_bootstrap = kwargs["num_bootstrap"]
+binary = kwargs["binary"]
 
 out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
 if "ALL" in pheno_category_lst:
@@ -145,7 +146,14 @@ else:
     
 # scale inputs
 X = scaler.fit_transform(X)
-y = df_phenos.phenotype.values
+
+# binary vs. quant (MIC) phenotypes
+if binary:
+    y = df_phenos.phenotype.values
+    assert len(np.unique(y)) == 2
+else:
+    #y = np.log(df_phenos.phenotype.values)
+    y = np.log(np.random.uniform(low=0.0001, high=5, size=len(df_phenos)))
 
 assert len(y) == X.shape[0]
 print(f"    {X.shape[0]} samples and {X.shape[1]} variables in the model")
@@ -153,17 +161,27 @@ print(f"    {X.shape[0]} samples and {X.shape[1]} variables in the model")
 
 ############# STEP 5: FIT L2-PENALIZED REGRESSION #############
 
-
-model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
-                             cv=5,
-                             penalty='l2',
-                             max_iter=10000, 
-                             multi_class='ovr',
-                             scoring='neg_log_loss',
-                             class_weight='balanced'
-                            )
+if binary:
+    model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
+                                 cv=5,
+                                 penalty='l2',
+                                 max_iter=10000, 
+                                 multi_class='ovr',
+                                 scoring='neg_log_loss',
+                                 class_weight='balanced'
+                                )
+else:
+    model = RidgeCV(alphas=np.logspace(-6, 6, 13),
+                    cv=5,
+                    max_iter=10000,
+                    scoring='neg_root_mean_squared_error'
+                   )
 model.fit(X, y)
-print(f"    Regularization parameter: {model.C_[0]}")
+
+if binary:
+    print(f"    Regularization parameter: {model.C_[0]}")
+else:
+    print(f"    Regularization parameter: {model.alpha_}")
 
 # save coefficients
 res_df = pd.DataFrame({"variant": np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]]), 'coef': np.squeeze(model.coef_)})
@@ -185,7 +203,10 @@ def bootstrap_coef():
         X_bs = X[sample_idx, :]
         y_bs = y[sample_idx]
 
-        bs_model = LogisticRegression(C=model.C_[0], penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
+        if binary:
+            bs_model = LogisticRegression(C=model.C_[0], penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
+        else:
+            bs_model = Ridge(alpha=model.alpha_, max_iter=10000)
         bs_model.fit(X_bs, y_bs)
         coefs.append(np.squeeze(bs_model.coef_))
         

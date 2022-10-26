@@ -16,37 +16,51 @@ mem_log=open('memory_usage.log','a+')
 who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resistance_variants_all.csv")
 
 
-def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
+def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, tier1_variants=None, alpha=0.05):
     '''
     Compute p-values using the Student's t-distribution. 
     '''
+    
+    # first compute confidence intervals for the coefficients for all variants, regardless of tier
+    ci = (1-alpha)*100
+    diff = (100-ci)/2
+        
+    # check ordering, then compute upper and lower bounds for the coefficients
+    assert sum(coef_df["variant"].values != bootstrap_df.columns) == 0
+    lower, upper = np.percentile(bootstrap_df, axis=0, q=(diff, 100-diff))
+    coef_df["coef_LB"] = lower
+    coef_df["coef_UB"] = upper
+        
+    # compute p-values for all variants
+    if tier1_variants is None:
+        coef_df_for_pval = coef_df.copy()
+    # compute p-values for only the tier 2 variants    
+    else:
+        coef_df_tier1 = coef_df.loc[coef_df[col].isin(tier1_variants)]
+        coef_df_for_pval = coef_df.loc[~coef_df[col].isin(tier1_variants)].reset_index(drop=True)
+        assert len(coef_df_tier1) + len(coef_df_for_pval) == len(coef_df)
+            
     # degrees of freedom: N - k - 1, where N = number of samples, k = number of features
-    dof = num_samples - len(coef_df) - 1
-        
-    pvals = []
-    for i, row in coef_df.iterrows():
-        
+    dof = num_samples - len(coef_df_for_pval) - 1
+    
+    for i, row in coef_df_for_pval.iterrows():
         # compute the t-statistic. 
         # this if statement is for the case when everything is 0 because it's an insignificant feature
         if row["coef"] == 0 and bootstrap_df[row[col]].std() == 0:
-            pvals.append(1)
+            continue
         else:
             # t-statistic is the true coefficient divided by the standard deviation of the bootstrapped coefficients
             t = np.abs(row["coef"]) / bootstrap_df[row[col]].std()
-            
-            # survival function = 1 - CDF = P(t > t_stat) = measure of extremeness
-            pvals.append(st.t.sf(t, df=dof))
-        
-        # add confidence intervals
-        ci = (1-alpha)*100
-        diff = (100-ci)/2
-        lower, upper = np.percentile(bootstrap_df[row[col]].values, q=(diff, 100-diff))
-        coef_df.loc[i, "coef_LB"] = lower
-        coef_df.loc[i, "coef_UB"] = upper
-        
-    pvals = np.array(pvals)
-    return pvals
 
+            # survival function = 1 - CDF = P(t > t_stat) = measure of extremeness        
+            coef_df_for_pval.loc[i, "pval"] = st.t.sf(t, df=dof)
+        
+    # tier 1 variants were excluded from the computation, concatenate with that dataframe and return
+    if tier1_variants is None:
+        return coef_df_for_pval
+    else:
+        return pd.concat([coef_df_tier1, coef_df_for_pval], axis=0).sort_values("coef", ascending=False).reset_index(drop=True)
+        
 
 
 aa_code_dict = {'VAL':'V', 'ILE':'I', 'LEU':'L', 'GLU':'E', 'GLN':'Q', \
@@ -84,7 +98,6 @@ def find_SNVs_in_current_WHO(coef_df, aa_code_dict, drug_abbr):
                 if key in new_variant.upper():
                     new_variant = new_variant.upper().replace(key, value)
 
-        # indels???
         new_variants.append(variant.split("_")[0] + "_" + new_variant)
         
     coef_df["gene"] = [variant.split("_")[0] for variant in coef_df.variant.values]
@@ -101,79 +114,25 @@ def find_SNVs_in_current_WHO(coef_df, aa_code_dict, drug_abbr):
 
 
 
-def compute_predictive_values(combined_df, return_stats=[]):
-    '''
-    Compute positive predictive value. 
-    Compute sensitivity, specificity, and positive and negative likelihood ratios. 
-    
-    PPV = true_positive / all_positive. NPV = true_negative / all_negative
-    Sens = true_positive / (true_positive + false_negative)
-    Spec = true_negative / (true_negative + false_positive)
-    
-    Also return the number of isolates with each variant = all_positive
-    
-    Positive LR = sens / (1 – spec)
-    Negative LR = (1 – sens) / spec
-
-    '''
-    # make a copy to keep sample_id in one dataframe
-    melted = combined_df.melt(id_vars=["sample_id", "phenotype"])
-    melted_2 = melted.copy()
-    del melted_2["sample_id"]
-    
-    # get counts of isolates grouped by phenotype and variant -- so how many isolates have a variant and have a phenotype (all 4 possibilities)
-    grouped_df = pd.DataFrame(melted_2.groupby(["phenotype", "variable"]).value_counts()).reset_index()
-    grouped_df = grouped_df.rename(columns={"variable": "orig_variant", "value": "variant", 0:"count"})
-    
-    # dataframes of the counts of the 4 values
-    true_pos_df = grouped_df.query("variant == 1 & phenotype == 1").rename(columns={"count": "TP"})
-    false_pos_df = grouped_df.query("variant == 1 & phenotype == 0").rename(columns={"count": "FP"})
-    true_neg_df = grouped_df.query("variant == 0 & phenotype == 0").rename(columns={"count": "TN"})
-    false_neg_df = grouped_df.query("variant == 0 & phenotype == 1").rename(columns={"count": "FN"})
-
-    assert len(true_pos_df) + len(false_pos_df) + len(true_neg_df) + len(false_neg_df) == len(grouped_df)
-    
-    # combine the 4 dataframes into a single dataframe (concatenating on axis = 1)
-    final = true_pos_df[["orig_variant", "TP"]].merge(
-            false_pos_df[["orig_variant", "FP"]], on="orig_variant", how="outer").merge(
-            true_neg_df[["orig_variant", "TN"]], on="orig_variant", how="outer").merge(
-            false_neg_df[["orig_variant", "FN"]], on="orig_variant", how="outer").fillna(0)
-
-    assert len(final) == len(melted["variable"].unique())
-    assert len(final) == len(final.drop_duplicates("orig_variant"))
-    
-    # check that all feature rows have the same number of samples    
-    assert len(np.unique(final[["TP", "FP", "TN", "FN"]].sum(axis=1))) == 1
-        
-    final["Num_Isolates"] = final["TP"] + final["FP"]
-    final["Total_Isolates"] = final["TP"] + final["FP"] + final["TN"] + final["FN"]
-    final["PPV"] = final["TP"] / (final["TP"] + final["FP"])
-    final["Sens"] = final["TP"] / (final["TP"] + final["FN"])
-    final["Spec"] = final["TN"] / (final["TN"] + final["FP"])
-    final["LR+"] = final["Sens"] / (1 - final["Spec"])
-    final["LR-"] = (1 - final["Sens"]) / final["Spec"]
-    #final["NPV"] = final["TN"] / (final["TN"] + final["FN"])
-    
-    if len(return_stats) == 0:
-        return final[["orig_variant", "Num_Isolates", "Total_Isolates", "TP", "FP", "TN", "FN", "PPV", "Sens", "Spec", "LR+", "LR-"]]
-    else:
-        return final[return_stats]
-
-
 
 def BH_FDR_correction(coef_df):
     '''
     Implement Benjamini-Hochberg FDR correction.
     '''
+    
+    coef_df_pval = coef_df.loc[~pd.isnull(coef_df["pval"])]
+    coef_df_no_pval = coef_df.loc[pd.isnull(coef_df["pval"])]
+    del coef_df
+    
     # sort the individual p-values in ascending order
-    coef_df = coef_df.sort_values("pval", ascending=True)
+    coef_df_pval = coef_df_pval.sort_values("pval", ascending=True)
     
     # assign ranks -- ties get the same value, and only increment by one
-    rank_dict = dict(zip(np.unique(coef_df["pval"]), np.arange(len(np.unique(coef_df["pval"])))+1))
-    ranks = coef_df["pval"].map(rank_dict).values
+    rank_dict = dict(zip(np.unique(coef_df_pval["pval"]), np.arange(len(np.unique(coef_df_pval["pval"])))+1))
+    ranks = coef_df_pval["pval"].map(rank_dict).values
     
-    coef_df["BH_pval"] = np.min([coef_df["pval"] * len(coef_df) / ranks, np.ones(len(coef_df))], axis=0)  
-    return coef_df
+    coef_df_pval["BH_pval"] = np.min([coef_df_pval["pval"] * len(coef_df_pval) / ranks, np.ones(len(coef_df_pval))], axis=0) 
+    return pd.concat([coef_df_pval, coef_df_no_pval], axis=0)
 
 
 
@@ -194,19 +153,28 @@ def run_all(out_dir, drug_abbr, **kwargs):
     
     # coefficients from L2 regularized regression ("baseline" regression)
     coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
+    coef_df = coef_df.query("coef != 0")
 
     # coefficients from bootstrap replicates
     bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
+    bs_df = bs_df[coef_df["variant"]]
     
-    # read in all genotypes and phenotypes
-    model_inputs = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
-    
+    # read in all genotypes and phenotypes    
     df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
 
     # add p-values and confidence intervals to the results dataframe
-    pvals = get_pvalues_add_ci(coef_df, bs_df, "variant", len(model_inputs), alpha=alpha)
-    coef_df["pval"] = pvals
-
+    # if tiers 1 and 2 are included, then compute p-values separately?  
+    if len(tiers_lst) > 1:
+        
+        tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
+        tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
+        tier1_variants = tier1_matrix.columns
+        
+        coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
+        assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
+    else:
+        coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
+        
     # Benjamini-Hochberg correction
     coef_df = BH_FDR_correction(coef_df)
 
@@ -217,74 +185,15 @@ def run_all(out_dir, drug_abbr, **kwargs):
     assert len(coef_df.query("pval > BH_pval")) == 0
     assert len(coef_df.query("pval > Bonferroni_pval")) == 0
 
-    # return all features with non-zero coefficients. Exclude insignificant features now using the FDR rate
-    res_df = coef_df.query("coef != 0 & BH_pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
+    # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
+    res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
     res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
 
     # convert to odds ratios
     res_df["Odds_Ratio"] = np.exp(res_df["coef"])
     res_df["OR_LB"] = np.exp(res_df["coef_LB"])
     res_df["OR_UB"] = np.exp(res_df["coef_UB"])
-
-    combined = model_inputs.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id").reset_index(drop=True)
-
-    # compute univariate stats for only the lof variable
-    if pool_lof:
-        keep_variants = list(res_df.loc[res_df["orig_variant"].str.contains("lof")]["orig_variant"].values)
-    else:
-        keep_variants = list(res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values)
-        
-    # check that all samples were preserved
-    combined_small = combined[["sample_id", "phenotype"] + keep_variants]
-    assert len(combined_small) == len(combined)
-    
-    #### Compute univariate statistics only for cases where genotypes are binary (no AF), synonymous are included, all features ####
-    #### For LOF, only compute univariate stats for the LOF variables. Otherwise, the corresponding non-LOF model contains everything #### 
-    #### In the LOF case, if no LOF variants (there is 1 LOF per gene) are significant, then keep_variants = [], and we don't run this block of code ####
-    if (het_mode != "AF") & (synonymous == True) and (len(tiers_lst) > 1) and (len(keep_variants) > 0):
-        
-        # get dataframe of predictive values for the non-zero coefficients and add them to the results dataframe
-        full_predict_values = compute_predictive_values(combined_small)
-        res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
-
-        print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates")
-        bs_results = pd.DataFrame(columns = keep_variants)
-
-        # need confidence intervals for 5 stats: PPV, sens, spec, + likelihood ratio, - likelihood ratio
-        for i in range(num_bootstrap):
-
-            # get bootstrap sample
-            bs_idx = np.random.choice(np.arange(0, len(combined_small)), size=len(combined_small), replace=True)
-            bs_combined = combined_small.iloc[bs_idx, :]
-
-            # check ordering of features because we're just going to append bootstrap dataframes
-            assert sum(bs_combined.columns[2:] != bs_results.columns) == 0
-
-            # get predictive values from the dataframe of bootstrapped samples. Only return the 5 we want CI for, and the variant
-            bs_values = compute_predictive_values(bs_combined, return_stats=["orig_variant", "PPV", "Sens", "Spec", "LR+", "LR-"])
-            bs_results = pd.concat([bs_results, bs_values.set_index("orig_variant").T], axis=0)
-
-        # add the confidence intervals to the dataframe
-        for variable in ["PPV", "Sens", "Spec", "LR+", "LR-"]:
-
-            lower, upper = np.nanpercentile(bs_results.loc[variable], q=[2.5, 97.5], axis=0)
-
-            # LR+ can be infinite if spec is 1, and after percentile, it will be NaN, so replace with infinity
-            if variable == "LR+":
-                res_df[variable] = res_df[variable].fillna(np.inf)
-                lower[np.isnan(lower)] = np.inf
-                upper[np.isnan(upper)] = np.inf
-
-            res_df = res_df.merge(pd.DataFrame({"orig_variant": bs_results.columns, 
-                                f"{variable}_LB": lower,
-                                f"{variable}_UB": upper,
-                               }), on="orig_variant", how="outer")
-
-            # sanity checks -- lower bounds should be <= true values, and upper bounds should be >= true values
-            assert sum(res_df[variable] < res_df[f"{variable}_LB"]) == 0
-            assert sum(res_df[variable] > res_df[f"{variable}_UB"]) == 0            
-
-    
+ 
     # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
     del res_df["variant"]
     del res_df["gene"]

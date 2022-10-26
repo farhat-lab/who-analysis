@@ -6,6 +6,7 @@ pheno_category_lst:
 het_mode: DROP
 synonymous: true
 pool_lof: false
+binary: true
 AF_thresh: 0.75
 missing_isolate_thresh: 0.01
 missing_feature_thresh: 0.25

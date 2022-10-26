@@ -24,6 +24,7 @@ AF_thresh = kwargs["AF_thresh"]
 impute = kwargs["impute"]
 synonymous = kwargs["synonymous"]
 pool_lof = kwargs["pool_lof"]
+binary = kwargs["binary"]
 
 out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
 if "ALL" in pheno_category_lst:
