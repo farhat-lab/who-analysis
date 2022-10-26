@@ -247,7 +247,7 @@ def run_all(out_dir, drug_abbr, **kwargs):
         res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
 
         print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates")
-        bs_results = pd.DataFrame(columns = res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values).astype(float)
+        bs_results = pd.DataFrame(columns = keep_variants)
 
         # need confidence intervals for 5 stats: PPV, sens, spec, + likelihood ratio, - likelihood ratio
         for i in range(num_bootstrap):
