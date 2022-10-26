@@ -26,7 +26,8 @@ def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
     pvals = []
     for i, row in coef_df.iterrows():
         
-        # compute the t-statistic. Case when everything is 0 because it's an insignificant feature
+        # compute the t-statistic. 
+        # this if statement is for the case when everything is 0 because it's an insignificant feature
         if row["coef"] == 0 and bootstrap_df[row[col]].std() == 0:
             pvals.append(1)
         else:
@@ -37,7 +38,7 @@ def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
             pvals.append(st.t.sf(t, df=dof))
         
         # add confidence intervals
-        ci = (1-alpha)*100   # default 95
+        ci = (1-alpha)*100
         diff = (100-ci)/2
         lower, upper = np.percentile(bootstrap_df[row[col]].values, q=(diff, 100-diff))
         coef_df.loc[i, "coef_LB"] = lower
