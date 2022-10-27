@@ -2,595 +2,125 @@ Filename: /home/sak0914/who-analysis/01_make_model_inputs.py
 
 Line #    Mem usage    Increment  Occurrences   Line Contents
 =============================================================
-   103     54.4 MiB     54.4 MiB           1   @profile(stream=mem_log)
+   103     55.2 MiB     55.2 MiB           1   @profile(stream=mem_log)
    104                                         def read_in_data():
    105                                                 
    106                                             # first get all the genotype files associated with the drug
-   107     54.4 MiB      0.0 MiB           1       geno_files = []
+   107     55.2 MiB      0.0 MiB           1       geno_files = []
    108                                         
-   109     54.4 MiB      0.0 MiB           3       for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
+   109     55.2 MiB      0.0 MiB           3       for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
    110                                         
    111                                                 # subdirectory (tiers)
-   112     54.4 MiB      0.0 MiB           2           full_subdir = os.path.join(genos_dir, f"drug_name={drug}", subdir)
+   112     55.2 MiB      0.0 MiB           2           full_subdir = os.path.join(genos_dir, f"drug_name={drug}", subdir)
    113                                         
    114                                                 # the last character is the tier number
-   115     54.4 MiB      0.0 MiB           2           if full_subdir[-1] in tiers_lst:
-   116     54.4 MiB      0.0 MiB           8               for fName in os.listdir(full_subdir):
-   117     54.4 MiB      0.0 MiB           6                   if "run" in fName:
-   118     54.4 MiB      0.0 MiB           6                       geno_files.append(os.path.join(full_subdir, fName))
+   115     55.2 MiB      0.0 MiB           2           if full_subdir[-1] in tiers_lst:
+   116     55.2 MiB      0.0 MiB           2               for fName in os.listdir(full_subdir):
+   117     55.2 MiB      0.0 MiB           1                   if "run" in fName:
+   118     55.2 MiB      0.0 MiB           1                       geno_files.append(os.path.join(full_subdir, fName))
    119                                         
-   120     54.4 MiB      0.0 MiB           1       print(f"    {len(df_phenos)} samples with phenotypes and {len(geno_files)} files with genotypes.")
+   120     55.2 MiB      0.0 MiB           1       print(f"    {len(df_phenos)} samples with phenotypes and {len(geno_files)} files with genotypes.")
    121                                         
-   122     54.4 MiB      0.0 MiB           1       dfs_lst = []
-   123   3031.3 MiB   -571.1 MiB           7       for i, fName in enumerate(geno_files):
+   122     55.2 MiB      0.0 MiB           1       dfs_lst = []
+   123  13303.8 MiB      0.0 MiB           2       for i, fName in enumerate(geno_files):
    124                                         
    125                                                 # print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
    126                                                 # read in the dataframe
-   127   2526.1 MiB    250.7 MiB           6           df = pd.read_csv(fName)
+   127   5389.2 MiB   5334.0 MiB           1           df = pd.read_csv(fName)
    128                                         
    129                                                 # get only genotypes for samples that have a phenotype
-   130   2812.3 MiB   1091.1 MiB           6           df_avail_isolates = df.loc[df.sample_id.isin(df_phenos.sample_id)]
+   130  10770.5 MiB   5381.3 MiB           1           df_avail_isolates = df.loc[df.sample_id.isin(df_phenos.sample_id)]
    131                                         
    132                                                 # keep all variants
-   133   2812.3 MiB   -486.7 MiB           6           if synonymous:
+   133  10770.5 MiB      0.0 MiB           1           if synonymous:
    134                                                     dfs_lst.append(df_avail_isolates)
    135                                                 else:
    136                                                     # P = coding variants, C = synonymous or upstream variants (get only upstream variants by getting only negative positions), and N = non-coding variants on rrs/rrl
    137                                                     # deletion does not contain the p/c/n prefix
    138                                                     # synonymous variants = synonymous, change in start codon that produces V instead of M, and changes in stop codon that preserve stop
-   139   3031.3 MiB    535.1 MiB           6               dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))        
+   139  13303.8 MiB   2533.3 MiB           1               dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))        
    140                                         
    141                                         
    142                                             # possible to have duplicated entries because they have different predicted effects
    143                                             # example: Met1fs is present in two lines because it has 2 predicted effects: frameshift and start lost
    144                                             # sort the dataframe by inverse, which keeps start_lost before frameshift, then drop_duplicates. 
-   145   3767.7 MiB    736.4 MiB           1       df_model = pd.concat(dfs_lst)
-   146   4715.3 MiB    947.6 MiB           1       return df_model.sort_values("predicted_effect", ascending=False).drop_duplicates(subset=["sample_id", "resolved_symbol", "variant_category", "variant_binary_status", "variant_allele_frequency"], keep="first").reset_index(drop=True)
+   145  15838.0 MiB   2534.2 MiB           1       df_model = pd.concat(dfs_lst)
+   146  18055.0 MiB   2217.0 MiB           1       return df_model.sort_values("predicted_effect", ascending=False).drop_duplicates(subset=["sample_id", "resolved_symbol", "variant_category", "variant_binary_status", "variant_allele_frequency"], keep="first").reset_index(drop=True)
 
 
-Filename: /home/sak0914/who-analysis/02_regression_with_bootstrap.py
-
-Line #    Mem usage    Increment  Occurrences   Line Contents
-=============================================================
-    68    273.8 MiB    273.8 MiB           1       @profile(stream=mem_log)
-    69                                             def read_in_matrix_compute_grm(fName):
-    70   2960.0 MiB   2686.3 MiB           1           minor_allele_counts = sparse.load_npz(fName).todense()
-    71                                         
-    72                                                 # convert to dataframe
-    73   2960.0 MiB      0.0 MiB           1           minor_allele_counts = pd.DataFrame(minor_allele_counts)
-    74   2960.1 MiB      0.0 MiB           1           minor_allele_counts.columns = minor_allele_counts.iloc[0, :]
-    75   2960.1 MiB      0.0 MiB           1           minor_allele_counts = minor_allele_counts.iloc[1:, :]
-    76   2960.4 MiB      0.3 MiB           1           minor_allele_counts.rename(columns={0:"sample_id"}, inplace=True)
-    77   2960.0 MiB     -0.4 MiB           1           minor_allele_counts["sample_id"] = minor_allele_counts["sample_id"].astype(int)
-    78                                         
-    79                                                 # make sample ids the index again
-    80   2962.9 MiB      2.9 MiB           1           minor_allele_counts = minor_allele_counts.set_index("sample_id")
-    81                                         
-    82   2965.2 MiB      2.4 MiB           1           mean_maf = pd.DataFrame(minor_allele_counts.mean(axis=0))
-    83   2965.2 MiB      0.0 MiB           1           print(f"Min MAF: {round(mean_maf[0].min(), 2)}, Max MAF: {round(mean_maf[0].max(), 2)}")
-    84                                         
-    85                                                 # compute GRM using the mino allele counts of only the samples in the model
-    86    718.5 MiB  -2246.8 MiB           1           minor_allele_counts = minor_allele_counts.query("sample_id in @model_inputs.sample_id.values")
-    87   1274.6 MiB    556.1 MiB           1           grm = np.cov(minor_allele_counts.values)
-    88                                         
-    89   1274.6 MiB      0.0 MiB           1           minor_allele_counts_samples = minor_allele_counts.index.values
-    90    838.3 MiB   -436.3 MiB           1           del minor_allele_counts
-    91    838.3 MiB      0.0 MiB           1           return grm, minor_allele_counts_samples
-
-
-Filename: /home/sak0914/who-analysis/02_regression_with_bootstrap.py
+Filename: /home/sak0914/who-analysis/01_make_model_inputs.py
 
 Line #    Mem usage    Increment  Occurrences   Line Contents
 =============================================================
-   194   1141.2 MiB   1141.2 MiB           1   @profile(stream=mem_log)
-   195                                         def bootstrap_coef():
-   196   1141.2 MiB      0.0 MiB           1       coefs = []
-   197   1141.2 MiB      0.0 MiB        1001       for i in range(num_bootstrap):
-   198                                         
-   199                                                 # randomly draw sample indices
-   200   1141.2 MiB      0.0 MiB        1000           sample_idx = np.random.choice(np.arange(0, len(y)), size=len(y), replace=True)
-   201                                         
-   202                                                 # get the X and y matrices
-   203   1275.4 MiB 134049.8 MiB        1000           X_bs = X[sample_idx, :]
-   204   1275.4 MiB    -91.9 MiB        1000           y_bs = y[sample_idx]
-   205                                         
-   206   1275.4 MiB    -92.2 MiB        1000           if binary:
-   207   1275.4 MiB    -88.8 MiB        1000               bs_model = LogisticRegression(C=model.C_[0], penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
-   208                                                 else:
-   209                                                     bs_model = Ridge(alpha=model.alpha_, max_iter=10000)
-   210   1141.2 MiB -134163.7 MiB        1000           bs_model.fit(X_bs, y_bs)
-   211   1141.2 MiB      0.0 MiB        1000           coefs.append(np.squeeze(bs_model.coef_))
-   212                                                 
-   213   1177.6 MiB     36.4 MiB           1       return pd.DataFrame(coefs)
-
-
-Filename: /home/sak0914/who-analysis/03_model_analysis.py
-
-Line #    Mem usage    Increment  Occurrences   Line Contents
-=============================================================
-   139     97.8 MiB     97.8 MiB           1   @profile(stream=mem_log)
-   140                                         def run_all(out_dir, drug_abbr, **kwargs):
-   141                                             
-   142     97.8 MiB      0.0 MiB           1       tiers_lst = kwargs["tiers_lst"]
-   143     97.8 MiB      0.0 MiB           1       pheno_category_lst = kwargs["pheno_category_lst"]
-   144     97.8 MiB      0.0 MiB           1       model_prefix = kwargs["model_prefix"]
-   145     97.8 MiB      0.0 MiB           1       het_mode = kwargs["het_mode"]
-   146     97.8 MiB      0.0 MiB           1       synonymous = kwargs["synonymous"]
-   147     97.8 MiB      0.0 MiB           1       pool_lof = kwargs["pool_lof"]
-   148     97.8 MiB      0.0 MiB           1       AF_thresh = kwargs["AF_thresh"]
-   149                                         
-   150     97.8 MiB      0.0 MiB           1       num_PCs = kwargs["num_PCs"]
-   151     97.8 MiB      0.0 MiB           1       num_bootstrap = kwargs["num_bootstrap"]
-   152     97.8 MiB      0.0 MiB           1       alpha = kwargs["alpha"]
-   153                                             
-   154                                             # coefficients from L2 regularized regression ("baseline" regression)
-   155     98.1 MiB      0.3 MiB           1       coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
-   156     98.5 MiB      0.5 MiB           1       coef_df = coef_df.query("coef != 0")
-   157                                         
-   158                                             # coefficients from bootstrap replicates
-   159    111.2 MiB     12.6 MiB           1       bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
-   160    107.8 MiB     -3.4 MiB           1       bs_df = bs_df[coef_df["variant"]]
-   161                                             
-   162                                             # read in all genotypes and phenotypes    
-   163    107.8 MiB      0.0 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
-   164                                         
-   165                                             # add p-values and confidence intervals to the results dataframe
-   166                                             # if tiers 1 and 2 are included, then compute p-values separately?  
-   167    107.8 MiB      0.0 MiB           1       if len(tiers_lst) > 1:
-   168                                                 
-   169                                                 tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
-   170                                                 tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
-   171                                                 tier1_variants = tier1_matrix.columns
-   172                                                 
-   173                                                 coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
-   174                                                 assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
-   175                                             else:
-   176    110.3 MiB      2.5 MiB           1           coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
-   177                                                 
-   178                                             # Benjamini-Hochberg correction
-   179    110.4 MiB      0.1 MiB           1       coef_df = BH_FDR_correction(coef_df)
+   154   2273.7 MiB   2273.7 MiB           1   @profile(stream=mem_log)
+   155                                         def pool_lof_mutations(df):
+   156                                             '''
+   157                                             resolved_symbol = gene
+   158                                             
+   159                                             Effect = lof for ALL frameshift, nonsense, loss of start, and large-scale deletion mutations. 
+   160                                             
+   161                                             This function creates a new column called lof, which is 1 for variants that are lof, 0 for frameshift mutations that are not lof, and nan for variants that
+   162                                             couldn't be lof (synonymous, missense, etc.)
+   163                                             
+   164                                             LOF criteria = loss of start or stop codon, nonsense mutation, single frameshift mutation, large-scale deletion
+   165                                             
+   166                                             If one of the above criteria (except the frameshift mutation) co-occurs with multiple frameshift mutations in the same sample and gene, then an lof feature will be
+   167                                             generated, and the frameshift mutations will remain as additional features. i.e. the LOF will not trump the multiple frameshift mutations. 
+   168                                             '''
+   169                                             
+   170                                             ###### STEP 1: Assign all (sample, gene) pairs with a single frameshift mutation to LOF, and the remaining to not LOF ######
+   171                                             
+   172                                             # get all frameshift mutations and separate by the number of frameshifts per gene per sample
+   173   2610.2 MiB    336.5 MiB           1       frameshift = df.query("predicted_effect == 'frameshift'")
+   174                                         
+   175                                             # (sample, gene) pairs with a single frameshift mutation are LOF
+   176   2628.2 MiB     18.0 MiB           1       lof_single_fs = pd.DataFrame(frameshift.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect == 1").reset_index()
+   177                                         
+   178                                             # already 1 because variant_category is the counts column now
+   179   2628.2 MiB      0.0 MiB           1       lof_single_fs.rename(columns={"predicted_effect": "lof"}, inplace=True)
    180                                         
-   181                                             # Bonferroni correction
-   182    110.4 MiB      0.0 MiB           1       coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
-   183                                         
-   184                                             # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
-   185    110.4 MiB      0.0 MiB           1       assert len(coef_df.query("pval > BH_pval")) == 0
-   186    110.4 MiB      0.0 MiB           1       assert len(coef_df.query("pval > Bonferroni_pval")) == 0
-   187                                         
-   188                                             # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
-   189    110.4 MiB      0.0 MiB           1       res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
-   190    110.8 MiB      0.4 MiB           1       res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
+   181                                             # lof column now is 1 for (sample, gene) pairs with only 1 frameshift mutation and 0 for those with multiple frameshift mutations
+   182   2631.8 MiB      3.6 MiB           1       frameshift = frameshift.merge(lof_single_fs, on=["sample_id", "resolved_symbol"], how="outer")
+   183   2631.8 MiB      0.0 MiB           1       frameshift["lof"] = frameshift["lof"].fillna(0)
+   184                                         
+   185                                             # merge with original dataframe to get the rest of the columns back. predicted_effect is now lof
+   186   5481.0 MiB   2849.2 MiB           1       df_with_lof = df.merge(frameshift[["sample_id", "resolved_symbol", "variant_category", "lof"]], on=["sample_id", "resolved_symbol", "variant_category"], how="outer")
+   187   5481.0 MiB      0.0 MiB           1       assert len(df) == len(df_with_lof)
+   188                                         
+   189                                             # value_counts drops all the NaNs when computing
+   190   5481.0 MiB      0.0 MiB           1       assert df_with_lof["lof"].value_counts(dropna=True).sum() == len(frameshift)
    191                                         
-   192                                             # convert to odds ratios
-   193    110.9 MiB      0.1 MiB           1       res_df["Odds_Ratio"] = np.exp(res_df["coef"])
-   194    110.9 MiB      0.0 MiB           1       res_df["OR_LB"] = np.exp(res_df["coef_LB"])
-   195    110.9 MiB      0.0 MiB           1       res_df["OR_UB"] = np.exp(res_df["coef_UB"])
-   196                                          
-   197                                             # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
-   198    110.9 MiB      0.0 MiB           1       del res_df["variant"]
-   199    110.9 MiB      0.0 MiB           1       del res_df["gene"]
-   200                                             #del res_df["genome_index"]
+   192                                             ###### STEP 2: Assign loss of start, stop gained, and large-scale deletion to LOF ######
+   193                                         
+   194                                             # criteria for lof are: nonsense mutation, loss of start, single frameshift mutation. Get only those satisfying the first two criteria (last done above)
+   195   5520.7 MiB    -79.1 MiB           3       df_with_lof.loc[(df_with_lof["variant_category"] == 'deletion') | 
+   196   5560.2 MiB     39.6 MiB           2                       (df_with_lof["predicted_effect"].isin(['stop_gained', 'start_lost'])), 'lof'
+   197   5481.0 MiB      0.0 MiB           1                      ] = 1
+   198                                             
+   199                                             # get only variants that are LOF
+   200   5480.8 MiB    -39.9 MiB           1       df_lof = df_with_lof.query("lof == 1")
    201                                             
-   202    110.9 MiB      0.0 MiB           1       return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
-
-
-Filename: /home/sak0914/who-analysis/03_model_analysis.py
-
-Line #    Mem usage    Increment  Occurrences   Line Contents
-=============================================================
-   139     97.8 MiB     97.8 MiB           1   @profile(stream=mem_log)
-   140                                         def run_all(out_dir, drug_abbr, **kwargs):
-   141                                             
-   142     97.8 MiB      0.0 MiB           1       tiers_lst = kwargs["tiers_lst"]
-   143     97.8 MiB      0.0 MiB           1       pheno_category_lst = kwargs["pheno_category_lst"]
-   144     97.8 MiB      0.0 MiB           1       model_prefix = kwargs["model_prefix"]
-   145     97.8 MiB      0.0 MiB           1       het_mode = kwargs["het_mode"]
-   146     97.8 MiB      0.0 MiB           1       synonymous = kwargs["synonymous"]
-   147     97.8 MiB      0.0 MiB           1       pool_lof = kwargs["pool_lof"]
-   148     97.8 MiB      0.0 MiB           1       AF_thresh = kwargs["AF_thresh"]
-   149                                         
-   150     97.8 MiB      0.0 MiB           1       num_PCs = kwargs["num_PCs"]
-   151     97.8 MiB      0.0 MiB           1       num_bootstrap = kwargs["num_bootstrap"]
-   152     97.8 MiB      0.0 MiB           1       alpha = kwargs["alpha"]
-   153                                             
-   154                                             # coefficients from L2 regularized regression ("baseline" regression)
-   155     98.3 MiB      0.5 MiB           1       coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
-   156     98.6 MiB      0.3 MiB           1       coef_df = coef_df.query("coef != 0")
-   157                                         
-   158                                             # coefficients from bootstrap replicates
-   159    134.1 MiB     35.5 MiB           1       bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
-   160    118.1 MiB    -16.0 MiB           1       bs_df = bs_df[coef_df["variant"]]
-   161                                             
-   162                                             # read in all genotypes and phenotypes    
-   163    118.1 MiB      0.0 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
-   164                                         
-   165                                             # add p-values and confidence intervals to the results dataframe
-   166                                             # if tiers 1 and 2 are included, then compute p-values separately?  
-   167    118.1 MiB      0.0 MiB           1       if len(tiers_lst) > 1:
-   168                                                 
-   169    118.1 MiB      0.0 MiB           1           tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
-   170    171.0 MiB     52.9 MiB           1           tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
-   171    171.0 MiB      0.0 MiB           1           tier1_variants = tier1_matrix.columns
-   172                                                 
-   173    171.3 MiB      0.3 MiB           1           coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
-   174    171.3 MiB      0.0 MiB           1           assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
-   175                                             else:
-   176                                                 coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
-   177                                                 
-   178                                             # Benjamini-Hochberg correction
-   179    171.3 MiB      0.0 MiB           1       coef_df = BH_FDR_correction(coef_df)
-   180                                         
-   181                                             # Bonferroni correction
-   182    171.3 MiB      0.0 MiB           1       coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
-   183                                         
-   184                                             # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
-   185    171.3 MiB      0.0 MiB           1       assert len(coef_df.query("pval > BH_pval")) == 0
-   186    171.3 MiB      0.0 MiB           1       assert len(coef_df.query("pval > Bonferroni_pval")) == 0
-   187                                         
-   188                                             # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
-   189    171.3 MiB      0.0 MiB           1       res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
-   190    171.6 MiB      0.3 MiB           1       res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
-   191                                         
-   192                                             # convert to odds ratios
-   193    171.6 MiB      0.0 MiB           1       res_df["Odds_Ratio"] = np.exp(res_df["coef"])
-   194    171.6 MiB      0.0 MiB           1       res_df["OR_LB"] = np.exp(res_df["coef_LB"])
-   195    171.6 MiB      0.0 MiB           1       res_df["OR_UB"] = np.exp(res_df["coef_UB"])
-   196                                          
-   197                                             # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
-   198    171.6 MiB      0.0 MiB           1       del res_df["variant"]
-   199    171.6 MiB      0.0 MiB           1       del res_df["gene"]
-   200                                             #del res_df["genome_index"]
-   201                                             
-   202    171.6 MiB      0.0 MiB           1       return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
-
-
-Filename: /home/sak0914/who-analysis/03_model_analysis.py
-
-Line #    Mem usage    Increment  Occurrences   Line Contents
-=============================================================
-   139     98.0 MiB     98.0 MiB           1   @profile(stream=mem_log)
-   140                                         def run_all(out_dir, drug_abbr, **kwargs):
-   141                                             
-   142     98.0 MiB      0.0 MiB           1       tiers_lst = kwargs["tiers_lst"]
-   143     98.0 MiB      0.0 MiB           1       pheno_category_lst = kwargs["pheno_category_lst"]
-   144     98.0 MiB      0.0 MiB           1       model_prefix = kwargs["model_prefix"]
-   145     98.0 MiB      0.0 MiB           1       het_mode = kwargs["het_mode"]
-   146     98.0 MiB      0.0 MiB           1       synonymous = kwargs["synonymous"]
-   147     98.0 MiB      0.0 MiB           1       pool_lof = kwargs["pool_lof"]
-   148     98.0 MiB      0.0 MiB           1       AF_thresh = kwargs["AF_thresh"]
-   149                                         
-   150     98.0 MiB      0.0 MiB           1       num_PCs = kwargs["num_PCs"]
-   151     98.0 MiB      0.0 MiB           1       num_bootstrap = kwargs["num_bootstrap"]
-   152     98.0 MiB      0.0 MiB           1       alpha = kwargs["alpha"]
-   153                                             
-   154                                             # coefficients from L2 regularized regression ("baseline" regression)
-   155     98.5 MiB      0.5 MiB           1       coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
-   156     98.8 MiB      0.2 MiB           1       coef_df = coef_df.query("coef != 0")
-   157                                         
-   158                                             # coefficients from bootstrap replicates
-   159    131.7 MiB     32.9 MiB           1       bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
-   160    115.7 MiB    -16.0 MiB           1       bs_df = bs_df[coef_df["variant"]]
-   161                                             
-   162                                             # read in all genotypes and phenotypes    
-   163    115.7 MiB      0.0 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
-   164                                         
-   165                                             # add p-values and confidence intervals to the results dataframe
-   166                                             # if tiers 1 and 2 are included, then compute p-values separately?  
-   167    115.7 MiB      0.0 MiB           1       if len(tiers_lst) > 1:
-   168                                                 
-   169    115.7 MiB      0.0 MiB           1           tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
-   170    168.5 MiB     52.8 MiB           1           tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
-   171    168.5 MiB      0.0 MiB           1           tier1_variants = tier1_matrix.columns
-   172                                                 
-   173    172.1 MiB      3.6 MiB           1           coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
-   174    172.1 MiB      0.0 MiB           1           assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
-   175                                             else:
-   176                                                 coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
-   177                                                 
-   178                                             # Benjamini-Hochberg correction
-   179    172.1 MiB      0.0 MiB           1       coef_df = BH_FDR_correction(coef_df)
-   180                                         
-   181                                             # Bonferroni correction
-   182    172.1 MiB      0.0 MiB           1       coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
-   183                                         
-   184                                             # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
-   185    172.1 MiB      0.0 MiB           1       assert len(coef_df.query("pval > BH_pval")) == 0
-   186    172.1 MiB      0.0 MiB           1       assert len(coef_df.query("pval > Bonferroni_pval")) == 0
-   187                                         
-   188                                             # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
-   189    172.1 MiB      0.0 MiB           1       res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
-   190    172.3 MiB      0.2 MiB           1       res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
-   191                                         
-   192                                             # convert to odds ratios
-   193    172.6 MiB      0.2 MiB           1       res_df["Odds_Ratio"] = np.exp(res_df["coef"])
-   194    172.6 MiB      0.0 MiB           1       res_df["OR_LB"] = np.exp(res_df["coef_LB"])
-   195    172.6 MiB      0.0 MiB           1       res_df["OR_UB"] = np.exp(res_df["coef_UB"])
-   196                                          
-   197                                             # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
-   198    172.6 MiB      0.0 MiB           1       del res_df["variant"]
-   199    172.6 MiB      0.0 MiB           1       del res_df["gene"]
-   200                                             #del res_df["genome_index"]
-   201                                             
-   202    172.6 MiB      0.0 MiB           1       return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
-
-
-Filename: /home/sak0914/who-analysis/03_model_analysis.py
-
-Line #    Mem usage    Increment  Occurrences   Line Contents
-=============================================================
-   139     97.8 MiB     97.8 MiB           1   @profile(stream=mem_log)
-   140                                         def run_all(out_dir, drug_abbr, **kwargs):
-   141                                             
-   142     97.8 MiB      0.0 MiB           1       tiers_lst = kwargs["tiers_lst"]
-   143     97.8 MiB      0.0 MiB           1       pheno_category_lst = kwargs["pheno_category_lst"]
-   144     97.8 MiB      0.0 MiB           1       model_prefix = kwargs["model_prefix"]
-   145     97.8 MiB      0.0 MiB           1       het_mode = kwargs["het_mode"]
-   146     97.8 MiB      0.0 MiB           1       synonymous = kwargs["synonymous"]
-   147     97.8 MiB      0.0 MiB           1       pool_lof = kwargs["pool_lof"]
-   148     97.8 MiB      0.0 MiB           1       AF_thresh = kwargs["AF_thresh"]
-   149                                         
-   150     97.8 MiB      0.0 MiB           1       num_PCs = kwargs["num_PCs"]
-   151     97.8 MiB      0.0 MiB           1       num_bootstrap = kwargs["num_bootstrap"]
-   152     97.8 MiB      0.0 MiB           1       alpha = kwargs["alpha"]
-   153                                             
-   154                                             # coefficients from L2 regularized regression ("baseline" regression)
-   155     98.3 MiB      0.5 MiB           1       coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
-   156     98.6 MiB      0.3 MiB           1       coef_df = coef_df.query("coef != 0")
-   157                                         
-   158                                             # coefficients from bootstrap replicates
-   159    134.1 MiB     35.5 MiB           1       bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
-   160    118.1 MiB    -16.0 MiB           1       bs_df = bs_df[coef_df["variant"]]
-   161                                             
-   162                                             # read in all genotypes and phenotypes    
-   163    118.1 MiB      0.0 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
-   164                                         
-   165                                             # add p-values and confidence intervals to the results dataframe
-   166                                             # if tiers 1 and 2 are included, then compute p-values separately?  
-   167    118.1 MiB      0.0 MiB           1       if len(tiers_lst) > 1:
-   168                                                 
-   169    118.1 MiB      0.0 MiB           1           tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
-   170    170.9 MiB     52.8 MiB           1           tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
-   171    170.9 MiB      0.0 MiB           1           tier1_variants = tier1_matrix.columns
-   172                                                 
-   173    173.4 MiB      2.5 MiB           1           coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
-   174    173.4 MiB      0.0 MiB           1           assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
-   175                                             else:
-   176                                                 coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
-   177                                                 
-   178                                             # Benjamini-Hochberg correction
-   179    173.4 MiB      0.0 MiB           1       coef_df = BH_FDR_correction(coef_df)
-   180                                         
-   181                                             # Bonferroni correction
-   182    173.4 MiB      0.0 MiB           1       coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
-   183                                         
-   184                                             # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
-   185    173.4 MiB      0.0 MiB           1       assert len(coef_df.query("pval > BH_pval")) == 0
-   186    173.4 MiB      0.0 MiB           1       assert len(coef_df.query("pval > Bonferroni_pval")) == 0
-   187                                         
-   188                                             # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
-   189    173.4 MiB      0.0 MiB           1       res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
-   190    173.7 MiB      0.3 MiB           1       res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
-   191                                         
-   192                                             # convert to odds ratios
-   193    173.7 MiB      0.0 MiB           1       res_df["Odds_Ratio"] = np.exp(res_df["coef"])
-   194    173.7 MiB      0.0 MiB           1       res_df["OR_LB"] = np.exp(res_df["coef_LB"])
-   195    173.7 MiB      0.0 MiB           1       res_df["OR_UB"] = np.exp(res_df["coef_UB"])
-   196                                          
-   197                                             # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
-   198    173.7 MiB      0.0 MiB           1       del res_df["variant"]
-   199    173.7 MiB      0.0 MiB           1       del res_df["gene"]
-   200                                             #del res_df["genome_index"]
-   201                                             
-   202    173.7 MiB      0.0 MiB           1       return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
-
-
-Filename: /home/sak0914/who-analysis/03_model_analysis.py
-
-Line #    Mem usage    Increment  Occurrences   Line Contents
-=============================================================
-   139     97.8 MiB     97.8 MiB           1   @profile(stream=mem_log)
-   140                                         def run_all(out_dir, drug_abbr, **kwargs):
-   141                                             
-   142     97.8 MiB      0.0 MiB           1       tiers_lst = kwargs["tiers_lst"]
-   143     97.8 MiB      0.0 MiB           1       pheno_category_lst = kwargs["pheno_category_lst"]
-   144     97.8 MiB      0.0 MiB           1       model_prefix = kwargs["model_prefix"]
-   145     97.8 MiB      0.0 MiB           1       het_mode = kwargs["het_mode"]
-   146     97.8 MiB      0.0 MiB           1       synonymous = kwargs["synonymous"]
-   147     97.8 MiB      0.0 MiB           1       pool_lof = kwargs["pool_lof"]
-   148     97.8 MiB      0.0 MiB           1       AF_thresh = kwargs["AF_thresh"]
-   149                                         
-   150     97.8 MiB      0.0 MiB           1       num_PCs = kwargs["num_PCs"]
-   151     97.8 MiB      0.0 MiB           1       num_bootstrap = kwargs["num_bootstrap"]
-   152     97.8 MiB      0.0 MiB           1       alpha = kwargs["alpha"]
-   153                                             
-   154                                             # coefficients from L2 regularized regression ("baseline" regression)
-   155     98.4 MiB      0.5 MiB           1       coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
-   156     98.6 MiB      0.3 MiB           1       coef_df = coef_df.query("coef != 0")
-   157                                         
-   158                                             # coefficients from bootstrap replicates
-   159    134.1 MiB     35.5 MiB           1       bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
-   160    118.1 MiB    -16.0 MiB           1       bs_df = bs_df[coef_df["variant"]]
-   161                                             
-   162                                             # read in all genotypes and phenotypes    
-   163    118.1 MiB      0.0 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
-   164                                         
-   165                                             # add p-values and confidence intervals to the results dataframe
-   166                                             # if tiers 1 and 2 are included, then compute p-values separately?  
-   167    118.1 MiB      0.0 MiB           1       if len(tiers_lst) > 1:
-   168                                                 
-   169    118.1 MiB      0.0 MiB           1           tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
-   170    171.0 MiB     52.9 MiB           1           tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
-   171    171.0 MiB      0.0 MiB           1           tier1_variants = tier1_matrix.columns
-   172                                                 
-   173    171.2 MiB      0.2 MiB           1           coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
-   174    171.3 MiB      0.0 MiB           1           assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
-   175                                             else:
-   176                                                 coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
-   177                                                 
-   178                                             # Benjamini-Hochberg correction
-   179    171.3 MiB      0.0 MiB           1       coef_df = BH_FDR_correction(coef_df)
-   180                                         
-   181                                             # Bonferroni correction
-   182    171.3 MiB      0.0 MiB           1       coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
-   183                                         
-   184                                             # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
-   185    171.3 MiB      0.0 MiB           1       assert len(coef_df.query("pval > BH_pval")) == 0
-   186    171.3 MiB      0.0 MiB           1       assert len(coef_df.query("pval > Bonferroni_pval")) == 0
-   187                                         
-   188                                             # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
-   189    171.3 MiB      0.0 MiB           1       res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
-   190    171.6 MiB      0.3 MiB           1       res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
-   191                                         
-   192                                             # convert to odds ratios
-   193    171.6 MiB      0.0 MiB           1       res_df["Odds_Ratio"] = np.exp(res_df["coef"])
-   194    171.6 MiB      0.0 MiB           1       res_df["OR_LB"] = np.exp(res_df["coef_LB"])
-   195    171.6 MiB      0.0 MiB           1       res_df["OR_UB"] = np.exp(res_df["coef_UB"])
-   196                                          
-   197                                             # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
-   198    171.6 MiB      0.0 MiB           1       del res_df["variant"]
-   199    171.6 MiB      0.0 MiB           1       del res_df["gene"]
-   200                                             #del res_df["genome_index"]
-   201                                             
-   202    171.6 MiB      0.0 MiB           1       return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
-
-
-Filename: /home/sak0914/who-analysis/03_model_analysis.py
-
-Line #    Mem usage    Increment  Occurrences   Line Contents
-=============================================================
-   139     97.8 MiB     97.8 MiB           1   @profile(stream=mem_log)
-   140                                         def run_all(out_dir, drug_abbr, **kwargs):
-   141                                             
-   142     97.8 MiB      0.0 MiB           1       tiers_lst = kwargs["tiers_lst"]
-   143     97.8 MiB      0.0 MiB           1       pheno_category_lst = kwargs["pheno_category_lst"]
-   144     97.8 MiB      0.0 MiB           1       model_prefix = kwargs["model_prefix"]
-   145     97.8 MiB      0.0 MiB           1       het_mode = kwargs["het_mode"]
-   146     97.8 MiB      0.0 MiB           1       synonymous = kwargs["synonymous"]
-   147     97.8 MiB      0.0 MiB           1       pool_lof = kwargs["pool_lof"]
-   148     97.8 MiB      0.0 MiB           1       AF_thresh = kwargs["AF_thresh"]
-   149                                         
-   150     97.8 MiB      0.0 MiB           1       num_PCs = kwargs["num_PCs"]
-   151     97.8 MiB      0.0 MiB           1       num_bootstrap = kwargs["num_bootstrap"]
-   152     97.8 MiB      0.0 MiB           1       alpha = kwargs["alpha"]
-   153                                             
-   154                                             # coefficients from L2 regularized regression ("baseline" regression)
-   155     98.1 MiB      0.3 MiB           1       coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
-   156     98.6 MiB      0.5 MiB           1       coef_df = coef_df.query("coef != 0")
-   157                                         
-   158                                             # coefficients from bootstrap replicates
-   159    111.2 MiB     12.6 MiB           1       bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
-   160    105.0 MiB     -6.2 MiB           1       bs_df = bs_df[coef_df["variant"]]
-   161                                             
-   162                                             # read in all genotypes and phenotypes    
-   163    105.2 MiB      0.3 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
-   164                                         
-   165                                             # add p-values and confidence intervals to the results dataframe
-   166                                             # if tiers 1 and 2 are included, then compute p-values separately?  
-   167    105.2 MiB      0.0 MiB           1       if len(tiers_lst) > 1:
-   168                                                 
-   169                                                 tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
-   170                                                 tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
-   171                                                 tier1_variants = tier1_matrix.columns
-   172                                                 
-   173                                                 coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
-   174                                                 assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
-   175                                             else:
-   176    107.5 MiB      2.3 MiB           1           coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
-   177                                                 
-   178                                             # Benjamini-Hochberg correction
-   179    107.6 MiB      0.1 MiB           1       coef_df = BH_FDR_correction(coef_df)
-   180                                         
-   181                                             # Bonferroni correction
-   182    107.6 MiB      0.0 MiB           1       coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
-   183                                         
-   184                                             # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
-   185    107.6 MiB      0.0 MiB           1       assert len(coef_df.query("pval > BH_pval")) == 0
-   186    107.6 MiB      0.0 MiB           1       assert len(coef_df.query("pval > Bonferroni_pval")) == 0
-   187                                         
-   188                                             # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
-   189    107.6 MiB      0.0 MiB           1       res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
-   190    108.1 MiB      0.4 MiB           1       res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
-   191                                         
-   192                                             # convert to odds ratios
-   193    108.1 MiB      0.0 MiB           1       res_df["Odds_Ratio"] = np.exp(res_df["coef"])
-   194    108.1 MiB      0.0 MiB           1       res_df["OR_LB"] = np.exp(res_df["coef_LB"])
-   195    108.1 MiB      0.0 MiB           1       res_df["OR_UB"] = np.exp(res_df["coef_UB"])
-   196                                          
-   197                                             # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
-   198    108.1 MiB      0.0 MiB           1       del res_df["variant"]
-   199    108.1 MiB      0.0 MiB           1       del res_df["gene"]
-   200                                             #del res_df["genome_index"]
-   201                                             
-   202    108.1 MiB      0.0 MiB           1       return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
-
-
-Filename: /home/sak0914/who-analysis/03_model_analysis.py
-
-Line #    Mem usage    Increment  Occurrences   Line Contents
-=============================================================
-   139     97.8 MiB     97.8 MiB           1   @profile(stream=mem_log)
-   140                                         def run_all(out_dir, drug_abbr, **kwargs):
-   141                                             
-   142     97.8 MiB      0.0 MiB           1       tiers_lst = kwargs["tiers_lst"]
-   143     97.8 MiB      0.0 MiB           1       pheno_category_lst = kwargs["pheno_category_lst"]
-   144     97.8 MiB      0.0 MiB           1       model_prefix = kwargs["model_prefix"]
-   145     97.8 MiB      0.0 MiB           1       het_mode = kwargs["het_mode"]
-   146     97.8 MiB      0.0 MiB           1       synonymous = kwargs["synonymous"]
-   147     97.8 MiB      0.0 MiB           1       pool_lof = kwargs["pool_lof"]
-   148     97.8 MiB      0.0 MiB           1       AF_thresh = kwargs["AF_thresh"]
-   149                                         
-   150     97.8 MiB      0.0 MiB           1       num_PCs = kwargs["num_PCs"]
-   151     97.8 MiB      0.0 MiB           1       num_bootstrap = kwargs["num_bootstrap"]
-   152     97.8 MiB      0.0 MiB           1       alpha = kwargs["alpha"]
-   153                                             
-   154                                             # coefficients from L2 regularized regression ("baseline" regression)
-   155     98.3 MiB      0.5 MiB           1       coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
-   156     98.6 MiB      0.3 MiB           1       coef_df = coef_df.query("coef != 0")
-   157                                         
-   158                                             # coefficients from bootstrap replicates
-   159    134.1 MiB     35.5 MiB           1       bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
-   160    118.1 MiB    -16.0 MiB           1       bs_df = bs_df[coef_df["variant"]]
-   161                                             
-   162                                             # read in all genotypes and phenotypes    
-   163    118.1 MiB      0.0 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
-   164                                         
-   165                                             # add p-values and confidence intervals to the results dataframe
-   166                                             # if tiers 1 and 2 are included, then compute p-values separately?  
-   167    118.1 MiB      0.0 MiB           1       if len(tiers_lst) > 1:
-   168                                                 
-   169    118.1 MiB      0.0 MiB           1           tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
-   170    171.0 MiB     52.9 MiB           1           tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
-   171    171.0 MiB      0.0 MiB           1           tier1_variants = tier1_matrix.columns
-   172                                                 
-   173    171.3 MiB      0.2 MiB           1           coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
-   174    171.3 MiB      0.0 MiB           1           assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
-   175                                             else:
-   176                                                 coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
-   177                                                 
-   178                                             # Benjamini-Hochberg correction
-   179    171.3 MiB      0.0 MiB           1       coef_df = BH_FDR_correction(coef_df)
-   180                                         
-   181                                             # Bonferroni correction
-   182    171.3 MiB      0.0 MiB           1       coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
-   183                                         
-   184                                             # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
-   185    171.3 MiB      0.0 MiB           1       assert len(coef_df.query("pval > BH_pval")) == 0
-   186    171.3 MiB      0.0 MiB           1       assert len(coef_df.query("pval > Bonferroni_pval")) == 0
-   187                                         
-   188                                             # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
-   189                                             #res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
-   190    171.6 MiB      0.3 MiB           1       coef_df = find_SNVs_in_current_WHO(coef_df, aa_code_dict, drug_abbr)
-   191                                         
-   192                                             # convert to odds ratios
-   193    171.6 MiB      0.0 MiB           1       coef_df["Odds_Ratio"] = np.exp(coef_df["coef"])
-   194    171.6 MiB      0.0 MiB           1       coef_df["OR_LB"] = np.exp(coef_df["coef_LB"])
-   195    171.6 MiB      0.0 MiB           1       coef_df["OR_UB"] = np.exp(coef_df["coef_UB"])
-   196                                          
-   197                                             # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
-   198    171.6 MiB      0.0 MiB           1       del coef_df["variant"]
-   199    171.6 MiB      0.0 MiB           1       del coef_df["gene"]
-   200                                             #del coef_df["genome_index"]
-   201                                             
-   202    171.6 MiB      0.0 MiB           1       return coef_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
+   202                                             ###### STEP 3: COMBINE LOF VARIANTS WITH NON-LOF VARIANTS TO GET A FULL DATAFRAME ######
+   203                                             
+   204                                             # this dataframe will be slightly smaller than the original because some lof mutations have been pooled
+   205                                             
+   206                                             # just keep 1 instance because the feature will become just lof. The row that is kept is arbitrary
+   207                                             # groupby takes more steps because the rest of the columns need to be gotten again
+   208   5480.8 MiB      0.0 MiB           1       df_lof_pooled = df_lof.drop_duplicates(["sample_id", "resolved_symbol"], keep='first')
+   209                                             
+   210                                             # concatenate the dataframe without LOF variants with the dataframe of pooled LOF variants
+   211   8331.9 MiB   2851.1 MiB           1       df_final = pd.concat([df_with_lof.query("lof != 1"), df_lof_pooled], axis=0)
+   212                                             
+   213                                             # the lof column will now be the variant category to use, so 
+   214                                             # 1. replace non-lof frame-shift mutations (value = 0) with NaN 
+   215                                             # 2. replace lof variants (value = 1) with the string lof
+   216                                             # 3. fill the NaNs (non-lof) with the original variant_category column
+   217                                             # 4. rename columns
+   218   8331.9 MiB      0.0 MiB           1       df_final["lof"] = df_final["lof"].replace(0, np.nan)
+   219   8331.9 MiB      0.0 MiB           1       df_final["lof"] = df_final["lof"].replace(1, "lof")
+   220   8332.2 MiB      0.3 MiB           1       df_final["lof"] = df_final["lof"].fillna(df_final["variant_category"])
+   221                                             
+   222   8325.7 MiB     -6.5 MiB           1       assert len(df_final["lof"].unique()) <= len(df_final["variant_category"].unique())
+   223  10859.9 MiB   2534.2 MiB           1       return df_final.rename(columns={"variant_category": "variant_category_unpooled", "lof": "variant_category"})
 
 

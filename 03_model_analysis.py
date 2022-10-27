@@ -41,7 +41,7 @@ def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, tier1_variants=N
         assert len(coef_df_tier1) + len(coef_df_for_pval) == len(coef_df)
             
     # degrees of freedom: N - k - 1, where N = number of samples, k = number of features
-    dof = num_samples - len(coef_df_for_pval) - 1
+    dof = num_samples - len(coef_df) - 1
     
     for i, row in coef_df_for_pval.iterrows():
         # compute the t-statistic. 
@@ -150,6 +150,7 @@ def run_all(out_dir, drug_abbr, **kwargs):
     num_PCs = kwargs["num_PCs"]
     num_bootstrap = kwargs["num_bootstrap"]
     alpha = kwargs["alpha"]
+    binary = kwargs["binary"]
     
     # coefficients from L2 regularized regression ("baseline" regression)
     coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
@@ -163,14 +164,22 @@ def run_all(out_dir, drug_abbr, **kwargs):
     df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
 
     # add p-values and confidence intervals to the results dataframe
-    # if tiers 1 and 2 are included, then compute p-values separately?  
+    # if tiers 1 and 2 are included, then compute p-values separately  
     if len(tiers_lst) > 1:
         
         tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
+        
+        # if it's not present, then it's because this is a tiers=1+2 model with pooling LOFs. It is possible that the corresponding tiers=1, poolLOF model was not
+        # different from the tiers=1 model. So then look for that in this case. 
+        if not os.path.isdir(tier1_equivalent_path):
+            tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1].split("_poolLOF")[0]
+        
         tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
         tier1_variants = tier1_matrix.columns
         
         coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
+        
+        # all tier 2 genes should have p-values in this case. Tier 1 p-values will be in the corresponding Tier 1 only model
         assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
     else:
         coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
@@ -186,13 +195,14 @@ def run_all(out_dir, drug_abbr, **kwargs):
     assert len(coef_df.query("pval > Bonferroni_pval")) == 0
 
     # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
-    #coef_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
+    coef_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
     coef_df = find_SNVs_in_current_WHO(coef_df, aa_code_dict, drug_abbr)
 
     # convert to odds ratios
-    coef_df["Odds_Ratio"] = np.exp(coef_df["coef"])
-    coef_df["OR_LB"] = np.exp(coef_df["coef_LB"])
-    coef_df["OR_UB"] = np.exp(coef_df["coef_UB"])
+    if binary:
+        coef_df["Odds_Ratio"] = np.exp(coef_df["coef"])
+        coef_df["OR_LB"] = np.exp(coef_df["coef_LB"])
+        coef_df["OR_UB"] = np.exp(coef_df["coef_UB"])
  
     # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
     del coef_df["variant"]

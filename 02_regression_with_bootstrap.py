@@ -15,7 +15,7 @@ mem_log=open('memory_usage.log','a+')
 ############# STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES #############
 
 
-_, config_file, drug = sys.argv
+_, config_file, drug, _ = sys.argv
 
 kwargs = yaml.safe_load(open(config_file))
 
@@ -151,9 +151,9 @@ X = scaler.fit_transform(X)
 if binary:
     y = df_phenos.phenotype.values
     assert len(np.unique(y)) == 2
-else:
+# else:
     #y = np.log(df_phenos.phenotype.values)
-    y = np.log(np.random.uniform(low=0.0001, high=5, size=len(df_phenos)))
+    #y = np.log(np.random.uniform(low=0.0001, high=5, size=len(df_phenos)))
 
 assert len(y) == X.shape[0]
 print(f"    {X.shape[0]} samples and {X.shape[1]} variables in the model")

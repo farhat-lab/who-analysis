@@ -84,8 +84,8 @@ df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
 # get the number of samples that have more than 1 phenotype recorded. Drop such samples (should be 0), but leave as a QC step for now. 
 drop_samples = df_phenos.groupby(["sample_id"]).nunique().query("phenotype > 1").index.values
 if len(drop_samples) > 0:
-    print(f"    {len(drop_samples)} isolates are recorded as being both resistant and susceptible to {drug}")
-    df_phenos = df_phenos.query("sample_id not in @drop_samples")
+    raise ValueError(f"    {len(drop_samples)} isolates are recorded as being both resistant and susceptible to {drug}")
+    #df_phenos = df_phenos.query("sample_id not in @drop_samples")
     
 # then drop any duplicated phenotypes
 df_phenos = df_phenos.drop_duplicates(keep="first").reset_index(drop=True)

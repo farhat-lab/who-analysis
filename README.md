@@ -60,6 +60,7 @@ If `fast-lineage-caller` does not install properly from the environment requirem
 Run the numbered scripts in order, with the `config.yaml` file, the full drug name, and the 3-letter abbreviation used in the 2021 WHO catalog. For example, for isoniazid, the arguments after the script name would be `config.yaml Isoniazid INH`. Parameters in the yaml file are as follows:
     
 <ul>
+    <li><code>binary</code>: boolean for whether to fit a binary or quantitative (MIC) model</li>
     <li><code>tiers_lst</code>: list of tiers to include in the model</li>
     <li><code>pheno_category_lst</code>: list of phenotype categories to include. The list can include the strings WHO and ALL.</li>
     <li><code>synonymous</code>: boolean for whether synonymous variants should be included</li>
@@ -74,6 +75,15 @@ Run the numbered scripts in order, with the `config.yaml` file, the full drug na
     <li><code>num_bootstrap</code>: number of bootstrap samples</li>
     <li><code>alpha</code>: significance level</li>
 </ul>
+    
+### Script Descriptions
+    
+    1. `01_make_model_inputs.py` creates input matrices for the model.
+    2. `02_regression_with_bootstrap.py` performs a Ridge (L2-penalized) regression. 
+    3. `03_model_analysis.py` gets p-values (including false discovery rate-corrected p-values) and confidence intervals for the coefficients/odds ratios. It creates a summary file called `model_analysis.csv` in every output directory, which contains all variants with non-zero coefficients and nominally significant p-values (p-value before FDR is less than 0.05).
+    4. `04_univariate_stats.py` computes univariate statistics, such as <b>sensitivity, specificity, likelihood ratios</b>, and <b>positive predictive value</b>. These columns are appended to the `model_analysis.csv` file created by script #3. 
+    5. `analysis/model_metrics.py` fit a new regression model using only the significant features. <b>This definition may be updated</b>, but right now, we are taking all tier 1 genes with a Benjamini-Hochberg corrected p-value less than 0.05 and all tier2 genes with a Benjamini-Hochberg corrected p-value less than 0.01.
+    6. `analysis/combine_model_analyses.py` combines the `model_analysis.csv` files from different models for the same drug and generates a summary dataframe of variants and in which type of model they were detected. The core model has <b> tier 1 genes only, WHO phenotypes only, no synonymous mutations, and pooling LOF mutations</b>. This dataframe will contain additional boolean columns indicating in which model a variant was detected. 
         
 ### Pooling LOF Mutations
     

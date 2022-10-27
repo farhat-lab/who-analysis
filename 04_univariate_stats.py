@@ -98,10 +98,11 @@ def compute_univariate_stats(**kwargs):
     combined = model_inputs.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id").reset_index(drop=True)
 
     # compute univariate stats for only the lof variable
-    if pool_lof:
-        keep_variants = list(res_df.loc[res_df["orig_variant"].str.contains("lof")]["orig_variant"].values)
-    else:
-        keep_variants = list(res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values)
+    # if pool_lof:
+    #     keep_variants = list(res_df.loc[res_df["orig_variant"].str.contains("lof")]["orig_variant"].values)
+    # else:
+    #     
+    keep_variants = list(res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values)
         
     # check that all samples were preserved
     combined_small = combined[["sample_id", "phenotype"] + keep_variants]
@@ -139,31 +140,35 @@ def compute_univariate_stats(**kwargs):
 
         # check this because have had some issues with np.nanpercentile giving an error about incompatible data types
         bs_results = bs_results.astype(float)
-                
+        if len(bs_results.index.unique()) != 5:
+            print(bs_results.index.unique())
+                 
         # add the confidence intervals to the dataframe
         for variable in ["PPV", "Sens", "Spec", "LR+", "LR-"]:
+            
+            if (variable in res_df.columns) and (variable in bs_results.index):
 
-            lower, upper = np.nanpercentile(bs_results.loc[variable, :], q=[2.5, 97.5], axis=0)
+                lower, upper = np.nanpercentile(bs_results.loc[variable, :], q=[2.5, 97.5], axis=0)
 
-            # LR+ can be infinite if spec is 1, and after percentile, it will be NaN, so replace with infinity
-            if variable == "LR+":
-                res_df[variable] = res_df[variable].fillna(np.inf)
-                lower[np.isnan(lower)] = np.inf
-                upper[np.isnan(upper)] = np.inf
+                # LR+ can be infinite if spec is 1, and after percentile, it will be NaN, so replace with infinity
+                if variable == "LR+":
+                    res_df[variable] = res_df[variable].fillna(np.inf)
+                    lower[np.isnan(lower)] = np.inf
+                    upper[np.isnan(upper)] = np.inf
 
-            res_df = res_df.merge(pd.DataFrame({"orig_variant": bs_results.columns, 
-                                f"{variable}_LB": lower,
-                                f"{variable}_UB": upper,
-                               }), on="orig_variant", how="outer")
+                res_df = res_df.merge(pd.DataFrame({"orig_variant": bs_results.columns, 
+                                    f"{variable}_LB": lower,
+                                    f"{variable}_UB": upper,
+                                   }), on="orig_variant", how="outer")
 
-            # sanity checks -- lower bounds should be <= true values, and upper bounds should be >= true values
-            assert sum(res_df[variable] < res_df[f"{variable}_LB"]) == 0
-            assert sum(res_df[variable] > res_df[f"{variable}_UB"]) == 0
+                # sanity checks -- lower bounds should be <= true values, and upper bounds should be >= true values
+                assert sum(res_df[variable] < res_df[f"{variable}_LB"]) == 0
+                assert sum(res_df[variable] > res_df[f"{variable}_UB"]) == 0
             
     return res_df
 
 
-_, config_file, drug = sys.argv
+_, config_file, drug, _ = sys.argv
 
 kwargs = yaml.safe_load(open(config_file))
 

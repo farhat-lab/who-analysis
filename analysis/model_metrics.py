@@ -6,7 +6,7 @@ import scipy.stats as st
 import sys, pickle
 import sklearn.metrics
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
+from sklearn.linear_model import LogisticRegressionCV, RidgeCV
 
 import glob, os, yaml
 import warnings
@@ -96,7 +96,9 @@ def compute_downselected_logReg_model(out_dir, pval_col, pval_thresh, tiers_lst,
     eigenvec_df.columns = [f"PC{num}" for num in eigenvec_df.columns]
 
     df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv")).sort_values("sample_id").reset_index(drop=True)
-    y = df_phenos.phenotype.values
+    
+    if binary:
+        y = df_phenos.phenotype.values
     
     # get all significant features
     downselect_matrix = model_matrix.merge(eigenvec_df, left_index=True, right_index=True)[model_analysis["orig_variant"]]
@@ -107,20 +109,31 @@ def compute_downselected_logReg_model(out_dir, pval_col, pval_thresh, tiers_lst,
     scaler = StandardScaler()
     X = scaler.fit_transform(downselect_matrix.values)
     
-    # fit a logistic regression model on the downselected data (only variants with non-zero coefficients and significant p-values after FDR)
-    small_model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
-                                 cv=5,
-                                 penalty='l2', 
-                                 max_iter=10000, 
-                                 multi_class='ovr',
-                                 scoring='neg_log_loss',
-                                 class_weight='balanced'
-                                )
-
+    # fit a regression model on the downselected data (only variants with non-zero coefficients and significant p-values after FDR)
+    if binary:
+        small_model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
+                                     cv=5,
+                                     penalty='l2',
+                                     max_iter=10000, 
+                                     multi_class='ovr',
+                                     scoring='neg_log_loss',
+                                     class_weight='balanced'
+                                    )
+    else:
+        small_model = RidgeCV(alphas=np.logspace(-6, 6, 13),
+                        cv=5,
+                        max_iter=10000,
+                        scoring='neg_root_mean_squared_error'
+                       )
+    
     # fit and save the baseline model
     small_model.fit(X, y)
-    print(f"    Regularization parameter: {small_model.C_[0]}")
-    pickle.dump(small_model, open(os.path.join(out_dir, 'logReg_model'),'wb'))
+    if binary:
+        print(f"    Regularization parameter: {small_model.C_[0]}")
+        pickle.dump(small_model, open(os.path.join(out_dir, 'logReg_model'),'wb'))
+    else:
+        print(f"    Regularization parameter: {small_model.alpha_}")
+        pickle.dump(small_model, open(os.path.join(out_dir, 'linReg_model'),'wb'))
 
 #     # update the model_analysis dataframe with accuracy metrics (sens, spec, ppv are already there)
 #     for i, row in model_analysis.iterrows():
@@ -133,27 +146,38 @@ def compute_downselected_logReg_model(out_dir, pval_col, pval_thresh, tiers_lst,
 
     # get predicted probabilities. The output is N x k dimensions, where N = number of samples, and k = number of classes
     # the second column is the probability of being in the class 1, so compute the classification threshold using that
-    y_proba = small_model.predict_proba(X)[:, 1]
-    y_hat = get_threshold_val(y, y_proba)
+    if binary:
+        y_proba = small_model.predict_proba(X)[:, 1]
+        y_hat = get_threshold_val(y, y_proba)
 
-    # compute sensitivity, specificity, and accuracy scores (balanced and unbalanced)
-    tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y, y_hat).ravel()
-    sens = tp / (tp+fn)
-    spec = tn / (tn+fp)
+        # compute sensitivity, specificity, and accuracy scores (balanced and unbalanced)
+        tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y, y_hat).ravel()
+        sens = tp / (tp+fn)
+        spec = tn / (tn+fp)
 
-    # return a dataframe of the summary stats
-    return pd.DataFrame({"Sens": sens,
-                         "Spec": spec,
-                         "AUC": sklearn.metrics.roc_auc_score(y, y_hat),
-                         "F1": sklearn.metrics.f1_score(y, y_hat),
-                         "accuracy": sklearn.metrics.accuracy_score(y, y_hat),
-                         "balanced_accuracy": sklearn.metrics.balanced_accuracy_score(y, y_hat),
-                        }, index=[0]
-                       )
+        # return a dataframe of the summary stats
+        return pd.DataFrame({"Sens": sens,
+                             "Spec": spec,
+                             "AUC": sklearn.metrics.roc_auc_score(y, y_hat),
+                             "F1": sklearn.metrics.f1_score(y, y_hat),
+                             "accuracy": sklearn.metrics.accuracy_score(y, y_hat),
+                             "balanced_accuracy": sklearn.metrics.balanced_accuracy_score(y, y_hat),
+                            }, index=[0]
+                           )
+    else:
+        y_hat = small_model.predict(X)
+        mae = np.mean(np.abs((y - y_hat)))
+        rmse = np.mean((y - y_hat)**2)
+        
+        # return a dataframe of the summary stats
+        return pd.DataFrame({"MAE": mae,
+                             "RMSE": rmse,
+                            }, index=[0]
+                           )        
 
 
 
-_, config_file, drug = sys.argv
+_, config_file, drug, _ = sys.argv
 
 kwargs = yaml.safe_load(open(config_file))
 
