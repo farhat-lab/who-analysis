@@ -133,6 +133,9 @@ def compute_univariate_stats(**kwargs):
             # get predictive values from the dataframe of bootstrapped samples. Only return the 5 we want CI for, and the variant
             bs_values = compute_predictive_values(bs_combined, return_stats=["orig_variant", "PPV", "Sens", "Spec", "LR+", "LR-"])
             bs_results = pd.concat([bs_results, bs_values.set_index("orig_variant").T], axis=0)
+            
+            if i % int(num_bootstrap / 10) == 0:
+                print(i)
 
         # add the confidence intervals to the dataframe
         for variable in ["PPV", "Sens", "Spec", "LR+", "LR-"]:
@@ -153,3 +156,34 @@ def compute_univariate_stats(**kwargs):
             # sanity checks -- lower bounds should be <= true values, and upper bounds should be >= true values
             assert sum(res_df[variable] < res_df[f"{variable}_LB"]) == 0
             assert sum(res_df[variable] > res_df[f"{variable}_UB"]) == 0
+            
+    return res_df
+
+
+_, config_file, drug = sys.argv
+
+kwargs = yaml.safe_load(open(config_file))
+
+tiers_lst = kwargs["tiers_lst"]
+pheno_category_lst = kwargs["pheno_category_lst"]
+model_prefix = kwargs["model_prefix"]
+het_mode = kwargs["het_mode"]
+synonymous = kwargs["synonymous"]
+
+out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
+if "ALL" in pheno_category_lst:
+    phenos_name = "ALL"
+else:
+    phenos_name = "WHO"
+
+out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
+
+if not os.path.isdir(out_dir):
+    print("No model for this analysis")
+    exit()
+
+# run analysis
+model_analysis_univariate_stats = compute_univariate_stats(**kwargs)
+
+# save, overwriting the original dataframe
+model_analysis_univariate_stats.to_csv(os.path.join(out_dir, "model_analysis.csv"), index=False)
