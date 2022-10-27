@@ -137,10 +137,13 @@ def compute_univariate_stats(**kwargs):
             if i % int(num_bootstrap / 10) == 0:
                 print(i)
 
+        # check this because have had some issues with np.nanpercentile giving an error about incompatible data types
+        bs_results = bs_results.astype(float)
+                
         # add the confidence intervals to the dataframe
         for variable in ["PPV", "Sens", "Spec", "LR+", "LR-"]:
 
-            lower, upper = np.nanpercentile(bs_results.loc[variable], q=[2.5, 97.5], axis=0)
+            lower, upper = np.nanpercentile(bs_results.loc[variable, :], q=[2.5, 97.5], axis=0)
 
             # LR+ can be infinite if spec is 1, and after percentile, it will be NaN, so replace with infinity
             if variable == "LR+":
