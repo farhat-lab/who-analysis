@@ -63,7 +63,7 @@ if num_PCs > 0:
     print(f"Fitting regression with population structure correction with {num_PCs} principal components")
 
     if not os.path.isfile("data/minor_allele_counts.npz"):
-        raise ValueError("Minor allele counts dataframe does not exist. Please run sample_numbers.py")
+        raise ValueError("Minor allele counts dataframe does not exist. Please run compute_samples_summary.py")
 
     @profile(stream=mem_log)
     def read_in_matrix_compute_grm(fName):
