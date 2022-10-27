@@ -174,3 +174,423 @@ Line #    Mem usage    Increment  Occurrences   Line Contents
    202    110.9 MiB      0.0 MiB           1       return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
 
 
+Filename: /home/sak0914/who-analysis/03_model_analysis.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   139     97.8 MiB     97.8 MiB           1   @profile(stream=mem_log)
+   140                                         def run_all(out_dir, drug_abbr, **kwargs):
+   141                                             
+   142     97.8 MiB      0.0 MiB           1       tiers_lst = kwargs["tiers_lst"]
+   143     97.8 MiB      0.0 MiB           1       pheno_category_lst = kwargs["pheno_category_lst"]
+   144     97.8 MiB      0.0 MiB           1       model_prefix = kwargs["model_prefix"]
+   145     97.8 MiB      0.0 MiB           1       het_mode = kwargs["het_mode"]
+   146     97.8 MiB      0.0 MiB           1       synonymous = kwargs["synonymous"]
+   147     97.8 MiB      0.0 MiB           1       pool_lof = kwargs["pool_lof"]
+   148     97.8 MiB      0.0 MiB           1       AF_thresh = kwargs["AF_thresh"]
+   149                                         
+   150     97.8 MiB      0.0 MiB           1       num_PCs = kwargs["num_PCs"]
+   151     97.8 MiB      0.0 MiB           1       num_bootstrap = kwargs["num_bootstrap"]
+   152     97.8 MiB      0.0 MiB           1       alpha = kwargs["alpha"]
+   153                                             
+   154                                             # coefficients from L2 regularized regression ("baseline" regression)
+   155     98.3 MiB      0.5 MiB           1       coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
+   156     98.6 MiB      0.3 MiB           1       coef_df = coef_df.query("coef != 0")
+   157                                         
+   158                                             # coefficients from bootstrap replicates
+   159    134.1 MiB     35.5 MiB           1       bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
+   160    118.1 MiB    -16.0 MiB           1       bs_df = bs_df[coef_df["variant"]]
+   161                                             
+   162                                             # read in all genotypes and phenotypes    
+   163    118.1 MiB      0.0 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
+   164                                         
+   165                                             # add p-values and confidence intervals to the results dataframe
+   166                                             # if tiers 1 and 2 are included, then compute p-values separately?  
+   167    118.1 MiB      0.0 MiB           1       if len(tiers_lst) > 1:
+   168                                                 
+   169    118.1 MiB      0.0 MiB           1           tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
+   170    171.0 MiB     52.9 MiB           1           tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
+   171    171.0 MiB      0.0 MiB           1           tier1_variants = tier1_matrix.columns
+   172                                                 
+   173    171.3 MiB      0.3 MiB           1           coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
+   174    171.3 MiB      0.0 MiB           1           assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
+   175                                             else:
+   176                                                 coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
+   177                                                 
+   178                                             # Benjamini-Hochberg correction
+   179    171.3 MiB      0.0 MiB           1       coef_df = BH_FDR_correction(coef_df)
+   180                                         
+   181                                             # Bonferroni correction
+   182    171.3 MiB      0.0 MiB           1       coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
+   183                                         
+   184                                             # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
+   185    171.3 MiB      0.0 MiB           1       assert len(coef_df.query("pval > BH_pval")) == 0
+   186    171.3 MiB      0.0 MiB           1       assert len(coef_df.query("pval > Bonferroni_pval")) == 0
+   187                                         
+   188                                             # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
+   189    171.3 MiB      0.0 MiB           1       res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
+   190    171.6 MiB      0.3 MiB           1       res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
+   191                                         
+   192                                             # convert to odds ratios
+   193    171.6 MiB      0.0 MiB           1       res_df["Odds_Ratio"] = np.exp(res_df["coef"])
+   194    171.6 MiB      0.0 MiB           1       res_df["OR_LB"] = np.exp(res_df["coef_LB"])
+   195    171.6 MiB      0.0 MiB           1       res_df["OR_UB"] = np.exp(res_df["coef_UB"])
+   196                                          
+   197                                             # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
+   198    171.6 MiB      0.0 MiB           1       del res_df["variant"]
+   199    171.6 MiB      0.0 MiB           1       del res_df["gene"]
+   200                                             #del res_df["genome_index"]
+   201                                             
+   202    171.6 MiB      0.0 MiB           1       return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
+
+
+Filename: /home/sak0914/who-analysis/03_model_analysis.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   139     98.0 MiB     98.0 MiB           1   @profile(stream=mem_log)
+   140                                         def run_all(out_dir, drug_abbr, **kwargs):
+   141                                             
+   142     98.0 MiB      0.0 MiB           1       tiers_lst = kwargs["tiers_lst"]
+   143     98.0 MiB      0.0 MiB           1       pheno_category_lst = kwargs["pheno_category_lst"]
+   144     98.0 MiB      0.0 MiB           1       model_prefix = kwargs["model_prefix"]
+   145     98.0 MiB      0.0 MiB           1       het_mode = kwargs["het_mode"]
+   146     98.0 MiB      0.0 MiB           1       synonymous = kwargs["synonymous"]
+   147     98.0 MiB      0.0 MiB           1       pool_lof = kwargs["pool_lof"]
+   148     98.0 MiB      0.0 MiB           1       AF_thresh = kwargs["AF_thresh"]
+   149                                         
+   150     98.0 MiB      0.0 MiB           1       num_PCs = kwargs["num_PCs"]
+   151     98.0 MiB      0.0 MiB           1       num_bootstrap = kwargs["num_bootstrap"]
+   152     98.0 MiB      0.0 MiB           1       alpha = kwargs["alpha"]
+   153                                             
+   154                                             # coefficients from L2 regularized regression ("baseline" regression)
+   155     98.5 MiB      0.5 MiB           1       coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
+   156     98.8 MiB      0.2 MiB           1       coef_df = coef_df.query("coef != 0")
+   157                                         
+   158                                             # coefficients from bootstrap replicates
+   159    131.7 MiB     32.9 MiB           1       bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
+   160    115.7 MiB    -16.0 MiB           1       bs_df = bs_df[coef_df["variant"]]
+   161                                             
+   162                                             # read in all genotypes and phenotypes    
+   163    115.7 MiB      0.0 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
+   164                                         
+   165                                             # add p-values and confidence intervals to the results dataframe
+   166                                             # if tiers 1 and 2 are included, then compute p-values separately?  
+   167    115.7 MiB      0.0 MiB           1       if len(tiers_lst) > 1:
+   168                                                 
+   169    115.7 MiB      0.0 MiB           1           tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
+   170    168.5 MiB     52.8 MiB           1           tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
+   171    168.5 MiB      0.0 MiB           1           tier1_variants = tier1_matrix.columns
+   172                                                 
+   173    172.1 MiB      3.6 MiB           1           coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
+   174    172.1 MiB      0.0 MiB           1           assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
+   175                                             else:
+   176                                                 coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
+   177                                                 
+   178                                             # Benjamini-Hochberg correction
+   179    172.1 MiB      0.0 MiB           1       coef_df = BH_FDR_correction(coef_df)
+   180                                         
+   181                                             # Bonferroni correction
+   182    172.1 MiB      0.0 MiB           1       coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
+   183                                         
+   184                                             # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
+   185    172.1 MiB      0.0 MiB           1       assert len(coef_df.query("pval > BH_pval")) == 0
+   186    172.1 MiB      0.0 MiB           1       assert len(coef_df.query("pval > Bonferroni_pval")) == 0
+   187                                         
+   188                                             # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
+   189    172.1 MiB      0.0 MiB           1       res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
+   190    172.3 MiB      0.2 MiB           1       res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
+   191                                         
+   192                                             # convert to odds ratios
+   193    172.6 MiB      0.2 MiB           1       res_df["Odds_Ratio"] = np.exp(res_df["coef"])
+   194    172.6 MiB      0.0 MiB           1       res_df["OR_LB"] = np.exp(res_df["coef_LB"])
+   195    172.6 MiB      0.0 MiB           1       res_df["OR_UB"] = np.exp(res_df["coef_UB"])
+   196                                          
+   197                                             # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
+   198    172.6 MiB      0.0 MiB           1       del res_df["variant"]
+   199    172.6 MiB      0.0 MiB           1       del res_df["gene"]
+   200                                             #del res_df["genome_index"]
+   201                                             
+   202    172.6 MiB      0.0 MiB           1       return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
+
+
+Filename: /home/sak0914/who-analysis/03_model_analysis.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   139     97.8 MiB     97.8 MiB           1   @profile(stream=mem_log)
+   140                                         def run_all(out_dir, drug_abbr, **kwargs):
+   141                                             
+   142     97.8 MiB      0.0 MiB           1       tiers_lst = kwargs["tiers_lst"]
+   143     97.8 MiB      0.0 MiB           1       pheno_category_lst = kwargs["pheno_category_lst"]
+   144     97.8 MiB      0.0 MiB           1       model_prefix = kwargs["model_prefix"]
+   145     97.8 MiB      0.0 MiB           1       het_mode = kwargs["het_mode"]
+   146     97.8 MiB      0.0 MiB           1       synonymous = kwargs["synonymous"]
+   147     97.8 MiB      0.0 MiB           1       pool_lof = kwargs["pool_lof"]
+   148     97.8 MiB      0.0 MiB           1       AF_thresh = kwargs["AF_thresh"]
+   149                                         
+   150     97.8 MiB      0.0 MiB           1       num_PCs = kwargs["num_PCs"]
+   151     97.8 MiB      0.0 MiB           1       num_bootstrap = kwargs["num_bootstrap"]
+   152     97.8 MiB      0.0 MiB           1       alpha = kwargs["alpha"]
+   153                                             
+   154                                             # coefficients from L2 regularized regression ("baseline" regression)
+   155     98.3 MiB      0.5 MiB           1       coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
+   156     98.6 MiB      0.3 MiB           1       coef_df = coef_df.query("coef != 0")
+   157                                         
+   158                                             # coefficients from bootstrap replicates
+   159    134.1 MiB     35.5 MiB           1       bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
+   160    118.1 MiB    -16.0 MiB           1       bs_df = bs_df[coef_df["variant"]]
+   161                                             
+   162                                             # read in all genotypes and phenotypes    
+   163    118.1 MiB      0.0 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
+   164                                         
+   165                                             # add p-values and confidence intervals to the results dataframe
+   166                                             # if tiers 1 and 2 are included, then compute p-values separately?  
+   167    118.1 MiB      0.0 MiB           1       if len(tiers_lst) > 1:
+   168                                                 
+   169    118.1 MiB      0.0 MiB           1           tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
+   170    170.9 MiB     52.8 MiB           1           tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
+   171    170.9 MiB      0.0 MiB           1           tier1_variants = tier1_matrix.columns
+   172                                                 
+   173    173.4 MiB      2.5 MiB           1           coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
+   174    173.4 MiB      0.0 MiB           1           assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
+   175                                             else:
+   176                                                 coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
+   177                                                 
+   178                                             # Benjamini-Hochberg correction
+   179    173.4 MiB      0.0 MiB           1       coef_df = BH_FDR_correction(coef_df)
+   180                                         
+   181                                             # Bonferroni correction
+   182    173.4 MiB      0.0 MiB           1       coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
+   183                                         
+   184                                             # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
+   185    173.4 MiB      0.0 MiB           1       assert len(coef_df.query("pval > BH_pval")) == 0
+   186    173.4 MiB      0.0 MiB           1       assert len(coef_df.query("pval > Bonferroni_pval")) == 0
+   187                                         
+   188                                             # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
+   189    173.4 MiB      0.0 MiB           1       res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
+   190    173.7 MiB      0.3 MiB           1       res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
+   191                                         
+   192                                             # convert to odds ratios
+   193    173.7 MiB      0.0 MiB           1       res_df["Odds_Ratio"] = np.exp(res_df["coef"])
+   194    173.7 MiB      0.0 MiB           1       res_df["OR_LB"] = np.exp(res_df["coef_LB"])
+   195    173.7 MiB      0.0 MiB           1       res_df["OR_UB"] = np.exp(res_df["coef_UB"])
+   196                                          
+   197                                             # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
+   198    173.7 MiB      0.0 MiB           1       del res_df["variant"]
+   199    173.7 MiB      0.0 MiB           1       del res_df["gene"]
+   200                                             #del res_df["genome_index"]
+   201                                             
+   202    173.7 MiB      0.0 MiB           1       return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
+
+
+Filename: /home/sak0914/who-analysis/03_model_analysis.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   139     97.8 MiB     97.8 MiB           1   @profile(stream=mem_log)
+   140                                         def run_all(out_dir, drug_abbr, **kwargs):
+   141                                             
+   142     97.8 MiB      0.0 MiB           1       tiers_lst = kwargs["tiers_lst"]
+   143     97.8 MiB      0.0 MiB           1       pheno_category_lst = kwargs["pheno_category_lst"]
+   144     97.8 MiB      0.0 MiB           1       model_prefix = kwargs["model_prefix"]
+   145     97.8 MiB      0.0 MiB           1       het_mode = kwargs["het_mode"]
+   146     97.8 MiB      0.0 MiB           1       synonymous = kwargs["synonymous"]
+   147     97.8 MiB      0.0 MiB           1       pool_lof = kwargs["pool_lof"]
+   148     97.8 MiB      0.0 MiB           1       AF_thresh = kwargs["AF_thresh"]
+   149                                         
+   150     97.8 MiB      0.0 MiB           1       num_PCs = kwargs["num_PCs"]
+   151     97.8 MiB      0.0 MiB           1       num_bootstrap = kwargs["num_bootstrap"]
+   152     97.8 MiB      0.0 MiB           1       alpha = kwargs["alpha"]
+   153                                             
+   154                                             # coefficients from L2 regularized regression ("baseline" regression)
+   155     98.4 MiB      0.5 MiB           1       coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
+   156     98.6 MiB      0.3 MiB           1       coef_df = coef_df.query("coef != 0")
+   157                                         
+   158                                             # coefficients from bootstrap replicates
+   159    134.1 MiB     35.5 MiB           1       bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
+   160    118.1 MiB    -16.0 MiB           1       bs_df = bs_df[coef_df["variant"]]
+   161                                             
+   162                                             # read in all genotypes and phenotypes    
+   163    118.1 MiB      0.0 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
+   164                                         
+   165                                             # add p-values and confidence intervals to the results dataframe
+   166                                             # if tiers 1 and 2 are included, then compute p-values separately?  
+   167    118.1 MiB      0.0 MiB           1       if len(tiers_lst) > 1:
+   168                                                 
+   169    118.1 MiB      0.0 MiB           1           tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
+   170    171.0 MiB     52.9 MiB           1           tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
+   171    171.0 MiB      0.0 MiB           1           tier1_variants = tier1_matrix.columns
+   172                                                 
+   173    171.2 MiB      0.2 MiB           1           coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
+   174    171.3 MiB      0.0 MiB           1           assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
+   175                                             else:
+   176                                                 coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
+   177                                                 
+   178                                             # Benjamini-Hochberg correction
+   179    171.3 MiB      0.0 MiB           1       coef_df = BH_FDR_correction(coef_df)
+   180                                         
+   181                                             # Bonferroni correction
+   182    171.3 MiB      0.0 MiB           1       coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
+   183                                         
+   184                                             # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
+   185    171.3 MiB      0.0 MiB           1       assert len(coef_df.query("pval > BH_pval")) == 0
+   186    171.3 MiB      0.0 MiB           1       assert len(coef_df.query("pval > Bonferroni_pval")) == 0
+   187                                         
+   188                                             # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
+   189    171.3 MiB      0.0 MiB           1       res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
+   190    171.6 MiB      0.3 MiB           1       res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
+   191                                         
+   192                                             # convert to odds ratios
+   193    171.6 MiB      0.0 MiB           1       res_df["Odds_Ratio"] = np.exp(res_df["coef"])
+   194    171.6 MiB      0.0 MiB           1       res_df["OR_LB"] = np.exp(res_df["coef_LB"])
+   195    171.6 MiB      0.0 MiB           1       res_df["OR_UB"] = np.exp(res_df["coef_UB"])
+   196                                          
+   197                                             # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
+   198    171.6 MiB      0.0 MiB           1       del res_df["variant"]
+   199    171.6 MiB      0.0 MiB           1       del res_df["gene"]
+   200                                             #del res_df["genome_index"]
+   201                                             
+   202    171.6 MiB      0.0 MiB           1       return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
+
+
+Filename: /home/sak0914/who-analysis/03_model_analysis.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   139     97.8 MiB     97.8 MiB           1   @profile(stream=mem_log)
+   140                                         def run_all(out_dir, drug_abbr, **kwargs):
+   141                                             
+   142     97.8 MiB      0.0 MiB           1       tiers_lst = kwargs["tiers_lst"]
+   143     97.8 MiB      0.0 MiB           1       pheno_category_lst = kwargs["pheno_category_lst"]
+   144     97.8 MiB      0.0 MiB           1       model_prefix = kwargs["model_prefix"]
+   145     97.8 MiB      0.0 MiB           1       het_mode = kwargs["het_mode"]
+   146     97.8 MiB      0.0 MiB           1       synonymous = kwargs["synonymous"]
+   147     97.8 MiB      0.0 MiB           1       pool_lof = kwargs["pool_lof"]
+   148     97.8 MiB      0.0 MiB           1       AF_thresh = kwargs["AF_thresh"]
+   149                                         
+   150     97.8 MiB      0.0 MiB           1       num_PCs = kwargs["num_PCs"]
+   151     97.8 MiB      0.0 MiB           1       num_bootstrap = kwargs["num_bootstrap"]
+   152     97.8 MiB      0.0 MiB           1       alpha = kwargs["alpha"]
+   153                                             
+   154                                             # coefficients from L2 regularized regression ("baseline" regression)
+   155     98.1 MiB      0.3 MiB           1       coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
+   156     98.6 MiB      0.5 MiB           1       coef_df = coef_df.query("coef != 0")
+   157                                         
+   158                                             # coefficients from bootstrap replicates
+   159    111.2 MiB     12.6 MiB           1       bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
+   160    105.0 MiB     -6.2 MiB           1       bs_df = bs_df[coef_df["variant"]]
+   161                                             
+   162                                             # read in all genotypes and phenotypes    
+   163    105.2 MiB      0.3 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
+   164                                         
+   165                                             # add p-values and confidence intervals to the results dataframe
+   166                                             # if tiers 1 and 2 are included, then compute p-values separately?  
+   167    105.2 MiB      0.0 MiB           1       if len(tiers_lst) > 1:
+   168                                                 
+   169                                                 tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
+   170                                                 tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
+   171                                                 tier1_variants = tier1_matrix.columns
+   172                                                 
+   173                                                 coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
+   174                                                 assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
+   175                                             else:
+   176    107.5 MiB      2.3 MiB           1           coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
+   177                                                 
+   178                                             # Benjamini-Hochberg correction
+   179    107.6 MiB      0.1 MiB           1       coef_df = BH_FDR_correction(coef_df)
+   180                                         
+   181                                             # Bonferroni correction
+   182    107.6 MiB      0.0 MiB           1       coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
+   183                                         
+   184                                             # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
+   185    107.6 MiB      0.0 MiB           1       assert len(coef_df.query("pval > BH_pval")) == 0
+   186    107.6 MiB      0.0 MiB           1       assert len(coef_df.query("pval > Bonferroni_pval")) == 0
+   187                                         
+   188                                             # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
+   189    107.6 MiB      0.0 MiB           1       res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
+   190    108.1 MiB      0.4 MiB           1       res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
+   191                                         
+   192                                             # convert to odds ratios
+   193    108.1 MiB      0.0 MiB           1       res_df["Odds_Ratio"] = np.exp(res_df["coef"])
+   194    108.1 MiB      0.0 MiB           1       res_df["OR_LB"] = np.exp(res_df["coef_LB"])
+   195    108.1 MiB      0.0 MiB           1       res_df["OR_UB"] = np.exp(res_df["coef_UB"])
+   196                                          
+   197                                             # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
+   198    108.1 MiB      0.0 MiB           1       del res_df["variant"]
+   199    108.1 MiB      0.0 MiB           1       del res_df["gene"]
+   200                                             #del res_df["genome_index"]
+   201                                             
+   202    108.1 MiB      0.0 MiB           1       return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
+
+
+Filename: /home/sak0914/who-analysis/03_model_analysis.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   139     97.8 MiB     97.8 MiB           1   @profile(stream=mem_log)
+   140                                         def run_all(out_dir, drug_abbr, **kwargs):
+   141                                             
+   142     97.8 MiB      0.0 MiB           1       tiers_lst = kwargs["tiers_lst"]
+   143     97.8 MiB      0.0 MiB           1       pheno_category_lst = kwargs["pheno_category_lst"]
+   144     97.8 MiB      0.0 MiB           1       model_prefix = kwargs["model_prefix"]
+   145     97.8 MiB      0.0 MiB           1       het_mode = kwargs["het_mode"]
+   146     97.8 MiB      0.0 MiB           1       synonymous = kwargs["synonymous"]
+   147     97.8 MiB      0.0 MiB           1       pool_lof = kwargs["pool_lof"]
+   148     97.8 MiB      0.0 MiB           1       AF_thresh = kwargs["AF_thresh"]
+   149                                         
+   150     97.8 MiB      0.0 MiB           1       num_PCs = kwargs["num_PCs"]
+   151     97.8 MiB      0.0 MiB           1       num_bootstrap = kwargs["num_bootstrap"]
+   152     97.8 MiB      0.0 MiB           1       alpha = kwargs["alpha"]
+   153                                             
+   154                                             # coefficients from L2 regularized regression ("baseline" regression)
+   155     98.3 MiB      0.5 MiB           1       coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
+   156     98.6 MiB      0.3 MiB           1       coef_df = coef_df.query("coef != 0")
+   157                                         
+   158                                             # coefficients from bootstrap replicates
+   159    134.1 MiB     35.5 MiB           1       bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
+   160    118.1 MiB    -16.0 MiB           1       bs_df = bs_df[coef_df["variant"]]
+   161                                             
+   162                                             # read in all genotypes and phenotypes    
+   163    118.1 MiB      0.0 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
+   164                                         
+   165                                             # add p-values and confidence intervals to the results dataframe
+   166                                             # if tiers 1 and 2 are included, then compute p-values separately?  
+   167    118.1 MiB      0.0 MiB           1       if len(tiers_lst) > 1:
+   168                                                 
+   169    118.1 MiB      0.0 MiB           1           tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
+   170    171.0 MiB     52.9 MiB           1           tier1_matrix = pd.read_pickle(os.path.join(tier1_equivalent_path, "filt_matrix.pkl"))
+   171    171.0 MiB      0.0 MiB           1           tier1_variants = tier1_matrix.columns
+   172                                                 
+   173    171.3 MiB      0.2 MiB           1           coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
+   174    171.3 MiB      0.0 MiB           1           assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
+   175                                             else:
+   176                                                 coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
+   177                                                 
+   178                                             # Benjamini-Hochberg correction
+   179    171.3 MiB      0.0 MiB           1       coef_df = BH_FDR_correction(coef_df)
+   180                                         
+   181                                             # Bonferroni correction
+   182    171.3 MiB      0.0 MiB           1       coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df), np.ones(len(coef_df))], axis=0)
+   183                                         
+   184                                             # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
+   185    171.3 MiB      0.0 MiB           1       assert len(coef_df.query("pval > BH_pval")) == 0
+   186    171.3 MiB      0.0 MiB           1       assert len(coef_df.query("pval > Bonferroni_pval")) == 0
+   187                                         
+   188                                             # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
+   189                                             #res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
+   190    171.6 MiB      0.3 MiB           1       coef_df = find_SNVs_in_current_WHO(coef_df, aa_code_dict, drug_abbr)
+   191                                         
+   192                                             # convert to odds ratios
+   193    171.6 MiB      0.0 MiB           1       coef_df["Odds_Ratio"] = np.exp(coef_df["coef"])
+   194    171.6 MiB      0.0 MiB           1       coef_df["OR_LB"] = np.exp(coef_df["coef_LB"])
+   195    171.6 MiB      0.0 MiB           1       coef_df["OR_UB"] = np.exp(coef_df["coef_UB"])
+   196                                          
+   197                                             # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
+   198    171.6 MiB      0.0 MiB           1       del coef_df["variant"]
+   199    171.6 MiB      0.0 MiB           1       del coef_df["gene"]
+   200                                             #del coef_df["genome_index"]
+   201                                             
+   202    171.6 MiB      0.0 MiB           1       return coef_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
+
+

@@ -186,20 +186,20 @@ def run_all(out_dir, drug_abbr, **kwargs):
     assert len(coef_df.query("pval > Bonferroni_pval")) == 0
 
     # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
-    res_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
-    res_df = find_SNVs_in_current_WHO(res_df, aa_code_dict, drug_abbr)
+    #coef_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
+    coef_df = find_SNVs_in_current_WHO(coef_df, aa_code_dict, drug_abbr)
 
     # convert to odds ratios
-    res_df["Odds_Ratio"] = np.exp(res_df["coef"])
-    res_df["OR_LB"] = np.exp(res_df["coef_LB"])
-    res_df["OR_UB"] = np.exp(res_df["coef_UB"])
+    coef_df["Odds_Ratio"] = np.exp(coef_df["coef"])
+    coef_df["OR_LB"] = np.exp(coef_df["coef_LB"])
+    coef_df["OR_UB"] = np.exp(coef_df["coef_UB"])
  
     # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
-    del res_df["variant"]
-    del res_df["gene"]
-    #del res_df["genome_index"]
+    del coef_df["variant"]
+    del coef_df["gene"]
+    #del coef_df["genome_index"]
     
-    return res_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
+    return coef_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
 
 
 _, config_file, drug, drug_WHO_abbr = sys.argv
