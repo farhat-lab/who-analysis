@@ -155,7 +155,8 @@ if binary:
     #y = np.log(df_phenos.phenotype.values)
     #y = np.log(np.random.uniform(low=0.0001, high=5, size=len(df_phenos)))
 
-assert len(y) == X.shape[0]
+if len(y) != X.shape[0]:
+    raise ValueError(f"Shapes of model inputs {X.shape} and outputs {len(y)} are incompatible")
 print(f"    {X.shape[0]} samples and {X.shape[1]} variables in the model")
 
 
@@ -209,7 +210,7 @@ def bootstrap_coef():
             bs_model = Ridge(alpha=model.alpha_, max_iter=10000)
         bs_model.fit(X_bs, y_bs)
         coefs.append(np.squeeze(bs_model.coef_))
-        
+
     return pd.DataFrame(coefs)
 
 
