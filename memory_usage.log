@@ -1,0 +1,50 @@
+Filename: /home/sak0914/who-analysis/01_make_model_inputs.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   103     56.3 MiB     56.3 MiB           1   @profile(stream=mem_log)
+   104                                         def read_in_data():
+   105                                                 
+   106                                             # first get all the genotype files associated with the drug
+   107     56.3 MiB      0.0 MiB           1       geno_files = []
+   108                                         
+   109     56.3 MiB      0.0 MiB           3       for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
+   110                                         
+   111                                                 # subdirectory (tiers)
+   112     56.3 MiB      0.0 MiB           2           full_subdir = os.path.join(genos_dir, f"drug_name={drug}", subdir)
+   113                                         
+   114                                                 # the last character is the tier number
+   115     56.3 MiB      0.0 MiB           2           if full_subdir[-1] in tiers_lst:
+   116     56.3 MiB      0.0 MiB           8               for fName in os.listdir(full_subdir):
+   117     56.3 MiB      0.0 MiB           6                   if "run" in fName:
+   118     56.3 MiB      0.0 MiB           6                       geno_files.append(os.path.join(full_subdir, fName))
+   119                                         
+   120     56.3 MiB      0.0 MiB           1       print(f"    {len(df_phenos)} samples with phenotypes and {len(geno_files)} files with genotypes.")
+   121                                         
+   122     56.3 MiB      0.0 MiB           1       dfs_lst = []
+   123   6408.6 MiB      0.0 MiB           7       for i, fName in enumerate(geno_files):
+   124                                         
+   125                                                 # print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
+   126                                                 # read in the dataframe
+   127   5259.4 MiB    522.8 MiB           6           df = pd.read_csv(fName)
+   128                                         
+   129                                                 # get only genotypes for samples that have a phenotype
+   130   6408.6 MiB   5829.5 MiB           6           df_avail_isolates = df.loc[df.sample_id.isin(df_phenos.sample_id)]
+   131                                         
+   132                                                 # keep all variants
+   133   6408.6 MiB      0.0 MiB           6           if synonymous:
+   134   6408.6 MiB      0.0 MiB           6               dfs_lst.append(df_avail_isolates)
+   135                                                 else:
+   136                                                     # P = coding variants, C = synonymous or upstream variants (get only upstream variants by getting only negative positions), and N = non-coding variants on rrs/rrl
+   137                                                     # deletion does not contain the p/c/n prefix
+   138                                                     # synonymous variants = synonymous, change in start codon that produces V instead of M, and changes in stop codon that preserve stop
+   139                                                     dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))        
+   140                                         
+   141                                         
+   142                                             # possible to have duplicated entries because they have different predicted effects
+   143                                             # example: Met1fs is present in two lines because it has 2 predicted effects: frameshift and start lost
+   144                                             # sort the dataframe by inverse, which keeps start_lost before frameshift, then drop_duplicates. 
+   145  11702.8 MiB   5294.2 MiB           1       df_model = pd.concat(dfs_lst)
+   146  16335.7 MiB   4632.9 MiB           1       return df_model.sort_values("predicted_effect", ascending=False).drop_duplicates(subset=["sample_id", "resolved_symbol", "variant_category", "variant_binary_status", "variant_allele_frequency"], keep="first").reset_index(drop=True)
+
+
