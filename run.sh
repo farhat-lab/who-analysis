@@ -50,11 +50,15 @@ abbr_array=(
  # 'LEV'
 )
 
-for i in ${!config_array[@]}; do 
-    for k in ${!drug_array[@]}; do 
-      python3 -u 01_make_model_inputs.py "${config_array[$i]}" "${drug_array[$k]}" "${abbr_array[$k]}"
-      python3 -u 02_regression_with_bootstrap.py "${config_array[$i]}" "${drug_array[$k]}" "${abbr_array[$k]}"
-      python3 -u 03_model_analysis.py "${config_array[$i]}" "${drug_array[$k]}" "${abbr_array[$k]}"
-      # python3 -u analysis/logReg_metrics.py "${config_array[$i]}" "${drug_array[$k]}"
+for k in ${!drug_array[@]}; do 
+    for i in ${!config_array[@]}; do 
+        python3 -u 01_make_model_inputs.py "${config_array[$i]}" "${drug_array[$k]}" "${abbr_array[$k]}"
+        python3 -u 02_regression_with_bootstrap.py "${config_array[$i]}" "${drug_array[$k]}" "${abbr_array[$k]}"
+        python3 -u 03_model_analysis.py "${config_array[$i]}" "${drug_array[$k]}" "${abbr_array[$k]}"
+    
+    # combine model results and compute univariate statistics for the significant variants
+    python3 -u 04_combine_model_analyses.py "${drug_array[$k]}"
+    python3 -u analysis/compute_univariate_stats.py "${drug_array[$k]}"
+    
     done
 done
