@@ -66,7 +66,7 @@ if num_PCs > 0:
         raise ValueError("Minor allele counts dataframe does not exist. Please run compute_samples_summary.py")
 
     @profile(stream=mem_log)
-    def read_in_matrix_compute_grm(fName):
+    def read_in_matrix_compute_grm(fName, model_inputs):
         minor_allele_counts = sparse.load_npz(fName).todense()
 
         # convert to dataframe
@@ -91,8 +91,8 @@ if num_PCs > 0:
         return grm, minor_allele_counts_samples
         
         
-    # compute GRM. delete minor allele counts matrix because it's so big
-    grm, minor_allele_counts_samples = read_in_matrix_compute_grm("data/minor_allele_counts.npz")
+    # compute GRM
+    grm, minor_allele_counts_samples = read_in_matrix_compute_grm("data/minor_allele_counts.npz", model_inputs)
     
     
 ############# STEP 3: RUN PCA ON THE GRM #############

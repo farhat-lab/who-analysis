@@ -12,7 +12,6 @@ warnings.filterwarnings("ignore")
 
 _, drug = sys.argv
 
-
 # get the core model for the drug: tier 1 only, WHO phenos only, no synonymous mutations, pool LOF (if it's not different from unpool LOF, use the unpooled model)
 out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
 
