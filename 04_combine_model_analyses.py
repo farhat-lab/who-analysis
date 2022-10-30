@@ -66,20 +66,12 @@ for tier in os.listdir(os.path.join(out_dir, drug)):
                 
       
 keys_lst = list(add_analyses.keys())
-# merged_analysis_dfs = {}
 
-# for key in keys_lst:
-
-#     merged_analysis_dfs[key] = pd.concat([core_analysis, add_analyses[key]], axis=0).drop_duplicates("orig_variant", keep="first")
-
+# merge the core analysis dataframe with the first additional dataframe
 merged_df = pd.concat([core_analysis, add_analyses[keys_lst[0]]], axis=0).drop_duplicates("orig_variant", keep="first")
 
+# merge the merged dataframe with the remaining additional analyses, dropping duplicates as before
 for key in keys_lst[1:]:
     merged_df = pd.concat([merged_df, add_analyses[key]], axis=0).drop_duplicates("orig_variant", keep="first")
-    
-# # keep variants with an FDR-corrected p-value < 0.05 for the core model.  
-# merged_significant = merged_df.loc[((merged_df["Tier1_only"] == 1) & (merged_df["WHO_phenos"] == 1) & (merged_df["poolLOF"] == 1) & (merged_df["Syn"] == 0) & (merged_df["BH_pval"] < 0.05)) |
-#                                    ((merged_df["Tier1_only"] == 0) & (merged_df["BH_pval"] < 0.01))
-#                                   ]
 
 merged_df.to_csv(os.path.join(os.path.join(out_dir, drug, "final_analysis.csv")), index=False)
