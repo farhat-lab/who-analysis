@@ -60,7 +60,7 @@ If `fast-lineage-caller` does not install properly from the environment requirem
 Run the numbered scripts in order, with the `config.yaml` file, the full drug name, and the 3-letter abbreviation used in the 2021 WHO catalog. For example, for isoniazid, the arguments after the script name would be `config.yaml Isoniazid INH`. Parameters in the yaml file are as follows:
     
 <ul>
-    <li><code>binary</code>: boolean for whether to fit a binary or quantitative (MIC) model</li>
+    <li>`binary`: boolean for whether to fit a binary or quantitative (MIC) model</li>
     <li><code>tiers_lst</code>: list of tiers to include in the model</li>
     <li><code>pheno_category_lst</code>: list of phenotype categories to include. The list can include the strings WHO and ALL.</li>
     <li><code>synonymous</code>: boolean for whether synonymous variants should be included</li>
