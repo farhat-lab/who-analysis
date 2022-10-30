@@ -78,7 +78,10 @@ Run the numbered scripts in order, with the `config.yaml` file, the full drug na
     
 ### Script Descriptions
     
-1. <code>01_make_model_inputs.py</code>: create input matrices to fit a regression model.
+    1. <code>01_make_model_inputs.py</code>: create input matrices to fit a regression model.
+    2. <code>02_regression_with_bootstrap.py</code> performs a Ridge (L2-penalized) regression. 
+    3. <code>03_model_analysis.py</code> gets p-values (including false discovery rate-corrected p-values) and confidence intervals for the coefficients/odds ratios. It creates a summary file called `model_analysis.csv` in every output directory, which contains all variants with non-zero coefficients and nominally significant p-values (p-value before FDR is less than 0.05).
+    4. <code>04_univariate_stats.py</code> computes univariate statistics, such as <b>sensitivity, specificity, likelihood ratios</b>, and <b>positive predictive value</b>. These columns are appended to the `model_analysis.csv` file created by script #3. 
 
 ### Pooling LOF Mutations
     
