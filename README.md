@@ -76,14 +76,7 @@ Run the numbered scripts in order, with the `config.yaml` file, the full drug na
     <li><code>alpha</code>: significance level</li>
 </ul>
     
-### Script Descriptions
-    
-    1. `01_make_model_inputs.py` creates input matrices for the model.
-    2. `02_regression_with_bootstrap.py` performs a Ridge (L2-penalized) regression. 
-    3. `03_model_analysis.py` gets p-values (including false discovery rate-corrected p-values) and confidence intervals for the coefficients/odds ratios. It creates a summary file called `model_analysis.csv` in every output directory, which contains all variants with non-zero coefficients and nominally significant p-values (p-value before FDR is less than 0.05).
-    4. `04_univariate_stats.py` computes univariate statistics, such as <b>sensitivity, specificity, likelihood ratios</b>, and <b>positive predictive value</b>. These columns are appended to the `model_analysis.csv` file created by script #3. 
-    5. `analysis/model_metrics.py` fit a new regression model using only the significant features. <b>This definition may be updated</b>, but right now, we are taking all tier 1 genes with a Benjamini-Hochberg corrected p-value less than 0.05 and all tier2 genes with a Benjamini-Hochberg corrected p-value less than 0.01.
-    6. `analysis/combine_model_analyses.py` combines the `model_analysis.csv` files from different models for the same drug and generates a summary dataframe of variants and in which type of model they were detected. The core model has <b> tier 1 genes only, WHO phenotypes only, no synonymous mutations, and pooling LOF mutations</b>. This dataframe will contain additional boolean columns indicating in which model a variant was detected. 
+
         
 ### Pooling LOF Mutations
     
@@ -91,7 +84,7 @@ If the argument `pool_lof` is set to True, then LOF mutations are pooled for eac
     
 When an LOF variant (i.e. loss of start or stop codons, early stop, large deletion) and multiple frameshift mutations co-occur, LOF will be generated as a new feature, and the frameshift mutations will remain as additional features. If an LOF variant co-occurs with a single frameshift mutation, then they are pooled into a single LOF feature. 
 
-### Heterozygous Alleles
+### Intermediate Allele Frequencies
 
 Heterozygous variants have allele fractions in the range [0.25, 0.75]. Below this range, alleles are reference (0), and above it, they are alternative (1). Selection of how to encode heterozygous alleles is made using the `config.yaml` file. The options are:
 
