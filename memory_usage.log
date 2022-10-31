@@ -641,3 +641,146 @@ Line #    Mem usage    Increment  Occurrences   Line Contents
    237   6123.4 MiB      0.0 MiB           1       return pd.DataFrame(model_outputs)
 
 
+Filename: /home/sak0914/who-analysis/analysis/03_model_metrics.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+    20   1464.3 MiB   1464.3 MiB           1   @profile(stream=mem_log)
+    21                                         def read_in_matrix_compute_grm(fName, samples):
+    22   4150.0 MiB   2685.7 MiB           1       minor_allele_counts = sparse.load_npz(fName).todense()
+    23                                         
+    24                                             # convert to dataframe
+    25   4150.0 MiB      0.0 MiB           1       minor_allele_counts = pd.DataFrame(minor_allele_counts)
+    26   4150.0 MiB      0.0 MiB           1       minor_allele_counts.columns = minor_allele_counts.iloc[0, :]
+    27   4150.0 MiB      0.0 MiB           1       minor_allele_counts = minor_allele_counts.iloc[1:, :]
+    28   4150.1 MiB      0.1 MiB           1       minor_allele_counts.rename(columns={0:"sample_id"}, inplace=True)
+    29   4149.8 MiB     -0.3 MiB           1       minor_allele_counts["sample_id"] = minor_allele_counts["sample_id"].astype(int)
+    30                                         
+    31                                             # make sample ids the index again
+    32   4152.7 MiB      2.9 MiB           1       minor_allele_counts = minor_allele_counts.set_index("sample_id")
+    33                                         
+    34   4155.1 MiB      2.3 MiB           1       mean_maf = pd.DataFrame(minor_allele_counts.mean(axis=0))
+    35   4155.1 MiB      0.0 MiB           1       print(f"Min MAF: {round(mean_maf[0].min(), 2)}, Max MAF: {round(mean_maf[0].max(), 2)}")
+    36                                         
+    37                                             # compute GRM using the mino allele counts of only the samples in the model
+    38   2566.9 MiB  -1588.1 MiB           1       minor_allele_counts = minor_allele_counts.query("sample_id in @samples")
+    39   5951.5 MiB   3384.6 MiB           1       grm = np.cov(minor_allele_counts.values)
+    40                                         
+    41   5951.5 MiB      0.0 MiB           1       minor_allele_counts_samples = minor_allele_counts.index.values
+    42   4855.1 MiB  -1096.4 MiB           1       del minor_allele_counts
+    43   4855.1 MiB      0.0 MiB           1       return grm, minor_allele_counts_samples
+
+
+Filename: /home/sak0914/who-analysis/analysis/03_model_metrics.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   130    184.9 MiB    184.9 MiB           1   @profile(stream=mem_log)
+   131                                         def compute_downselected_logReg_model(drug, out_dir, binary=True, num_bootstrap=1000):
+   132                                             '''
+   133                                             This model computes a logistic regression model using the significant predictors from the first model.
+   134                                             
+   135                                             The original model was used to assign coefficients/odds ratios and p-values. Using the significant predictors (p < 0.05 after FDR), this function
+   136                                             builds another L2-penalized logistic regression to compute sensitivity, specificity, AUC, accuracy, and balanced accuracy. 
+   137                                             '''
+   138                                             
+   139                                             # final_analysis file with all significant variants for a drug
+   140    185.9 MiB      1.0 MiB           1       res_df = pd.read_csv(os.path.join(out_dir, drug, "final_analysis.csv"))
+   141                                             
+   142                                             # read in all genotypes and phenotypes and combine into a single dataframe. 
+   143                                             # Take the dataframes with the most genotypes and phenotypes represented: tiers=1+2, phenos=ALL
+   144                                             # if there are significant LOF variants in res_df, then get the corresponding poolLOF matrix and combine matrices 
+   145    187.4 MiB      1.5 MiB           1       df_phenos = pd.read_csv(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn", "phenos.csv"))
+   146                                             
+   147    187.6 MiB      0.2 MiB           1       if len(res_df.loc[res_df["orig_variant"].str.contains("lof")]) > 0:
+   148                                                 model_inputs = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn", "filt_matrix.pkl"))
+   149                                                 model_inputs_poolLOF = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF", "filt_matrix.pkl"))
+   150                                                 
+   151                                                 # combine dataframes and remove duplicate columns
+   152                                                 model_inputs = pd.concat([model_inputs, model_inputs_poolLOF], axis=1)
+   153                                                 model_inputs = model_inputs.loc[:,~model_inputs.columns.duplicated()]
+   154                                         
+   155                                             else:
+   156    826.1 MiB    638.5 MiB           1           model_inputs = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn", "filt_matrix.pkl"))
+   157                                                 
+   158                                             # combine into a single dataframe and check that there are no principal components left (because there aren't in df_phenos)
+   159   1464.3 MiB    638.2 MiB           1       combined = model_inputs.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id", how="inner").set_index("sample_id")
+   160   1464.3 MiB      0.0 MiB           1       assert sum(combined.columns.str.contains("PC")) == 0
+   161                                             
+   162                                             # compute GRM and get only samples that are represented in the GRM (it should be everything, but this is just to avoid errors)
+   163                                             # GRM is in the order of minor_allele_counts_samples (N x N)
+   164   4855.1 MiB   3390.8 MiB           1       grm, minor_allele_counts_samples = read_in_matrix_compute_grm("data/minor_allele_counts.npz", combined.index.values)
+   165   4855.1 MiB      0.0 MiB           1       combined = combined.loc[minor_allele_counts_samples, :]
+   166                                             
+   167   4855.1 MiB      0.0 MiB           1       scaler = StandardScaler()
+   168   4855.1 MiB      0.0 MiB           1       pca = PCA(n_components=5)
+   169   4870.9 MiB     15.8 MiB           1       pca.fit(scaler.fit_transform(grm))
+   170                                         
+   171   4870.9 MiB      0.0 MiB           1       print(f"Explained variance ratios of 5 principal components: {pca.explained_variance_ratio_}")
+   172   4870.9 MiB      0.0 MiB           1       eigenvec = pca.components_.T
+   173   4870.9 MiB      0.0 MiB           1       eigenvec_df = pd.DataFrame(eigenvec)
+   174   4870.9 MiB      0.0 MiB           1       eigenvec_df.index = minor_allele_counts_samples
+   175                                             
+   176                                             # combine with eigevectors, then separate the phenotypes
+   177   4870.9 MiB      0.0 MiB           1       combined = combined.merge(eigenvec_df, left_index=True, right_index=True)
+   178   4870.9 MiB      0.0 MiB           1       if binary:
+   179   4870.9 MiB      0.0 MiB           1           y = combined["phenotype"].values
+   180   4870.9 MiB      0.0 MiB           1           del combined["phenotype"]
+   181                                             
+   182   5509.5 MiB    638.6 MiB           1       X = scaler.fit_transform(combined.values)
+   183                                             
+   184                                             # fit a regression model on the downselected data (only variants with non-zero coefficients and significant p-values after FDR)
+   185   5509.5 MiB      0.0 MiB           1       if binary:
+   186   5509.7 MiB      0.2 MiB           2           model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
+   187   5509.7 MiB      0.0 MiB           1                                        cv=5,
+   188   5509.7 MiB      0.0 MiB           1                                        penalty='l2',
+   189   5509.7 MiB      0.0 MiB           1                                        max_iter=10000, 
+   190   5509.7 MiB      0.0 MiB           1                                        multi_class='ovr',
+   191   5509.7 MiB      0.0 MiB           1                                        scoring='neg_log_loss',
+   192   5509.7 MiB      0.0 MiB           1                                        class_weight='balanced'
+   193                                                                             )
+   194                                             else:
+   195                                                 model = RidgeCV(alphas=np.logspace(-6, 6, 13),
+   196                                                                 cv=5,
+   197                                                                 max_iter=10000,
+   198                                                                 scoring='neg_root_mean_squared_error'
+   199                                                                )
+   200                                             
+   201                                             # fit and save the baseline model if you want to make more predictions later
+   202   6147.5 MiB    637.8 MiB           1       model.fit(X, y)
+   203   6147.5 MiB      0.0 MiB           1       if binary:
+   204   6147.5 MiB      0.0 MiB           1           print(f"    Regularization parameter: {model.C_[0]}")
+   205   6147.5 MiB      0.0 MiB           1           pickle.dump(model, open(os.path.join(out_dir, drug, 'logReg_model'),'wb'))
+   206                                             else:
+   207                                                 print(f"    Regularization parameter: {model.alpha_}")
+   208                                                 pickle.dump(model, open(os.path.join(out_dir, drug, 'linReg_model'),'wb'))
+   209                                         
+   210                                         
+   211                                             # get the summary stats for the overall model
+   212   5509.6 MiB   -637.9 MiB           1       model_outputs = generate_model_output(X, y, model, binary=True, print_thresh=True)
+   213   5509.6 MiB      0.0 MiB           1       model_outputs["BS"] = 0
+   214                                             
+   215                                             # next, perform bootstrapping with 1000 replicates
+   216   5509.6 MiB      0.0 MiB           1       print(f"Bootstrapping the summary model with {num_bootstrap} replicates")
+   217   6147.9 MiB      0.0 MiB        1001       for i in range(num_bootstrap):
+   218                                         
+   219                                                 # randomly draw sample indices
+   220   6147.9 MiB      0.1 MiB        1000           sample_idx = np.random.choice(np.arange(0, len(y)), size=len(y), replace=True)
+   221                                         
+   222                                                 # get the X and y matrices
+   223   6785.9 MiB 623897.0 MiB        1000           X_bs = X[sample_idx, :]
+   224   6785.9 MiB -14056.5 MiB        1000           y_bs = y[sample_idx]
+   225                                         
+   226   6785.9 MiB -14056.5 MiB        1000           if binary:
+   227   6785.9 MiB -14050.9 MiB        1000               bs_model = LogisticRegression(C=model.C_[0], penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
+   228                                                 else:
+   229                                                     bs_model = Ridge(alpha=model.alpha_, max_iter=10000)
+   230                                                 
+   231   6147.9 MiB -637373.2 MiB        1000           bs_model.fit(X_bs, y_bs)
+   232   6147.9 MiB      0.0 MiB        1000           summary = generate_model_output(X_bs, y_bs, bs_model, binary=binary, print_thresh=False)
+   233   6147.9 MiB      0.0 MiB        1000           summary["BS"] = 1
+   234   6147.9 MiB      0.0 MiB        1000           model_outputs = pd.concat([model_outputs, summary], axis=0)
+   235                                         
+   236   6147.9 MiB      0.0 MiB           1       return pd.DataFrame(model_outputs)
+
+
