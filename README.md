@@ -97,7 +97,7 @@ Parameters in the yaml file are as follows:
     <li><code>alpha</code>: significance level</li>
 </ul>
     
-After the 3 scripts in the main directory, run the 3 numbered scripts in the `analysis` directory in order. Each script requires only the drug name as an argument.
+After the 3 scripts in the home directory, run the 3 numbered scripts in the `analysis` directory in order. Each script requires only the drug name as an argument.
   
 1. <code>analysis/01_combine_model_analyses.py</code> combines the `model_analysis.csv` files from different models for the same drug and generates a summary dataframe of variants and in which type of model they were detected. The core model has <b> tier 1 genes only, WHO phenotypes only, no synonymous mutations, and pooling LOF mutations</b>. This dataframe will contain additional boolean columns indicating in which model a variant was detected. 
 2. <code>analysis/02_compute_univariate_stats.py</code> computes univariate statistics, such as <b>sensitivity, specificity, likelihood ratios</b>, and <b>positive predictive value</b>. These columns are appended to the `model_analysis.csv` file created by script #3. 
