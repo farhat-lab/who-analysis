@@ -2,12 +2,11 @@
 
 ## Create Environment
 
-### Add required channels
+Add required channels, then build the environment from teh `environment_reqs.txt` file
+
 <code>conda config --add channels bioconda</code>
 
 <code>conda config --add channels conda-forge</code>
-
-## Build environment from file
 
 <code>conda create --name env_name --file environment_reqs.txt</code>
     
