@@ -10,8 +10,7 @@
 
 # list of config files to use
 config_array=(
- 'config_1.yaml'
- 'config_2.yaml'
+ 'config.yaml'
 )
 
 # list of drugs and associated abbreviations
