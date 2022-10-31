@@ -35,7 +35,7 @@ core_analysis["poolLOF"] = 1
 core_analysis["Syn"] = 0
 
 # keep all significant variants at an FDR threshold of 0.05
-core_analysis = core_analysis.query("BH_pval" < 0.05)
+core_analysis = core_analysis.query("BH_pval < 0.05")
 
 # create dictionary of the additional model analyses
 add_analyses = {}
@@ -59,7 +59,7 @@ for tier in os.listdir(os.path.join(out_dir, drug)):
                     add_analysis["Syn"] = int("withSyn" in add_path)
                     
                     # keep all significant variants at an FDR threshold of 0.01
-                    add_analyses[add_path] = add_analysis.query("BH_pval" < 0.01)
+                    add_analyses[add_path] = add_analysis.query("BH_pval < 0.01")
             else:
                 print(f"No model analysis file in {analysis_fName}")
                 
