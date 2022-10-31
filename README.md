@@ -8,10 +8,11 @@
 <code>conda config --add channels conda-forge</code>
 
 ## Build environment from file
-<code>conda create --name <env_name> --file environment_reqs.txt</code>
-    
-If `fast-lineage-caller` does not install properly from the environment requirements file, install it with `pip install fast-lineage-caller`. I have had issues in the past installing it with conda. 
 
+<code>conda create --name env_name --file environment_reqs.txt</code>
+    
+If <code>fast-lineage-caller</code> does not install properly from the environment requirements file, install it with <code>pip install fast-lineage-caller</code>. I have had issues in the past installing it with conda. 
+    
 ## Genotype Annotations
 
 <ul>
@@ -30,6 +31,7 @@ If `fast-lineage-caller` does not install properly from the environment requirem
         <li>lof: any frameshift, large-scale deletion, nonsense, or loss of start mutation</li>
         <li>initiator_codon_variant: Valine start codon</li>
         <li>stop_retained_variant: variant in the stop codon that did not change it</li>
+    </ul>
 </ul>
 
 ## Phenotype Annotations
