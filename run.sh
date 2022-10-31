@@ -59,6 +59,7 @@ for k in ${!drug_array[@]}; do
     # combine model results and compute univariate statistics for the significant variants
     python3 -u analysis/01_combine_model_analyses.py "${drug_array[$k]}"
     python3 -u analysis/02_compute_univariate_stats.py "${drug_array[$k]}"
+    python3 -u analysis/03_model_metrics.py "${drug_array[$k]}"
     
     done
 done

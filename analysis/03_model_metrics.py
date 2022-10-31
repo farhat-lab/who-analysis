@@ -232,6 +232,9 @@ def compute_downselected_logReg_model(drug, out_dir, binary=True, num_bootstrap=
         summary = generate_model_output(X_bs, y_bs, bs_model, binary=binary, print_thresh=False)
         summary["BS"] = 1
         model_outputs = pd.concat([model_outputs, summary], axis=0)
+        
+        if i % (num_bootstrap / 10) == 0:
+            print(i)
 
     return pd.DataFrame(model_outputs)
     
