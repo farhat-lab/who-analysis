@@ -56,8 +56,29 @@ If `fast-lineage-caller` does not install properly from the environment requirem
 3. <code>samples_summary.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, phenotypes, SNP counts, lineages, and the number of (sample, gene) pairs with multiple frameshift mutations.
 
 ## Running the Analysis
+    
+### Models
+    
+#### Core Model Features:
+    
+<ul>
+    <li>Tier 1 genes</li>
+    <li>Isolates with WHO-approved phenotypes</li>
+    <li>No synonymous mutations</li>
+    <li>Pool loss-of-function (LOF) mutations</li>
+</ul>
+    
+Genetic features that are significant in a regression model (Benjamini-Hochberg corrected p-value less than 0.05) will be reported in a summary. After running additional models, additional features with a Benjamini-Hochberg corrected p-value less than 0.01 will also be included in the summary.
+    
+### Scripts
 
-Run the numbered scripts in order, with the `config.yaml` file, the full drug name, and the 3-letter abbreviation used in the 2021 WHO catalog. For example, for isoniazid, the arguments after the script name would be `config.yaml Isoniazid INH`. Parameters in the yaml file are as follows:
+Run the numbered scripts in order, with the `config.yaml` file, the full drug name, and the 3-letter abbreviation used in the 2021 WHO catalog. For example, for isoniazid, the arguments after the script name would be `config.yaml Isoniazid INH`. 
+   
+1. <code>01_make_model_inputs.py</code>: create input matrices to fit a regression model.
+2. <code>02_regression_with_bootstrap.py</code> performs a Ridge (L2-penalized) regression. 
+3. <code>03_model_analysis.py</code> gets p-values (including false discovery rate-corrected p-values) and confidence intervals for the coefficients/odds ratios. It creates a summary file called `model_analysis.csv` in every output directory, which contains all variants with non-zero coefficients and nominally significant p-values (p-value before FDR is less than 0.05).
+    
+Parameters in the yaml file are as follows:
     
 <ul>
     <li><code>binary</code>: boolean for whether to fit a binary or quantitative (MIC) model</li>
@@ -76,13 +97,12 @@ Run the numbered scripts in order, with the `config.yaml` file, the full drug na
     <li><code>alpha</code>: significance level</li>
 </ul>
     
-### Script Descriptions
-    
-1. <code>01_make_model_inputs.py</code>: create input matrices to fit a regression model.
-2. <code>02_regression_with_bootstrap.py</code> performs a Ridge (L2-penalized) regression. 
-3. <code>03_model_analysis.py</code> gets p-values (including false discovery rate-corrected p-values) and confidence intervals for the coefficients/odds ratios. It creates a summary file called `model_analysis.csv` in every output directory, which contains all variants with non-zero coefficients and nominally significant p-values (p-value before FDR is less than 0.05).
-4. <code>04_univariate_stats.py</code> computes univariate statistics, such as <b>sensitivity, specificity, likelihood ratios</b>, and <b>positive predictive value</b>. These columns are appended to the `model_analysis.csv` file created by script #3. 
-
+After the 3 scripts in the main directory, run the 3 numbered scripts in the `analysis` directory in order. Each script requires only the drug name as an argument.
+  
+1. <code>analysis/01_combine_model_analyses.py</code> combines the `model_analysis.csv` files from different models for the same drug and generates a summary dataframe of variants and in which type of model they were detected. The core model has <b> tier 1 genes only, WHO phenotypes only, no synonymous mutations, and pooling LOF mutations</b>. This dataframe will contain additional boolean columns indicating in which model a variant was detected. 
+2. <code>analysis/02_compute_univariate_stats.py</code> computes univariate statistics, such as <b>sensitivity, specificity, likelihood ratios</b>, and <b>positive predictive value</b>. These columns are appended to the `model_analysis.csv` file created by script #3. 
+3. <code>analysis/03_model_metrics.py</code> fits a new regression model using only the significant features. and perform nonparametric bootstrapping to get confidence intervals for model statistics (i.e. sensitivity, specificity, AUC, and accuracy). 
+ 
 ### Pooling LOF Mutations
     
 If the argument `pool_lof` is set to True, then LOF mutations are pooled for each (sample, gene) pair. A custom function is used for this so that genes containing multiple frameshift mutations are not considered LOF. If this is decided against, then pooling can be done on the `Effect` column in the genotypes dataframes. 
