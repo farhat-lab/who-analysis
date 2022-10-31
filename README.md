@@ -127,10 +127,3 @@ A threshold of <b>1%</b> is used to drop isolates, i.e. if more than 1% of an is
 Similarly, if more than <b>25%</b> of the isolates in a given analysis are missing that feature, then drop the feature. 
 
 Then, all remaining features with anything missing are dropped. Imputation can be done instead by setting the argument `impute` to True. This will impute every element in the matrix that is missing by averaging the feature, stratified by resistance phenotype. 
-    
----
-**NOTE**
-
-32 <a href="https://docs.google.com/spreadsheets/d/13vdVdzZk053yT-i5LgyFJUBD1T6_nIRgzBAxxa2OOyc/edit#gid=0" target="_blank">analyses</a> run for each drug, changing each parameter individually.  
-
----
