@@ -2,7 +2,7 @@
 
 ## Create Environment
 
-Add required channels, then build the environment from teh `environment_reqs.txt` file
+Add required channels, then build the environment from the `environment_reqs.txt` file
 
 <code>conda config --add channels bioconda</code>
 
