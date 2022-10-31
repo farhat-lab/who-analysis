@@ -15,12 +15,6 @@ _, drug = sys.argv
 # get the core model for the drug: tier 1 only, WHO phenos only, no synonymous mutations, pool LOF (if it's not different from unpool LOF, use the unpooled model)
 out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
 
-# remove any file in the directory (that's not a directory itself) so that it does not appear in the lists later in the nested for loop
-files = glob.glob(os.path.join(out_dir, drug, "*.csv"))
-for fName in files:
-    print(f"Removing {fName}")
-    os.remove(fName)
-
 core_out_dir = os.path.join(out_dir, drug, "tiers=1/phenos=WHO")
 core_model_path = os.path.join(core_out_dir, "dropAF_noSyn_poolLOF")
 
@@ -42,27 +36,29 @@ add_analyses = {}
 
 for tier in os.listdir(os.path.join(out_dir, drug)):
     tiers_path = os.path.join(out_dir, drug, tier)
-    for pheno in os.listdir(tiers_path):
-        phenos_path = os.path.join(out_dir, drug, tier, pheno)
-        for model in os.listdir(phenos_path):
-            model_path = os.path.join(out_dir, drug, tier, pheno, model)
-            
-            analysis_fName = os.path.join(model_path, "model_analysis.csv")
-            if os.path.isfile(analysis_fName):
-                if model_path != core_model_path:
-                    add_analysis = pd.read_csv(analysis_fName)
-                    add_path = model_path.split(os.path.join(out_dir, drug))[1].strip("/").replace("dropAF_", "")
-                    
-                    add_analysis["Tier1_only"] = int("2" not in add_path)
-                    add_analysis["WHO_phenos"] = int("WHO" in add_path)
-                    add_analysis["poolLOF"] = int("LOF" in add_path)
-                    add_analysis["Syn"] = int("withSyn" in add_path)
-                    
-                    # keep all significant variants at an FDR threshold of 0.01
-                    add_analyses[add_path] = add_analysis.query("BH_pval < 0.01")
-            else:
-                print(f"No model analysis file in {analysis_fName}")
-                
+    if os.path.isdir(tiers_path):
+        for pheno in os.listdir(tiers_path):
+            phenos_path = os.path.join(out_dir, drug, tier, pheno)
+            for model in os.listdir(phenos_path):
+                model_path = os.path.join(out_dir, drug, tier, pheno, model)
+
+                analysis_fName = os.path.join(model_path, "model_analysis.csv")
+                if os.path.isfile(analysis_fName):
+                    if model_path != core_model_path:
+                        add_analysis = pd.read_csv(analysis_fName)
+                        add_path = model_path.split(os.path.join(out_dir, drug))[1].strip("/").replace("dropAF_", "")
+
+                        add_analysis["Tier1_only"] = int("2" not in add_path)
+                        add_analysis["WHO_phenos"] = int("WHO" in add_path)
+                        add_analysis["poolLOF"] = int("LOF" in add_path)
+                        add_analysis["Syn"] = int("withSyn" in add_path)
+
+                        # keep all significant variants at an FDR threshold of 0.01
+                        add_analyses[add_path] = add_analysis.query("BH_pval < 0.01")
+                else:
+                    print(f"No model analysis file in {analysis_fName}")
+    else:
+        print(f"Skipping {tiers_path} because it is not a directory")
       
 keys_lst = list(add_analyses.keys())
 
