@@ -13,7 +13,7 @@
     
 If <code>fast-lineage-caller</code> does not install properly from the environment requirements file, install it with <code>pip install fast-lineage-caller</code>. I have had issues in the past installing it with conda. 
     
-## Genotype Annotations
+<!-- ## Genotype Annotations
 
 <ul>
     <li>resolved_symbol: gene name</li>
@@ -49,7 +49,7 @@ If <code>fast-lineage-caller</code> does not install properly from the environme
             <li>0 if the variant meets QC and AF < 0.25</li>
             <li>NA if the variant does not meet QC</li>
         </ul>
-</ul>
+</ul> -->
 
 ## Files in the Data Directory
 
@@ -58,10 +58,8 @@ If <code>fast-lineage-caller</code> does not install properly from the environme
 3. <code>samples_summary.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, phenotypes, SNP counts, lineages, and the number of (sample, gene) pairs with multiple frameshift mutations.
 
 ## Running the Analysis
-    
-### Models
-    
-#### Core Model Features:
+        
+### Core Model Features:
     
 <ul>
     <li>Tier 1 genes</li>
