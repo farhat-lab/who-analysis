@@ -78,7 +78,11 @@ def compute_predictive_values(combined_df, return_stats=[]):
 def compute_univariate_stats(drug, out_dir, num_bootstrap=1000):
 
     # final_analysis file with all significant variants for a drug
-    res_df = pd.read_csv(os.path.join(out_dir, drug, "final_analysis.csv"))
+    res_df = pd.read_csv(os.path.join(out_dir, drug, "final_analysis.csv"), usecols=['orig_variant', 'coef', 'coef_LB', 'coef_UB', 'pval', 'BH_pval',
+                                                                                   'Bonferroni_pval', 'genome_index', 'confidence_WHO_2021', 'Odds_Ratio',
+                                                                                   'OR_LB', 'OR_UB', 'Tier1_only', 'WHO_phenos', 'poolLOF', 'Syn'
+                                                                                    ]
+                        )
     
     # read in all genotypes and phenotypes and combine into a single dataframe. 
     # Take the dataframes with the most genotypes and phenotypes represented: tiers=1+2, phenos=ALL
@@ -98,6 +102,7 @@ def compute_univariate_stats(drug, out_dir, num_bootstrap=1000):
         
     combined = model_inputs.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id").reset_index(drop=True)
 
+    # Can't compute univariate stats for PCs.
     keep_variants = list(res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values)
         
     # check that all samples were preserved
@@ -108,10 +113,19 @@ def compute_univariate_stats(drug, out_dir, num_bootstrap=1000):
     full_predict_values = compute_predictive_values(combined_small)
     res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
     
-    # save, overwriting the original dataframe
+    # save the analysis dataframe with the univariate stats. Do this in case an error occurs during the 
     res_df.to_csv(os.path.join(out_dir, drug, "final_analysis.csv"), index=False)
 
     print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates")
+    # Can't compute univariate stats for PCs. For tractability, only compute bootstrap stats for variants with positive coefficients.
+    # The stats for variants with negative coefficients are often edge numbers and not informative, so this saves time. 
+    keep_variants = list(res_df.loc[(~res_df["orig_variant"].str.contains("PC")) & (res_df["coef"] > 0)]["orig_variant"].values)
+    
+    # Remake this dataframe with fewer features because only going to bootstrap stats for variants with positive coefficients.
+    # check that all samples were preserved. 
+    combined_small = combined[["sample_id", "phenotype"] + keep_variants]
+    assert len(combined_small) == len(combined)
+    
     bs_results = pd.DataFrame(columns = keep_variants)
 
     # need confidence intervals for 5 stats: PPV, sens, spec, + likelihood ratio, - likelihood ratio
@@ -120,7 +134,7 @@ def compute_univariate_stats(drug, out_dir, num_bootstrap=1000):
         # get bootstrap sample
         bs_idx = np.random.choice(np.arange(0, len(combined_small)), size=len(combined_small), replace=True)
         bs_combined = combined_small.iloc[bs_idx, :]
-
+        
         # check ordering of features because we're just going to append bootstrap dataframes
         assert sum(bs_combined.columns[2:] != bs_results.columns) == 0
 
@@ -131,15 +145,13 @@ def compute_univariate_stats(drug, out_dir, num_bootstrap=1000):
         if i % int(num_bootstrap / 10) == 0:
             print(i)
 
-    # check this because have had some issues with np.nanpercentile giving an error about incompatible data types
+    # ensure everything is float because had some issues with np.nanpercentile giving an error about incompatible data types
     bs_results = bs_results.astype(float)
     if len(bs_results.index.unique()) != 5:
         print(bs_results.index.unique())
 
     # add the confidence intervals to the dataframe
     for variable in ["PPV", "Sens", "Spec", "LR+", "LR-"]:
-
-        # if (variable in res_df.columns) and (variable in bs_results.index):
 
         lower, upper = np.nanpercentile(bs_results.loc[variable, :], q=[2.5, 97.5], axis=0)
 

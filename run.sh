@@ -6,7 +6,7 @@
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=skulkarni@g.harvard.edu
+#SBATCH --mail-user=yasha_ektefaie@g.harvard.edu
 
 # list of config files to use
 config_array=(
@@ -21,15 +21,15 @@ drug_array=(
  'Delamanid'
  'Capreomycin'
  'Rifampicin'
- # 'Ethionamide'
- # 'Kanamycin'
- # 'Isoniazid'
- # 'Streptomycin'
- # 'Pyrazinamide'
- # 'Linezolid'
- # 'Bedaquiline'
- # 'Moxifloxacin'
- # 'Levofloxacin'
+ 'Ethionamide'
+ 'Kanamycin'
+ 'Isoniazid'
+ 'Streptomycin'
+ 'Pyrazinamide'
+ 'Linezolid'
+ 'Bedaquiline'
+ 'Moxifloxacin'
+ 'Levofloxacin'
 )
 abbr_array=(
  'EMB'
@@ -38,15 +38,15 @@ abbr_array=(
  'DLM'
  'CAP'
  'RIF'
- # 'ETH'
- # 'KAN'
- # 'INH'
- # 'STM'
- # 'PZA'
- # 'LZD'
- # 'BDQ'
- # 'MXF'
- # 'LEV'
+ 'ETH'
+ 'KAN'
+ 'INH'
+ 'STM'
+ 'PZA'
+ 'LZD'
+ 'BDQ'
+ 'MXF'
+ 'LEV'
 )
 
 for k in ${!drug_array[@]}; do 

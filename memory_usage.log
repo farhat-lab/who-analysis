@@ -1,0 +1,126 @@
+Filename: /home/sak0914/who-analysis/01_make_model_inputs.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   103     54.9 MiB     54.9 MiB           1   @profile(stream=mem_log)
+   104                                         def read_in_data():
+   105                                                 
+   106                                             # first get all the genotype files associated with the drug
+   107     54.9 MiB      0.0 MiB           1       geno_files = []
+   108                                         
+   109     54.9 MiB      0.0 MiB           3       for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
+   110                                         
+   111                                                 # subdirectory (tiers)
+   112     54.9 MiB      0.0 MiB           2           full_subdir = os.path.join(genos_dir, f"drug_name={drug}", subdir)
+   113                                         
+   114                                                 # the last character is the tier number
+   115     54.9 MiB      0.0 MiB           2           if full_subdir[-1] in tiers_lst:
+   116     54.9 MiB      0.0 MiB           8               for fName in os.listdir(full_subdir):
+   117     54.9 MiB      0.0 MiB           6                   if "run" in fName:
+   118     54.9 MiB      0.0 MiB           6                       geno_files.append(os.path.join(full_subdir, fName))
+   119                                         
+   120     54.9 MiB      0.0 MiB           1       print(f"    {len(df_phenos)} samples with phenotypes and {len(geno_files)} files with genotypes.")
+   121                                         
+   122     54.9 MiB      0.0 MiB           1       dfs_lst = []
+   123   8889.7 MiB      0.0 MiB           7       for i, fName in enumerate(geno_files):
+   124                                         
+   125                                                 # print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
+   126                                                 # read in the dataframe
+   127   7258.1 MiB    384.8 MiB           6           df = pd.read_csv(fName)
+   128                                         
+   129                                                 # get only genotypes for samples that have a phenotype
+   130   8889.7 MiB   8450.0 MiB           6           df_avail_isolates = df.loc[df.sample_id.isin(df_phenos.sample_id)]
+   131                                         
+   132                                                 # keep all variants
+   133   8889.7 MiB      0.0 MiB           6           if synonymous:
+   134   8889.7 MiB      0.0 MiB           6               dfs_lst.append(df_avail_isolates)
+   135                                                 else:
+   136                                                     # P = coding variants, C = synonymous or upstream variants (get only upstream variants by getting only negative positions), and N = non-coding variants on rrs/rrl
+   137                                                     # deletion does not contain the p/c/n prefix
+   138                                                     # synonymous variants = synonymous, change in start codon that produces V instead of M, and changes in stop codon that preserve stop
+   139                                                     dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))        
+   140                                         
+   141                                         
+   142                                             # possible to have duplicated entries because they have different predicted effects
+   143                                             # example: Met1fs is present in two lines because it has 2 predicted effects: frameshift and start lost
+   144                                             # sort the dataframe by inverse, which keeps start_lost before frameshift, then drop_duplicates. 
+   145  16267.8 MiB   7378.1 MiB           1       df_model = pd.concat(dfs_lst)
+   146  22723.7 MiB   6456.0 MiB           1       return df_model.sort_values("predicted_effect", ascending=False).drop_duplicates(subset=["sample_id", "resolved_symbol", "variant_category", "variant_binary_status", "variant_allele_frequency"], keep="first").reset_index(drop=True)
+
+
+Filename: /home/sak0914/who-analysis/01_make_model_inputs.py
+
+Line #    Mem usage    Increment  Occurrences   Line Contents
+=============================================================
+   154   6557.3 MiB   6557.3 MiB           1   @profile(stream=mem_log)
+   155                                         def pool_lof_mutations(df):
+   156                                             '''
+   157                                             resolved_symbol = gene
+   158                                             
+   159                                             Effect = lof for ALL frameshift, nonsense, loss of start, and large-scale deletion mutations. 
+   160                                             
+   161                                             This function creates a new column called lof, which is 1 for variants that are lof, 0 for frameshift mutations that are not lof, and nan for variants that
+   162                                             couldn't be lof (synonymous, missense, etc.)
+   163                                             
+   164                                             LOF criteria = loss of start or stop codon, nonsense mutation, single frameshift mutation, large-scale deletion
+   165                                             
+   166                                             If one of the above criteria (except the frameshift mutation) co-occurs with multiple frameshift mutations in the same sample and gene, then an lof feature will be
+   167                                             generated, and the frameshift mutations will remain as additional features. i.e. the LOF will not trump the multiple frameshift mutations. 
+   168                                             '''
+   169                                             
+   170                                             ###### STEP 1: Assign all (sample, gene) pairs with a single frameshift mutation to LOF, and the remaining to not LOF ######
+   171                                             
+   172                                             # get all frameshift mutations and separate by the number of frameshifts per gene per sample
+   173   7665.4 MiB   1108.1 MiB           1       frameshift = df.query("predicted_effect == 'frameshift'")
+   174                                         
+   175                                             # (sample, gene) pairs with a single frameshift mutation are LOF
+   176   7665.6 MiB      0.2 MiB           1       lof_single_fs = pd.DataFrame(frameshift.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect == 1").reset_index()
+   177                                         
+   178                                             # already 1 because variant_category is the counts column now
+   179   7665.6 MiB      0.0 MiB           1       lof_single_fs.rename(columns={"predicted_effect": "lof"}, inplace=True)
+   180                                         
+   181                                             # lof column now is 1 for (sample, gene) pairs with only 1 frameshift mutation and 0 for those with multiple frameshift mutations
+   182   7774.0 MiB    108.5 MiB           1       frameshift = frameshift.merge(lof_single_fs, on=["sample_id", "resolved_symbol"], how="outer")
+   183   7694.2 MiB    -79.8 MiB           1       frameshift["lof"] = frameshift["lof"].fillna(0)
+   184                                         
+   185                                             # merge with original dataframe to get the rest of the columns back. predicted_effect is now lof
+   186  16095.9 MiB   8401.7 MiB           1       df_with_lof = df.merge(frameshift[["sample_id", "resolved_symbol", "variant_category", "lof"]], on=["sample_id", "resolved_symbol", "variant_category"], how="outer")
+   187  16095.9 MiB      0.0 MiB           1       assert len(df) == len(df_with_lof)
+   188                                         
+   189                                             # value_counts drops all the NaNs when computing
+   190  16095.9 MiB      0.0 MiB           1       assert df_with_lof["lof"].value_counts(dropna=True).sum() == len(frameshift)
+   191                                         
+   192                                             ###### STEP 2: Assign loss of start, stop gained, and large-scale deletion to LOF ######
+   193                                         
+   194                                             # criteria for lof are: nonsense mutation, loss of start, single frameshift mutation. Get only those satisfying the first two criteria (last done above)
+   195  16211.2 MiB   -230.2 MiB           3       df_with_lof.loc[(df_with_lof["variant_category"] == 'deletion') | 
+   196  16326.3 MiB    115.1 MiB           2                       (df_with_lof["predicted_effect"].isin(['stop_gained', 'start_lost'])), 'lof'
+   197  16095.9 MiB      0.0 MiB           1                      ] = 1
+   198                                             
+   199                                             # get only variants that are LOF
+   200  16096.0 MiB   -115.3 MiB           1       df_lof = df_with_lof.query("lof == 1")
+   201                                             
+   202                                             ###### STEP 3: COMBINE LOF VARIANTS WITH NON-LOF VARIANTS TO GET A FULL DATAFRAME ######
+   203                                             
+   204                                             # this dataframe will be slightly smaller than the original because some lof mutations have been pooled
+   205                                             
+   206                                             # just keep 1 instance because the feature will become just lof. The row that is kept is arbitrary
+   207                                             # groupby takes more steps because the rest of the columns need to be gotten again
+   208  16120.7 MiB     24.8 MiB           1       df_lof_pooled = df_lof.drop_duplicates(["sample_id", "resolved_symbol"], keep='first')
+   209                                             
+   210                                             # concatenate the dataframe without LOF variants with the dataframe of pooled LOF variants
+   211  24345.7 MiB   8224.9 MiB           1       df_final = pd.concat([df_with_lof.query("lof != 1"), df_lof_pooled], axis=0)
+   212                                             
+   213                                             # the lof column will now be the variant category to use, so 
+   214                                             # 1. replace non-lof frame-shift mutations (value = 0) with NaN 
+   215                                             # 2. replace lof variants (value = 1) with the string lof
+   216                                             # 3. fill the NaNs (non-lof) with the original variant_category column
+   217                                             # 4. rename columns
+   218  24345.7 MiB      0.0 MiB           1       df_final["lof"] = df_final["lof"].replace(0, np.nan)
+   219  28055.3 MiB   3709.6 MiB           1       df_final["lof"] = df_final["lof"].replace(1, "lof")
+   220  24346.3 MiB  -3709.0 MiB           1       df_final["lof"] = df_final["lof"].fillna(df_final["variant_category"])
+   221                                             
+   222  24346.3 MiB      0.0 MiB           1       assert len(df_final["lof"].unique()) <= len(df_final["variant_category"].unique())
+   223  31657.4 MiB   7311.1 MiB           1       return df_final.rename(columns={"variant_category": "variant_category_unpooled", "lof": "variant_category"})
+
+

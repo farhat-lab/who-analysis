@@ -106,8 +106,8 @@ def find_SNVs_in_current_WHO(coef_df, aa_code_dict, drug_abbr):
     coef_df["variant"] = new_variants
     
     # WHO variants are named with the gene first, followed by an underscore, then the variant itself
-    who_cat12 = who_variants.query("drug == @drug_abbr")
-    coef_df = coef_df.merge(who_cat12[["genome_index", "confidence", "variant"]], on="variant", how="outer")
+    who_single_drug = who_variants.query("drug == @drug_abbr")
+    coef_df = coef_df.merge(who_single_drug[["genome_index", "confidence", "variant"]], on="variant", how="outer")
     coef_df.rename(columns={"confidence": "confidence_WHO_2021"}, inplace=True)
     
     # drop duplicates that arise from the same AA variant being associated with multiple nucleotide mutations in the 2021 catalog
