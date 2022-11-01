@@ -199,8 +199,7 @@ def run_all(out_dir, drug_abbr, **kwargs):
     assert len(coef_df.query("pval > BH_pval")) == 0
     assert len(coef_df.query("pval > Bonferroni_pval")) == 0
 
-    # return all features with non-zero coefficients. Include only variants with nominally significant p-values for tractability
-    # coef_df = coef_df.query("pval < @alpha").sort_values("coef", ascending=False).reset_index(drop=True)
+    # return all features with non-zero coefficients.
     coef_df = find_SNVs_in_current_WHO(coef_df, aa_code_dict, drug_abbr)
 
     # convert to odds ratios

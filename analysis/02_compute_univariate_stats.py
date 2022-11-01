@@ -107,6 +107,9 @@ def compute_univariate_stats(drug, out_dir, num_bootstrap=1000):
     # get dataframe of predictive values for the non-zero coefficients and add them to the results dataframe
     full_predict_values = compute_predictive_values(combined_small)
     res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
+    
+    # save, overwriting the original dataframe
+    res_df.to_csv(os.path.join(out_dir, drug, "final_analysis.csv"), index=False)
 
     print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates")
     bs_results = pd.DataFrame(columns = keep_variants)
@@ -155,8 +158,9 @@ def compute_univariate_stats(drug, out_dir, num_bootstrap=1000):
         # numerical precision can make this fail though, so commented out for now
         # assert sum(res_df[variable] < res_df[f"{variable}_LB"]) == 0
         # assert sum(res_df[variable] > res_df[f"{variable}_UB"]) == 0
-            
-    return res_df
+        
+    # save, overwriting the original dataframe
+    res_df.to_csv(os.path.join(out_dir, drug, "final_analysis.csv"), index=False)
 
 
 _, drug = sys.argv
@@ -165,6 +169,3 @@ out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
 
 # run analysis
 model_analysis_univariate_stats = compute_univariate_stats(drug, out_dir, num_bootstrap=1000)
-
-# save, overwriting the original dataframe
-model_analysis_univariate_stats.to_csv(os.path.join(out_dir, drug, "final_analysis.csv"), index=False)

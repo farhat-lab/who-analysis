@@ -139,6 +139,9 @@ def compute_downselected_logReg_model(drug, out_dir, binary=True, num_bootstrap=
     # final_analysis file with all significant variants for a drug
     res_df = pd.read_csv(os.path.join(out_dir, drug, "final_analysis.csv"))
     
+    # get only significant variants: 0.05 for core features, 0.01 for the rest
+    res_df = res_df.query("(Tier1_only == 1 & WHO_phenos == 1 & poolLOF == 1 & Syn == 0 & BH_pval < 0.05) | (~(Tier1_only == 1 & WHO_phenos == 1 & poolLOF == 1 & Syn == 0) & BH_pval < 0.01)")
+
     # read in all genotypes and phenotypes and combine into a single dataframe. 
     # Take the dataframes with the most genotypes and phenotypes represented: tiers=1+2, phenos=ALL
     # if there are significant LOF variants in res_df, then get the corresponding poolLOF matrix and combine matrices 
