@@ -111,7 +111,7 @@ def find_SNVs_in_current_WHO(coef_df, aa_code_dict, drug_abbr):
     coef_df.rename(columns={"confidence": "confidence_WHO_2021"}, inplace=True)
     
     # drop duplicates that arise from the same AA variant being associated with multiple nucleotide mutations in the 2021 catalog
-    return coef_df.dropna(subset="orig_variant").drop_duplicates(subset="orig_variant", keep='first').reset_index(drop=True)
+    return coef_df.dropna(subset=["orig_variant"]).drop_duplicates(subset=["orig_variant"], keep='first').reset_index(drop=True)
 
 
 

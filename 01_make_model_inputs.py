@@ -138,12 +138,7 @@ def read_in_data():
             # synonymous variants = synonymous, change in start codon that produces V instead of M, and changes in stop codon that preserve stop
             dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))        
 
-
-    # possible to have duplicated entries because they have different predicted effects
-    # example: Met1fs is present in two lines because it has 2 predicted effects: frameshift and start lost
-    # sort the dataframe by inverse, which keeps start_lost before frameshift, then drop_duplicates. 
-    df_model = pd.concat(dfs_lst)
-    return df_model.sort_values("predicted_effect", ascending=False).drop_duplicates(subset=["sample_id", "resolved_symbol", "variant_category", "variant_binary_status", "variant_allele_frequency"], keep="first").reset_index(drop=True)
+    return pd.concat(dfs_lst)
 
 
 df_model = read_in_data()
