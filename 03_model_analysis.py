@@ -30,15 +30,6 @@ def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, tier1_variants=N
     lower, upper = np.percentile(bootstrap_df, axis=0, q=(diff, 100-diff))
     coef_df["coef_LB"] = lower
     coef_df["coef_UB"] = upper
-        
-    # # compute p-values for all variants
-    # if tier1_variants is None:
-    #     coef_df_for_pval = coef_df.copy()
-    # # compute p-values for only the tier 2 variants    
-    # else:
-    #     coef_df_tier1 = coef_df.loc[coef_df[col].isin(tier1_variants)]
-    #     coef_df_for_pval = coef_df.loc[~coef_df[col].isin(tier1_variants)].reset_index(drop=True)
-    #     assert len(coef_df_tier1) + len(coef_df_for_pval) == len(coef_df)
             
     # degrees of freedom: N - k - 1, where N = number of samples, k = number of features
     dof = num_samples - len(coef_df) - 1
@@ -55,11 +46,6 @@ def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, tier1_variants=N
             # survival function = 1 - CDF = P(t > t_stat) = measure of extremeness        
             coef_df.loc[i, "pval"] = st.t.sf(t, df=dof)
         
-    # # tier 1 variants were excluded from the computation, concatenate with that dataframe and return
-    # if tier1_variants is None:
-    #     return coef_df_for_pval
-    # else:
-    #     return pd.concat([coef_df_tier1, coef_df_for_pval], axis=0).sort_values("coef", ascending=False).reset_index(drop=True)
     return coef_df
         
 
@@ -121,12 +107,6 @@ def BH_FDR_correction(coef_df):
     Implement Benjamini-Hochberg FDR correction.
     '''
     
-#     coef_df_pval = coef_df.loc[~pd.isnull(coef_df["pval"])]
-#     coef_df_no_pval = coef_df.loc[pd.isnull(coef_df["pval"])]
-#     del coef_df
-    
-#     # sort the individual p-values in ascending order
-#     coef_df_pval = coef_df_pval.sort_values("pval", ascending=True)
     coef_df = coef_df.sort_values("pval", ascending=True)
     
     # assign ranks -- ties get the same value, and only increment by one
@@ -166,27 +146,7 @@ def run_all(out_dir, drug_abbr, **kwargs):
     # read in all genotypes and phenotypes    
     df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
 
-#     # add p-values and confidence intervals to the results dataframe
-#     # if tiers 1 and 2 are included, then compute p-values separately  
-#     if len(tiers_lst) > 1:
-        
-#         tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1]
-        
-#         # if it's not present, then it's because this is a tiers=1+2 model with pooling LOFs. It is possible that the corresponding tiers=1, poolLOF model was not
-#         # different from the tiers=1 model. So then look for that in this case. 
-#         if not os.path.isdir(tier1_equivalent_path):
-#             tier1_equivalent_path = out_dir.split("tiers")[0] + "tiers=1/phenos" + out_dir.split("phenos")[-1].split("_poolLOF")[0]
-        
-#         tier1_matrix = pd.read_csv(os.path.join(tier1_equivalent_path, "model_analysis.csv"))
-#         tier1_variants = tier1_matrix["orig_variant"].values
-        
-#         coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), tier1_variants=tier1_variants, alpha=alpha)
-        
-#         # all tier 2 genes should have p-values in this case. Tier 1 p-values will be in the corresponding Tier 1 only model
-#         assert len(coef_df.loc[~coef_df["variant"].isin(tier1_variants) & pd.isnull(coef_df["pval"])]) == 0
-#     else:
-#         coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
-    
+    # add confidence intervals and p-values (both based on the bootstrapped models) to the results dataframe    
     coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
         
     # Benjamini-Hochberg correction
@@ -211,7 +171,6 @@ def run_all(out_dir, drug_abbr, **kwargs):
     # clean up the dataframe a little -- variant and gene are from the 2021 catalog (redundant with the orig_variant column)
     del coef_df["variant"]
     del coef_df["gene"]
-    #del coef_df["genome_index"]
     
     return coef_df.drop_duplicates("orig_variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
 
