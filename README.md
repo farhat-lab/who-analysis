@@ -100,7 +100,7 @@ After the 3 scripts in the home directory, run the 3 numbered scripts in the `an
   
 1. <code>analysis/01_combine_model_analyses.py</code> combines the `model_analysis.csv` files from different models for the same drug and generates a summary dataframe of variants and in which type of model they were detected. The core model has <b> tier 1 genes only, WHO phenotypes only, no synonymous mutations, and pooling LOF mutations</b>. This dataframe will contain additional boolean columns indicating in which model a variant was detected. 
 2. <code>analysis/02_compute_univariate_stats.py</code> computes univariate statistics, such as <b>sensitivity, specificity, likelihood ratios</b>, and <b>positive predictive value</b>. These columns are appended to the `model_analysis.csv` file created by script #3. 
-3. <code>analysis/03_model_metrics.py</code> fits a new regression model using only the significant features. and perform nonparametric bootstrapping to get confidence intervals for model statistics (i.e. sensitivity, specificity, AUC, and accuracy). 
+3. <code>analysis/03_model_metrics.py</code> fits a new regression model using only the significant features (coefficient confidence interval does not include 0) and performs nonparametric bootstrapping to get confidence intervals for model statistics. 
  
 ### Pooling LOF Mutations
     
@@ -110,13 +110,15 @@ When an LOF variant (i.e. loss of start or stop codons, early stop, large deleti
 
 ### Intermediate Allele Frequencies
 
-Heterozygous variants have allele fractions in the range [0.25, 0.75]. Below this range, alleles are reference (0), and above it, they are alternative (1). Selection of how to encode heterozygous alleles is made using the `config.yaml` file. The options are:
+Intermediate = allele fractions in the range [0.25, 0.75]. Below this range, alleles are reference (0), and above it, they are alternative (1). Selection of how to encode intermediate allele frequencies is made using the `config.yaml` file. The options are:
 
 <ul>
-    <li>Drop</li>
+    <li>Drop all isolates containing any ambiguous mutations.</li>
     <li>Encode all variants with AF > 0.25 (including those with AF > 0.75) with their AF, not binary. </li>
     <li>Binarize them using an AF threshold</li>
 </ul>
+
+Currently, all isolates with any intermediate allele frequencies are <b>dropped</b> from a given model before running.
 
 ### Missing Data
 
