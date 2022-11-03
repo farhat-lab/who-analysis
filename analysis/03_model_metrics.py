@@ -11,13 +11,13 @@ from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge
 
 import warnings
 warnings.filterwarnings("ignore")
-from memory_profiler import profile
+import tracemalloc
 
-# open file for writing memory logs to. Append to file, not overwrite
-mem_log=open('memory_usage.log','a+')
+
+# starting the memory monitoring
+tracemalloc.start()
     
     
-@profile(stream=mem_log)
 def read_in_matrix_compute_grm(fName, samples):
     minor_allele_counts = sparse.load_npz(fName).todense()
 
@@ -127,7 +127,6 @@ def generate_model_output(X, y, model, binary=True, print_thresh=False):
 
 
 
-@profile(stream=mem_log)
 def compute_downselected_logReg_model(drug, out_dir, binary=True, num_bootstrap=1000):
     '''
     This model computes a logistic regression model using the significant predictors from the first model.
@@ -259,3 +258,12 @@ if binary:
     summary_df.to_csv(os.path.join(out_dir, drug, "logReg_summary.csv"), index=False)
 else:
     summary_df.to_csv(os.path.join(out_dir, drug, "linReg_summary.csv"), index=False)
+    
+    
+# returns a tuple: current, peak memory in bytes 
+script_memory = tracemalloc.get_traced_memory()[1] / 1e9
+tracemalloc.stop()
+
+# write peak memory usage in GB
+with open("memory_usage.log", "a+") as file:
+    file.write(f"{os.path.basename(__file__)}: {script_memory} GB\n")

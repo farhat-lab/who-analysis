@@ -3,12 +3,14 @@ import pandas as pd
 import glob, os, yaml, sys
 import warnings
 warnings.filterwarnings("ignore")
-from memory_profiler import profile
+import tracemalloc
 
-# open file for writing memory logs to. Overwrite file, otherwise it will become huge
-mem_log=open('memory_usage.log','w+')
 
 ############# STEP 0: READ IN PARAMETERS FILE AND MAKE OUTPUT DIRECTORIES #############
+
+
+# starting the memory monitoring
+tracemalloc.start()
 
 _, config_file, drug, drug_WHO_abbr = sys.argv
 
@@ -100,7 +102,6 @@ df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
 ############# STEP 2: GET ALL AVAILABLE GENOTYPES #############
           
         
-@profile(stream=mem_log)
 def read_in_data():
         
     # first get all the genotype files associated with the drug
@@ -146,7 +147,7 @@ df_model = read_in_data()
 
 ############# STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #############
 
-@profile(stream=mem_log)
+
 def pool_lof_mutations(df):
     '''
     resolved_symbol = gene
@@ -371,3 +372,12 @@ filtered_matrix.to_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
 # keep only samples with genotypes available because everything should be represented, including samples without variants
 df_phenos = df_phenos.query("sample_id in @filtered_matrix.index.values")
 df_phenos.to_csv(os.path.join(out_dir, "phenos.csv"), index=False)
+
+# returns a tuple: current, peak memory in bytes 
+script_memory = tracemalloc.get_traced_memory()[1] / 1e9
+tracemalloc.stop()
+
+# write peak memory usage in GB
+with open("memory_usage.log", "w+") as file:
+    file.write(f"{out_dir}\n")
+    file.write(f"{os.path.basename(__file__)}: {script_memory} GB\n")

@@ -6,14 +6,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import warnings
 warnings.filterwarnings("ignore")
-from memory_profiler import profile
-
-# open file for writing memory logs to. Append to file, not overwrite
-mem_log=open('memory_usage.log','a+')
+import tracemalloc
 
 
 ############# STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES #############
 
+
+# starting the memory monitoring
+tracemalloc.start()
 
 _, config_file, drug, _ = sys.argv
 
@@ -65,7 +65,6 @@ if num_PCs > 0:
     if not os.path.isfile("data/minor_allele_counts.npz"):
         raise ValueError("Minor allele counts dataframe does not exist. Please run compute_samples_summary.py")
 
-    @profile(stream=mem_log)
     def read_in_matrix_compute_grm(fName, model_inputs):
         minor_allele_counts = sparse.load_npz(fName).todense()
 
@@ -192,7 +191,6 @@ res_df.to_csv(os.path.join(out_dir, "regression_coef.csv"), index=False)
 ############# STEP 6: BOOTSTRAP COEFFICIENTS #############
 
 # use the regularization parameter determined above
-@profile(stream=mem_log)
 def bootstrap_coef():
     coefs = []
     for i in range(num_bootstrap):
@@ -218,3 +216,11 @@ def bootstrap_coef():
 coef_df = bootstrap_coef()
 coef_df.columns = np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]])
 coef_df.to_csv(os.path.join(out_dir, "coef_bootstrap.csv"), index=False)
+
+# returns a tuple: current, peak memory in bytes 
+script_memory = tracemalloc.get_traced_memory()[1] / 1e9
+tracemalloc.stop()
+
+# write peak memory usage in GB
+with open("memory_usage.log", "a+") as file:
+    file.write(f"{os.path.basename(__file__)}: {script_memory} GB\n")

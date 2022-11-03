@@ -8,11 +8,10 @@ import sys
 import glob, os, yaml
 import warnings
 warnings.filterwarnings("ignore")
-from memory_profiler import profile
+import tracemalloc
 
-# open file for writing memory logs to. Append to file, not overwrite
-mem_log=open('memory_usage.log','a+')
-
+# starting the memory monitoring
+tracemalloc.start()
 
 
 def compute_predictive_values(combined_df, return_stats=[]):
@@ -181,3 +180,11 @@ out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
 
 # run analysis
 model_analysis_univariate_stats = compute_univariate_stats(drug, out_dir, num_bootstrap=1000)
+
+# returns a tuple: current, peak memory in bytes 
+script_memory = tracemalloc.get_traced_memory()[1] / 1e9
+tracemalloc.stop()
+
+# write peak memory usage in GB
+with open("memory_usage.log", "a+") as file:
+    file.write(f"{os.path.basename(__file__)}: {script_memory} GB\n")
