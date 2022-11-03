@@ -69,7 +69,7 @@ If <code>fast-lineage-caller</code> does not install properly from the environme
     
 Genetic features that are significant in a regression model (Benjamini-Hochberg corrected p-value less than 0.05) will be reported in a summary. After running additional models, additional features with a Benjamini-Hochberg corrected p-value less than 0.01 will also be included in the summary.
     
-### Scripts
+### Model Scripts
 
 Run the numbered scripts in order, with the `config.yaml` file, the full drug name, and the 3-letter abbreviation used in the 2021 WHO catalog. For example, for isoniazid, the arguments after the script name would be `config.yaml Isoniazid INH`. 
    
@@ -95,8 +95,12 @@ Parameters in the yaml file are as follows:
     <li><code>num_bootstrap</code>: number of bootstrap samples</li>
     <li><code>alpha</code>: significance level</li>
 </ul>
-    
-After the 3 scripts in the home directory, run the 3 numbered scripts in the `analysis` directory in order. Each script requires only the drug name as an argument.
+
+### Parameter combinations:
+
+### Analysis Scripts:
+
+AFTER running the 3 scripts in the home directory for a given drug, run the 3 numbered scripts in the `analysis` directory in order. Each script requires only the drug name as an argument. The analysis scripts must be run AFTER running all models with all parameter combinations. The analysis scripts combine the results from multiple models and output a single final dataframe. 
   
 1. <code>analysis/01_combine_model_analyses.py</code> combines the `model_analysis.csv` files from different models for the same drug and generates a summary dataframe of variants and in which type of model they were detected. The core model has <b> tier 1 genes only, WHO phenotypes only, no synonymous mutations, and pooling LOF mutations</b>. This dataframe will contain additional boolean columns indicating in which model a variant was detected. 
 2. <code>analysis/02_compute_univariate_stats.py</code> computes univariate statistics, such as <b>sensitivity, specificity, likelihood ratios</b>, and <b>positive predictive value</b>. These columns are appended to the `model_analysis.csv` file created by script #3. 
