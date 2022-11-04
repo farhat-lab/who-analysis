@@ -85,10 +85,10 @@ Parameters in the yaml file are as follows:
     <li><code>pheno_category_lst</code>: list of phenotype categories to include. The list can include the strings WHO and ALL.</li>
     <li><code>synonymous</code>: boolean for whether synonymous variants should be included</li>
     <li><code>pool_lof</code>: boolean for whether or not LOF variants should be pooled</li>
-    <li><code>het_mode</code>: how to handle mutations with intermediate AF. Options are DROP, AF, and BINARY. </li>
+    <li><code>amb_mode</code>: how to handle mutations with intermediate AF. Options are DROP, AF, and BINARY. </li>
     <li><code>missing_isolate_thresh</code>: threshold for missing isolates (0-1). i.e. if an isolate has more than N% of variants missing, drop it.</li>
     <li><code>missing_feature_thresh</code>: threshold for missing variants (0-1), i.e. if a variant has more than N% of isolates missing, drop it.</li>
-    <li><code>AF_thresh</code>: Only used if <code>het_mode</code> = BINARY. Variants with AF > the threshold will be assigned to 1, the others to 0.</li>
+    <li><code>AF_thresh</code>: Only used if <code>amb_mode</code> = BINARY. Variants with AF > the threshold will be assigned to 1, the others to 0.</li>
     <li><code>drop_isolates_before_variants</code>: boolean to drop isolates with lot of missingness before variants. If this is set to False, the one with more missingness will be dropped first.</li>
     <li><code>impute</code>: boolean for whether missing values should be imputed (if False, then they will be dropped)</li>
     <li><code>num_PCs</code>: number of principal components (>= 0)</li>
