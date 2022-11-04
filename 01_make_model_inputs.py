@@ -75,6 +75,7 @@ genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 
+
 ############# STEP 1: GET ALL AVAILABLE PHENOTYPES #############
 
 
