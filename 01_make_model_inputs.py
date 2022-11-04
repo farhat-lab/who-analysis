@@ -151,9 +151,7 @@ def read_in_data():
 
 
 df_model = read_in_data()
-print(df_model.shape)
 # print(f"{tracemalloc.get_traced_memory()[1] / 1e9} GB to read in genotypes dataframe")
-# df_model.to_csv("/n/scratch3/users/s/sak0914/df_model_inh.csv", index=False)
 
 
 ############# STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #############
@@ -236,7 +234,6 @@ def pool_lof_mutations(df):
 if pool_lof:
     print("Pooling LOF mutations")
     df_model = pool_lof_mutations(df_model)
-    print(df_model.shape)
     
 
 ############# STEP 4: PROCESS HETEROZYGOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #############
