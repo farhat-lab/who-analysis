@@ -119,12 +119,11 @@ def BH_FDR_correction(coef_df):
 
 
 
-def run_all(out_dir, drug_abbr, **kwargs):
+def run_all(out_dir, drug, drug_abbr, **kwargs):
     
     tiers_lst = kwargs["tiers_lst"]
     pheno_category_lst = kwargs["pheno_category_lst"]
     model_prefix = kwargs["model_prefix"]
-    het_mode = kwargs["het_mode"]
     synonymous = kwargs["synonymous"]
     pool_lof = kwargs["pool_lof"]
     AF_thresh = kwargs["AF_thresh"]
@@ -142,11 +141,12 @@ def run_all(out_dir, drug_abbr, **kwargs):
     bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
     bs_df = bs_df[coef_df["variant"]]
     
-    # read in all genotypes and phenotypes    
-    df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
+    # to get the number of samples, read in the model eigenvectors file, which is the smallest pickle file
+    model_eigenvecs = pd.read_pickle(os.path.join(out_dir, "model_eigenvecs.pkl"))
 
     # add confidence intervals and p-values (both based on the bootstrapped models) to the results dataframe    
-    coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(df_phenos), alpha=alpha)
+    coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(model_eigenvecs), alpha=alpha)
+    del model_eigenvecs
         
     # Benjamini-Hochberg correction
     coef_df = BH_FDR_correction(coef_df)
@@ -181,7 +181,6 @@ kwargs = yaml.safe_load(open(config_file))
 tiers_lst = kwargs["tiers_lst"]
 pheno_category_lst = kwargs["pheno_category_lst"]
 model_prefix = kwargs["model_prefix"]
-het_mode = kwargs["het_mode"]
 synonymous = kwargs["synonymous"]
 
 out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
@@ -197,7 +196,7 @@ if not os.path.isdir(out_dir):
     exit()
 
 # run analysis
-model_analysis = run_all(out_dir, drug_WHO_abbr, **kwargs)
+model_analysis = run_all(out_dir, drug, drug_WHO_abbr, **kwargs)
 
 # save
 model_analysis.to_csv(os.path.join(out_dir, "model_analysis.csv"), index=False)

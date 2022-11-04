@@ -1,2 +1,14 @@
 /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=WHO/dropAF_noSyn
 01_make_model_inputs.py: 4.220874132 GB
+02_regression_with_bootstrap.py: 11.317587994 GB
+03_model_analysis.py: 0.016864658 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Isoniazid/tiers=1+2/phenos=ALL/dropAF_withSyn
+01_make_model_inputs.py: 120.304982412 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Isoniazid/tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF
+01_make_model_inputs.py: 137.542446652 GB
+02_regression_with_bootstrap.py: 67.152954949 GB
+03_model_analysis.py: 0.146363404 GB
+
+02_regression_with_bootstrap.py: 12.480240848 GB

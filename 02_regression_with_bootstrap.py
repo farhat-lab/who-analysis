@@ -25,6 +25,7 @@ model_prefix = kwargs["model_prefix"]
 num_PCs = kwargs["num_PCs"]
 num_bootstrap = kwargs["num_bootstrap"]
 binary = kwargs["binary"]
+pool_lof = kwargs["pool_lof"]
 
 out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
 if "ALL" in pheno_category_lst:
@@ -39,8 +40,6 @@ if not os.path.isdir(out_dir):
     exit()
 
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
-phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
-phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 
 scaler = StandardScaler()
 
@@ -52,7 +51,7 @@ model_inputs = pd.read_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
 # reset index so that sample_id is now a column, which makes slicing easier
 model_inputs = model_inputs.reset_index()
 
-df_phenos = pd.read_csv(os.path.join(out_dir, "phenos.csv"))
+df_phenos = pd.read_csv(os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos.csv"))
 
 
 ############# STEP 2: COMPUTE THE GENETIC RELATEDNESS MATRIX, REMOVING RESISTANCE LOCI #############
@@ -104,6 +103,7 @@ if num_PCs > 0:
     eigenvec = pca.components_.T
     eigenvec_df = pd.DataFrame(eigenvec)
     eigenvec_df["sample_id"] = minor_allele_counts_samples
+    del grm
 
     
 ############# STEP 4: PREPARE INPUTS TO THE MODEL #############
@@ -142,6 +142,10 @@ else:
     X = model_inputs.values
     assert sum(model_inputs.index != df_phenos["sample_id"]) == 0
     
+# now that the model matrix pickle file has been created, delete the original pickle file for the genotypes matrix to save space
+# need this file to compare shapes for LOF cases, so only remove it from an LOF directory
+if pool_lof:
+    os.remove(os.path.join(out_dir, "filt_matrix.pkl"))
     
 # scale inputs
 X = scaler.fit_transform(X)
@@ -208,6 +212,9 @@ def bootstrap_coef():
             bs_model = Ridge(alpha=model.alpha_, max_iter=10000)
         bs_model.fit(X_bs, y_bs)
         coefs.append(np.squeeze(bs_model.coef_))
+        
+        if i % (num_bootstrap / 10) == 0:
+            print(i)
 
     return pd.DataFrame(coefs)
 

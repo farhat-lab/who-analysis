@@ -249,7 +249,7 @@ _, drug = sys.argv
 out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
 
 # run logistic regression model using only significant predictors saved in the model_analysis.csv file
-#if (het_mode != "AF") & (synonymous == True) and (len(tiers_lst) > 1):
+#if (amb_mode != "AF") & (synonymous == True) and (len(tiers_lst) > 1):
 binary = True
 
 summary_df = compute_downselected_logReg_model(drug, out_dir, binary=binary, num_bootstrap=1000)

@@ -4,7 +4,7 @@ tiers_lst:
 - '2'
 pheno_category_lst:
 - WHO
-het_mode: DROP
+amb_mode: DROP
 synonymous: true
 pool_lof: false
 AF_thresh: 0.75

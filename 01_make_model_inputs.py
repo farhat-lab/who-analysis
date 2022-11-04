@@ -21,7 +21,7 @@ pheno_category_lst = kwargs["pheno_category_lst"]
 
 missing_isolate_thresh = kwargs["missing_isolate_thresh"]
 missing_feature_thresh = kwargs["missing_feature_thresh"]
-het_mode = kwargs["het_mode"]
+amb_mode = kwargs["amb_mode"]
 AF_thresh = kwargs["AF_thresh"]
 impute = kwargs["impute"]
 synonymous = kwargs["synonymous"]
@@ -37,36 +37,39 @@ else:
     phenos_name = "WHO"
 
 
-if het_mode == "DROP":
+if amb_mode == "DROP":
     model_prefix = "dropAF"
-elif het_mode == "AF":
+elif amb_mode == "AF":
     model_prefix = "encodeAF"
-elif het_mode == "BINARY":
+elif amb_mode == "BINARY":
     model_prefix = "binarizeAF"
 else:
-    raise ValueError(f"{het_mode} is not a valid mode for handling heterozygous alleles")
+    raise ValueError(f"{amb_mode} is not a valid mode for handling heterozygous alleles")
 
 if synonymous:
     model_prefix += "_withSyn"
 else:
     model_prefix += "_noSyn"
     
-    
 if pool_lof:
-    model_prefix += "_poolLOF"
-    
+    model_prefix += "_poolLOF"    
     
 # add to config file for use in the second and third scripts
 kwargs["model_prefix"] = model_prefix
 
 with open(config_file, "w") as file:
     yaml.dump(kwargs, file, default_flow_style=False, sort_keys=False)
-    
+  
 out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 print(f"\nSaving results to {out_dir}")
+
+# the corresponding non-poolLOF model should already have been run so that the filt_matrices can be compared to see if pooling LOFs makes a difference
+if pool_lof:
+    if not os.path.isfile(os.path.join(out_dir.replace("_poolLOF", ""), "filt_matrix.pkl")):
+        raise ValueError("Please run the corresponding model without LOF pooling first!")
     
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
@@ -75,28 +78,34 @@ phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 ############# STEP 1: GET ALL AVAILABLE PHENOTYPES #############
 
 
-# read them all in, concatenate, and get the number of samples
-df_phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, fName)) for fName in os.listdir(phenos_dir) if "run" in fName], axis=0)
+phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos.csv")
 
-if len(df_phenos.phenotypic_category.unique()) > 2:
-    raise ValueError("More than 2 phenotypic categories in the dataframe!")
+if not os.path.isfile(phenos_file)
+    # read them all in, concatenate, and get the number of samples
+    df_phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, fName)) for fName in os.listdir(phenos_dir) if "run" in fName], axis=0)
 
-df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
+    if len(df_phenos.phenotypic_category.unique()) > 2:
+        raise ValueError("More than 2 phenotypic categories in the dataframe!")
 
-# get the number of samples that have more than 1 phenotype recorded. Drop such samples (should be 0), but leave as a QC step for now. 
-drop_samples = df_phenos.groupby(["sample_id"]).nunique().query("phenotype > 1").index.values
-if len(drop_samples) > 0:
-    raise ValueError(f"    {len(drop_samples)} isolates are recorded as being both resistant and susceptible to {drug}")
-    #df_phenos = df_phenos.query("sample_id not in @drop_samples")
-    
-# then drop any duplicated phenotypes
-df_phenos = df_phenos.drop_duplicates(keep="first").reset_index(drop=True)
+    # get the number of samples that have more than 1 phenotype recorded. Drop such samples (should be 0), but leave as a QC step for now. 
+    drop_samples = df_phenos.groupby(["sample_id"]).nunique().query("phenotype > 1").index.values
+    if len(drop_samples) > 0:
+        raise ValueError(f"    {len(drop_samples)} isolates are recorded as being both resistant and susceptible to {drug}")
+        #df_phenos = df_phenos.query("sample_id not in @drop_samples")
 
-# check that there is resistance data for all samples
-assert sum(pd.isnull(df_phenos.phenotype)) == 0
-assert sum(np.unique(df_phenos["phenotype"]) != np.array(['R', 'S'])) == 0
-    
-df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
+    # then drop any duplicated phenotypes
+    df_phenos = df_phenos.drop_duplicates(keep="first").reset_index(drop=True)
+
+    # check that there is resistance data for all samples
+    assert sum(pd.isnull(df_phenos.phenotype)) == 0
+    assert sum(np.unique(df_phenos["phenotype"]) != np.array(['R', 'S'])) == 0
+
+    df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
+
+    # this is the phenotypes file for all models for the drug. 
+    df_phenos.to_csv(phenos_file, index=False)
+else:
+    df_phenos = pd.read_csv(phenos_file)
 
 
 ############# STEP 2: GET ALL AVAILABLE GENOTYPES #############
@@ -134,15 +143,17 @@ def read_in_data():
         if synonymous:
             dfs_lst.append(df_avail_isolates)
         else:
-            # P = coding variants, C = synonymous or upstream variants (get only upstream variants by getting only negative positions), and N = non-coding variants on rrs/rrl
-            # deletion does not contain the p/c/n prefix
             # synonymous variants = synonymous, change in start codon that produces V instead of M, and changes in stop codon that preserve stop
-            dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))        
-
-    return pd.concat(dfs_lst)
+            dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))  
+            
+    # drop duplicates before returning. Sometimes there are duplicate entries, and they will cause later errors when comparing some lengths
+    return pd.concat(dfs_lst).drop_duplicates().reset_index(drop=True)
 
 
 df_model = read_in_data()
+print(df_model.shape)
+# print(f"{tracemalloc.get_traced_memory()[1] / 1e9} GB to read in genotypes dataframe")
+# df_model.to_csv("/n/scratch3/users/s/sak0914/df_model_inh.csv", index=False)
 
 
 ############# STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #############
@@ -165,6 +176,8 @@ def pool_lof_mutations(df):
     
     ###### STEP 1: Assign all (sample, gene) pairs with a single frameshift mutation to LOF, and the remaining to not LOF ######
     
+    len_df = len(df)
+    
     # get all frameshift mutations and separate by the number of frameshifts per gene per sample
     frameshift = df.query("predicted_effect == 'frameshift'")
 
@@ -179,21 +192,22 @@ def pool_lof_mutations(df):
     frameshift["lof"] = frameshift["lof"].fillna(0)
 
     # merge with original dataframe to get the rest of the columns back. predicted_effect is now lof
-    df_with_lof = df.merge(frameshift[["sample_id", "resolved_symbol", "variant_category", "lof"]], on=["sample_id", "resolved_symbol", "variant_category"], how="outer")
-    assert len(df) == len(df_with_lof)
+    df = df.merge(frameshift[["sample_id", "resolved_symbol", "variant_category", "lof"]], on=["sample_id", "resolved_symbol", "variant_category"], how="outer")
+    assert len(df) == len_df
 
     # value_counts drops all the NaNs when computing
-    assert df_with_lof["lof"].value_counts(dropna=True).sum() == len(frameshift)
+    assert df["lof"].value_counts(dropna=True).sum() == len(frameshift)
+    del frameshift
 
     ###### STEP 2: Assign loss of start, stop gained, and large-scale deletion to LOF ######
 
     # criteria for lof are: nonsense mutation, loss of start, single frameshift mutation. Get only those satisfying the first two criteria (last done above)
-    df_with_lof.loc[(df_with_lof["variant_category"] == 'deletion') | 
-                    (df_with_lof["predicted_effect"].isin(['stop_gained', 'start_lost'])), 'lof'
-                   ] = 1
+    df.loc[(df["variant_category"] == 'deletion') | 
+            (df["predicted_effect"].isin(['stop_gained', 'start_lost'])), 'lof'
+          ] = 1
     
     # get only variants that are LOF
-    df_lof = df_with_lof.query("lof == 1")
+    df_lof = df.query("lof == 1")
     
     ###### STEP 3: COMBINE LOF VARIANTS WITH NON-LOF VARIANTS TO GET A FULL DATAFRAME ######
     
@@ -201,56 +215,54 @@ def pool_lof_mutations(df):
     
     # just keep 1 instance because the feature will become just lof. The row that is kept is arbitrary
     # groupby takes more steps because the rest of the columns need to be gotten again
-    df_lof_pooled = df_lof.drop_duplicates(["sample_id", "resolved_symbol"], keep='first')
+    df_lof = df_lof.drop_duplicates(["sample_id", "resolved_symbol"], keep='first')
     
     # concatenate the dataframe without LOF variants with the dataframe of pooled LOF variants
-    df_final = pd.concat([df_with_lof.query("lof != 1"), df_lof_pooled], axis=0)
+    df_lof = pd.concat([df.query("lof != 1"), df_lof], axis=0)
     
     # the lof column will now be the variant category to use, so 
     # 1. replace non-lof frame-shift mutations (value = 0) with NaN 
     # 2. replace lof variants (value = 1) with the string lof
     # 3. fill the NaNs (non-lof) with the original variant_category column
     # 4. rename columns
-    df_final["lof"] = df_final["lof"].replace(0, np.nan)
-    df_final["lof"] = df_final["lof"].replace(1, "lof")
-    df_final["lof"] = df_final["lof"].fillna(df_final["variant_category"])
+    df_lof["lof"] = df_lof["lof"].replace(0, np.nan)
+    df_lof["lof"] = df_lof["lof"].replace(1, "lof")
+    df_lof["lof"] = df_lof["lof"].fillna(df_lof["variant_category"])
     
-    assert len(df_final["lof"].unique()) <= len(df_final["variant_category"].unique())
-    return df_final.rename(columns={"variant_category": "variant_category_unpooled", "lof": "variant_category"})
+    assert len(df_lof["lof"].unique()) <= len(df_lof["variant_category"].unique())
+    return df_lof.rename(columns={"variant_category": "variant_category_unpooled", "lof": "variant_category"})
 
 
 if pool_lof:
     print("Pooling LOF mutations")
     df_model = pool_lof_mutations(df_model)
+    print(df_model.shape)
     
 
 ############# STEP 4: PROCESS HETEROZYGOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #############
 
 
 # set variants with AF <= the threshold as wild-type and AF > the threshold as alternative
-if het_mode == "BINARY":
+if amb_mode == "BINARY":
     print(f"Binarizing heterozygous variants with AF threshold of {AF_thresh}")
     df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= AF_thresh), "variant_binary_status"] = 0
     df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] > AF_thresh), "variant_binary_status"] = 1
 
 # use heterozygous AF as the matrix value for variants with AF > 0.25. Below 0.25, the AF measurements aren't reliable
-elif het_mode == "AF":
+elif amb_mode == "AF":
     print("Encoding heterozygous variants with AF")
     
-    # encode only heterozygous variants with AF
+    # encode only variants with intermediate AF with their AF
     # df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (~pd.isnull(df_model["variant_allele_frequency"])), "variant_binary_status"] = df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (~pd.isnull(df_model["variant_allele_frequency"])), "variant_allele_frequency"].values
     
     # encode all variants with AF > 0.25 with their AF
     df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_binary_status"] = df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_allele_frequency"].values
    
 # drop all isolates with heterozygous variants with ANY AF below the threshold. DON'T DROP FEATURES BECAUSE MIGHT DROP SOMETHING RELEVANT
-elif het_mode == "DROP":
+elif amb_mode == "DROP":
     drop_isolates = df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= 0.75)].sample_id.unique()
     print(f"Dropped {len(drop_isolates)} isolates with any heterozygous variants. Remainder are binary")
-    df_model = df_model.query("sample_id not in @drop_isolates")
-else:
-    raise ValueError(f"{het_mode} is not a valid mode for handling heterozygous alleles")
-    
+    df_model = df_model.query("sample_id not in @drop_isolates")    
     
 # check after this step that the only NaNs left are truly missing data --> NaN in variant_binary_status must also be NaN in variant_allele_frequency
 assert len(df_model.loc[(~pd.isnull(df_model["variant_allele_frequency"])) & (pd.isnull(df_model["variant_binary_status"]))]) == 0
@@ -268,7 +280,7 @@ df_model = df_model.sort_values("variant_binary_status").drop_duplicates(["sampl
 matrix = df_model.pivot(index="sample_id", columns="mutation", values="variant_binary_status")
 
 # in this case, only 3 possible values -- 0 (ref), 1 (alt), NaN (missing)
-if het_mode.upper() in ["BINARY", "DROP"]:
+if amb_mode.upper() in ["BINARY", "DROP"]:
     assert len(np.unique(matrix.values)) <= 3
 # the smallest value will be 0. Check that the second smallest value is greater than 0.25 (below this, AFs are not really reliable)
 else:
@@ -346,8 +358,6 @@ if impute:
                 else:
                     filtered_matrix.loc[isolate, col] = susc_impute
 
-            if i % 100 == 0:
-                print(i)
 # don't impute anything, simply drop all isolates (rows) with NaNs.
 else:
     filtered_matrix.dropna(axis=0, inplace=True, how="any")
@@ -369,15 +379,11 @@ if pool_lof:
         
 filtered_matrix.to_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
 
-# keep only samples with genotypes available because everything should be represented, including samples without variants
-df_phenos = df_phenos.query("sample_id in @filtered_matrix.index.values")
-df_phenos.to_csv(os.path.join(out_dir, "phenos.csv"), index=False)
-
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
 tracemalloc.stop()
 
 # write peak memory usage in GB
-with open("memory_usage.log", "w+") as file:
-    file.write(f"{out_dir}\n")
+with open("memory_usage.log", "a+") as file:
+    file.write(f"\n{out_dir}\n")
     file.write(f"{os.path.basename(__file__)}: {script_memory} GB\n")
