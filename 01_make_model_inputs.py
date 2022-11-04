@@ -127,7 +127,7 @@ def read_in_data():
                 if "run" in fName:
                     geno_files.append(os.path.join(full_subdir, fName))
 
-    print(f"    {len(df_phenos)} samples with phenotypes and {len(geno_files)} files with genotypes.")
+    print(f"    {len(geno_files)} files with genotypes.")
 
     dfs_lst = []
     for i, fName in enumerate(geno_files):
