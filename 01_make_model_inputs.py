@@ -81,7 +81,7 @@ phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 
 phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos.csv")
 
-if not os.path.isfile(phenos_file)
+if not os.path.isfile(phenos_file):
     # read them all in, concatenate, and get the number of samples
     df_phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, fName)) for fName in os.listdir(phenos_dir) if "run" in fName], axis=0)
 
@@ -128,7 +128,7 @@ def read_in_data():
                 if "run" in fName:
                     geno_files.append(os.path.join(full_subdir, fName))
 
-    print(f"    {len(geno_files)} files with genotypes.")
+    print(f"    {len(geno_files)} files with genotypes")
 
     dfs_lst = []
     for i, fName in enumerate(geno_files):
@@ -284,9 +284,7 @@ if amb_mode.upper() in ["BINARY", "DROP"]:
 else:
     assert np.sort(np.unique(matrix.values))[1] > 0.25
 
-# compare proportions of missing isolates or variants to determine which is more problematic and drop that first
-# usually, isolates will be more problematic, but rrs/rrl are very problematic, so for ribosome-targeting drugs, need to drop variants first
-    
+# compare proportions of missing isolates or variants to determine which is more problematic and drop that first. usually, isolates will be more problematic    
 # maximum proportion of missing isolates per feature
 max_prop_missing_isolates_per_feature = matrix.isna().sum(axis=0).max() / matrix.shape[0]
 # maximum proportion of missing features per isolate

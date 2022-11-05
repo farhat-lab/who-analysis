@@ -165,6 +165,7 @@ print(f"    {X.shape[0]} samples and {X.shape[1]} variables in the model")
 
 ############# STEP 5: FIT L2-PENALIZED REGRESSION #############
 
+
 if binary:
     model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
                                  cv=5,

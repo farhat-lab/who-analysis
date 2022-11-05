@@ -114,7 +114,6 @@ def BH_FDR_correction(coef_df):
     ranks = coef_df["pval"].map(rank_dict).values
     
     coef_df["BH_pval"] = np.min([coef_df["pval"] * len(coef_df) / ranks, np.ones(len(coef_df))], axis=0) 
-    # return pd.concat([coef_df_pval, coef_df_no_pval], axis=0)
     return coef_df
 
 
