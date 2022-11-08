@@ -81,10 +81,8 @@ assert sum(np.array(save_matrix.shape) - np.array(minor_allele_counts.shape) == 
 sparse.save_npz("data/minor_allele_counts", sparse.COO(save_matrix.values))
 del save_matrix
     
-    
 minor_allele_counts_samples = minor_allele_counts.index.values
 del minor_allele_counts
-    
     
 def compute_number_frameshift_by_tier(drug, tiers_lst):
     
@@ -137,10 +135,7 @@ for drug in drugs_for_analysis:
     geno_files = [os.path.join(genos_dir, drug, "tier=1", fName) for fName in os.listdir(os.path.join(genos_dir, drug, "tier=1")) if "run" in fName]
     genos = pd.concat([pd.read_csv(fName, usecols=["sample_id"]) for fName in geno_files], axis=0)
     
-    assert len(genos.sample_id.unique()) == len(phenos.sample_id.unique())
     num_with_snps = set(minor_allele_counts_samples).intersection(genos.sample_id.unique())
-    assert len(genos.sample_id.unique()) == num_with_snps
-    
     samples_with_lineages = lineages.loc[lineages["Sample ID"].isin(genos["sample_id"])]
         
     # get the number of isolates with multiple frameshift mutations in them, by tier
@@ -161,5 +156,11 @@ for drug in drugs_for_analysis:
         
     print("Finished", drug.split("=")[1])
     
-# save
+    
+# check and save
+if len(summary_df.query("Genos != Phenos")) > 0:
+    print("There are different numbers of genotypes and phenotypes")
+if len(summary_df.query("Genos != SNP_Matrix")) > 0:
+    print("There are different numbers of genotypes and SNP matrix entries")
+    
 summary_df.to_csv("data/samples_summary.csv", index=False)
