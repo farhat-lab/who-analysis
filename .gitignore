@@ -1,12 +1,13 @@
 .ipynb_checkpoints
 __pycache__/
 
-# notebook for testing
+# scratch notebook
 sandbox.ipynb
 
 # extra config and bash files made during testing
 config_*.yaml
 run_*.sh
+config_files/
 
 # confidential information
 data/sample_ids_mapping.csv
