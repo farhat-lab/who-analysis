@@ -1,17 +1,5 @@
 
 /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=WHO/dropAF_noSyn
-01_make_model_inputs.py: 6.102836819 GB
-
-/n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=WHO/dropAF_noSyn
-01_make_model_inputs.py: 6.102836899 GB
-
-/n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=WHO/dropAF_noSyn
-01_make_model_inputs.py: 6.102906676 GB
-
-/n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=WHO/dropAF_noSyn
-01_make_model_inputs.py: 6.102700415 GB
-
-/n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=WHO/dropAF_noSyn
 01_make_model_inputs.py: 6.102699977 GB
 02_regression_with_bootstrap.py: 11.508630613 GB
 03_model_analysis.py: 0.017044547 GB
@@ -33,3 +21,9 @@
 
 /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1+2/phenos=WHO/dropAF_noSyn_poolLOF
 01_make_model_inputs.py: 6.904928629 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=ALL/dropAF_noSyn
+01_make_model_inputs.py: 7.699935531 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Levofloxacin/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 8.360503226 GB

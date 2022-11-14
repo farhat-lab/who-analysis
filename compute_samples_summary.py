@@ -182,4 +182,4 @@ if len(summary_df.query("Genos != Phenos")) > 0:
 if len(summary_df.query("Genos != SNP_Matrix")) > 0:
     print("There are different numbers of genotypes and SNP matrix entries")
     
-summary_df.to_csv("data/samples_summary.csv", index=False)
+summary_df.sort_values("Drug", ascending=True).to_csv("data/samples_summary.csv", index=False)
