@@ -1,12 +1,12 @@
 binary: true
 tiers_lst:
 - '1'
-- '2'
 pheno_category_lst:
 - WHO
 amb_mode: DROP
-synonymous: true
-pool_lof: false
+pool_lof: true
+pool_inframe: false
+synonymous: false
 AF_thresh: 0.75
 missing_isolate_thresh: 0.01
 missing_feature_thresh: 0.25

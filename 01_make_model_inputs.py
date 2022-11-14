@@ -26,6 +26,7 @@ AF_thresh = kwargs["AF_thresh"]
 impute = kwargs["impute"]
 synonymous = kwargs["synonymous"]
 pool_lof = kwargs["pool_lof"]
+pool_inframe = kwargs["pool_inframe"]
 binary = kwargs["binary"]
 
 out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
@@ -44,7 +45,7 @@ elif amb_mode == "AF":
 elif amb_mode == "BINARY":
     model_prefix = "binarizeAF"
 else:
-    raise ValueError(f"{amb_mode} is not a valid mode for handling heterozygous alleles")
+    raise ValueError(f"{amb_mode} is not a valid mode for handling intermediate AFs")
 
 if synonymous:
     model_prefix += "_withSyn"
@@ -52,7 +53,9 @@ else:
     model_prefix += "_noSyn"
     
 if pool_lof:
-    model_prefix += "_poolLOF"    
+    model_prefix += "_poolLOF" 
+if pool_inframe:
+    model_prefix += "_poolInframe"
     
 # add to config file for use in the second and third scripts
 kwargs["model_prefix"] = model_prefix
@@ -66,10 +69,19 @@ if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 print(f"\nSaving results to {out_dir}")
 
-# the corresponding non-poolLOF model should already have been run so that the filt_matrices can be compared to see if pooling LOFs makes a difference
+# the corresponding unpooled model should already have been run so that the filt_matrices can be compared to see if the pooled version should be run
 if pool_lof:
-    if not os.path.isfile(os.path.join(out_dir.replace("_poolLOF", ""), "filt_matrix.pkl")):
-        raise ValueError("Please run the corresponding model without LOF pooling first!")
+    if pool_inframe:
+        if not (os.path.isdir(out_dir.replace("_poolLOF", "")) & os.path.isdir(out_dir.replace("_poolInframe", ""))):
+            raise ValueError("Please run both corresponding models pooling only 1 type of mutation first!")
+    else:
+        if not os.path.isdir(out_dir.replace("_poolLOF", "")):
+            raise ValueError("Please run the corresponding model without LOF pooling first!")
+else:
+    if pool_inframe:
+        if not os.path.isdir(out_dir.replace("_poolInframe", "")):
+            raise ValueError("Please run the corresponding model without inframe pooling first!")
+            
     
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
@@ -92,7 +104,6 @@ if not os.path.isfile(phenos_file):
     drop_samples = df_phenos.groupby(["sample_id"]).nunique().query("phenotype > 1").index.values
     if len(drop_samples) > 0:
         raise ValueError(f"    {len(drop_samples)} isolates are recorded as being both resistant and susceptible to {drug}")
-        #df_phenos = df_phenos.query("sample_id not in @drop_samples")
 
     # then drop any duplicated phenotypes
     df_phenos = df_phenos.drop_duplicates(keep="first").reset_index(drop=True)
@@ -108,6 +119,10 @@ if not os.path.isfile(phenos_file):
 else:
     df_phenos = pd.read_csv(phenos_file)
 
+if len(df_phenos.phenotypic_category.unique()) > 2:
+    raise ValueError("More than 2 phenotypic categories! Please check!")
+
+df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
 
 ############# STEP 2: GET ALL AVAILABLE GENOTYPES #############
           
@@ -135,7 +150,7 @@ def read_in_data():
 
         # print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
         # read in the dataframe
-        df = pd.read_csv(fName)
+        df = pd.read_csv(fName, low_memory=False)
 
         # get only genotypes for samples that have a phenotype
         df_avail_isolates = df.loc[df.sample_id.isin(df_phenos.sample_id)]
@@ -148,6 +163,7 @@ def read_in_data():
             dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))  
             
     # drop duplicates before returning. Sometimes there are duplicate entries, and they will cause later errors when comparing some lengths
+    #return pd.concat(dfs_lst).sort_values("predicted_effect", ascending=False).drop_duplicates(subset=["sample_id", "variant_category"], keep="first")
     return pd.concat(dfs_lst).drop_duplicates().reset_index(drop=True)
 
 
@@ -158,97 +174,48 @@ df_model = read_in_data()
 ############# STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #############
 
 
-def pool_lof_mutations(df):
-    '''
-    resolved_symbol = gene
+def pool_mutations(df, effect_lst, pool_col):
     
-    Effect = lof for ALL frameshift, nonsense, loss of start, and large-scale deletion mutations. 
-    
-    This function creates a new column called lof, which is 1 for variants that are lof, 0 for frameshift mutations that are not lof, and nan for variants that
-    couldn't be lof (synonymous, missense, etc.)
-    
-    LOF criteria = loss of start or stop codon, nonsense mutation, single frameshift mutation, large-scale deletion
-    
-    If one of the above criteria (except the frameshift mutation) co-occurs with multiple frameshift mutations in the same sample and gene, then an lof feature will be
-    generated, and the frameshift mutations will remain as additional features. i.e. the LOF will not trump the multiple frameshift mutations. 
-    '''
-    
-    ###### STEP 1: Assign all (sample, gene) pairs with a single frameshift mutation to LOF, and the remaining to not LOF ######
-    
-    len_df = len(df)
-    
-    # get all frameshift mutations and separate by the number of frameshifts per gene per sample
-    frameshift = df.query("predicted_effect == 'frameshift'")
+    df.loc[df["predicted_effect"].isin(effect_lst), pool_col] = 1
 
-    # (sample, gene) pairs with a single frameshift mutation are LOF
-    lof_single_fs = pd.DataFrame(frameshift.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect == 1").reset_index()
+    # sort descending to keep the largest variant_binary_status and variant_allele_frequency first. In this way, LOF mutations that are actually present are preserved
+    # drop duplicates includes the lof column because all lof mutations in the same gene will have lof = 1, regardless of the value of variant_binary_status
+    df_pool = df.query(f"{pool_col} == 1").sort_values(by=["variant_binary_status", "variant_allele_frequency"], ascending=False, na_position="last").drop_duplicates(subset=["sample_id", "resolved_symbol", pool_col])
+    
+    # for LOF mutations that are not present (i.e. variant_binary_status != 1), there will be no predicted_effect because here we are combining all LOF mutations that are present
+    # in a gene (resolved_symbol) to get an overall LOF variable
+    annot_df = pd.DataFrame(df.query(f"{pool_col} == 1 & variant_binary_status == 1").groupby(["sample_id", "resolved_symbol"])["predicted_effect"].unique()).reset_index()
+    annot_df[f"predicted_effect_{pool_col}"] = [",".join(val) for val in annot_df["predicted_effect"]]
+    del annot_df["predicted_effect"]
 
-    # already 1 because variant_category is the counts column now
-    lof_single_fs.rename(columns={"predicted_effect": "lof"}, inplace=True)
+    df_pool = df_pool.merge(annot_df, on=["sample_id", "resolved_symbol"], how="outer")
+    df_pool = pd.concat([df_pool, df.query(f"{pool_col} != 1")], axis=0)
+    df_pool.loc[df_pool[pool_col] == 1, "variant_category"] = pool_col
 
-    # lof column now is 1 for (sample, gene) pairs with only 1 frameshift mutation and 0 for those with multiple frameshift mutations
-    frameshift = frameshift.merge(lof_single_fs, on=["sample_id", "resolved_symbol"], how="outer")
-    frameshift["lof"] = frameshift["lof"].fillna(0)
-
-    # merge with original dataframe to get the rest of the columns back. predicted_effect is now lof
-    df = df.merge(frameshift[["sample_id", "resolved_symbol", "variant_category", "lof"]], on=["sample_id", "resolved_symbol", "variant_category"], how="outer")
-    assert len(df) == len_df
-
-    # value_counts drops all the NaNs when computing
-    assert df["lof"].value_counts(dropna=True).sum() == len(frameshift)
-    del frameshift
-
-    ###### STEP 2: Assign loss of start, stop gained, and large-scale deletion to LOF ######
-
-    # criteria for lof are: nonsense mutation, loss of start, single frameshift mutation. Get only those satisfying the first two criteria (last done above)
-    df.loc[(df["variant_category"] == 'deletion') | 
-            (df["predicted_effect"].isin(['stop_gained', 'start_lost'])), 'lof'
-          ] = 1
-    
-    # get only variants that are LOF
-    df_lof = df.query("lof == 1")
-    
-    ###### STEP 3: COMBINE LOF VARIANTS WITH NON-LOF VARIANTS TO GET A FULL DATAFRAME ######
-    
-    # this dataframe will be slightly smaller than the original because some lof mutations have been pooled
-    
-    # just keep 1 instance because the feature will become just lof. The row that is kept is arbitrary
-    # groupby takes more steps because the rest of the columns need to be gotten again
-    df_lof = df_lof.drop_duplicates(["sample_id", "resolved_symbol"], keep='first')
-    
-    # concatenate the dataframe without LOF variants with the dataframe of pooled LOF variants
-    df_lof = pd.concat([df.query("lof != 1"), df_lof], axis=0)
-    
-    # the lof column will now be the variant category to use, so 
-    # 1. replace non-lof frame-shift mutations (value = 0) with NaN 
-    # 2. replace lof variants (value = 1) with the string lof
-    # 3. fill the NaNs (non-lof) with the original variant_category column
-    # 4. rename columns
-    df_lof["lof"] = df_lof["lof"].replace(0, np.nan)
-    df_lof["lof"] = df_lof["lof"].replace(1, "lof")
-    df_lof["lof"] = df_lof["lof"].fillna(df_lof["variant_category"])
-    
-    assert len(df_lof["lof"].unique()) <= len(df_lof["variant_category"].unique())
-    return df_lof.rename(columns={"variant_category": "variant_category_unpooled", "lof": "variant_category"})
+    return df_pool
 
 
 if pool_lof:
     print("Pooling LOF mutations")
-    df_model = pool_lof_mutations(df_model)
+    df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation"], "lof")
+    
+if pool_inframe:
+    print("Pooling inframe mutations")
+    df_model = pool_mutations(df_model, ["inframe_insertion", "inframe_deletion"], "inframe")
     
 
-############# STEP 4: PROCESS HETEROZYGOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #############
+############# STEP 4: PROCESS AMBIGUOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #############
 
 
 # set variants with AF <= the threshold as wild-type and AF > the threshold as alternative
 if amb_mode == "BINARY":
-    print(f"Binarizing heterozygous variants with AF threshold of {AF_thresh}")
+    print(f"Binarizing ambiguous variants with AF threshold of {AF_thresh}")
     df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= AF_thresh), "variant_binary_status"] = 0
     df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] > AF_thresh), "variant_binary_status"] = 1
 
-# use heterozygous AF as the matrix value for variants with AF > 0.25. Below 0.25, the AF measurements aren't reliable
+# use ambiguous AF as the matrix value for variants with AF > 0.25. Below 0.25, the AF measurements aren't reliable
 elif amb_mode == "AF":
-    print("Encoding heterozygous variants with AF")
+    print("Encoding ambiguous variants with their AF")
     
     # encode only variants with intermediate AF with their AF
     # df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (~pd.isnull(df_model["variant_allele_frequency"])), "variant_binary_status"] = df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (~pd.isnull(df_model["variant_allele_frequency"])), "variant_allele_frequency"].values
@@ -256,10 +223,10 @@ elif amb_mode == "AF":
     # encode all variants with AF > 0.25 with their AF
     df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_binary_status"] = df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_allele_frequency"].values
    
-# drop all isolates with heterozygous variants with ANY AF below the threshold. DON'T DROP FEATURES BECAUSE MIGHT DROP SOMETHING RELEVANT
+# drop all isolates with ambiguous variants with ANY AF below the threshold. DON'T DROP FEATURES BECAUSE MIGHT DROP SOMETHING RELEVANT
 elif amb_mode == "DROP":
     drop_isolates = df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= 0.75)].sample_id.unique()
-    print(f"Dropped {len(drop_isolates)} isolates with any heterozygous variants. Remainder are binary")
+    print(f"Dropped {len(drop_isolates)} isolates with any intermediate AFs. Remainder are binary")
     df_model = df_model.query("sample_id not in @drop_isolates")    
     
 # check after this step that the only NaNs left are truly missing data --> NaN in variant_binary_status must also be NaN in variant_allele_frequency
@@ -364,15 +331,33 @@ else:
 assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
 print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} genetic variants")
 
-# check if the filtered matrix has the same dimensions as the corresponding model without LOF pooling
-# if they have the same shape, it means that LOF pooling did not make 
+
+# check if the filtered matrix has the same dimensions and the same variants as the corresponding models without pooling
+# if they have the same shape, it means that LOF pooling did not make       
+# the corresponding unpooled model should already have been run so that the filt_matrices can be compared to see if the pooled version should be run
 if pool_lof:
-    df_model_no_poolLOF = pd.read_pickle(os.path.join(out_dir.replace("_poolLOF", ""), "filt_matrix.pkl"))
-    if (len(df_model_no_poolLOF.index.symmetric_difference(filtered_matrix.index)) == 0) & (df_model_no_poolLOF.shape[1] == filtered_matrix.shape[1]):
-        print("Pooling LOFs does not affect this model. Quitting this model...")
-        os.rmdir(os.path.join(out_dir))
-        exit()
+    if os.path.isfile(os.path.join(out_dir.replace("_poolLOF", ""), "filt_matrix.pkl")):
+        df_model_no_poolLOF = pd.read_pickle(os.path.join(out_dir.replace("_poolLOF", ""), "filt_matrix.pkl"))
         
+        if pool_inframe:
+            if os.path.isfile(os.path.join(out_dir.replace("_poolInframe", ""), "filt_matrix.pkl")):
+                df_model_no_poolInframe = pd.read_pickle(os.path.join(out_dir.replace("_poolInframe", ""), "filt_matrix.pkl"))
+                
+                if ((len(df_model_no_poolLOF.index.symmetric_difference(filtered_matrix.index)) == 0) & (df_model_no_poolLOF.shape[1] == filtered_matrix.shape[1])) | ((len(df_model_no_poolInframe.index.symmetric_difference(filtered_matrix.index)) == 0) & (df_model_no_poolInframe.shape[1] == filtered_matrix.shape[1])):
+                    print("Pooling both types of mutations does not affect this model. Quitting this model...")
+                    exit()
+        else:
+            if (len(df_model_no_poolLOF.index.symmetric_difference(filtered_matrix.index)) == 0) & (df_model_no_poolLOF.shape[1] == filtered_matrix.shape[1]):
+                print("Pooling LOF mutations does not affect this model. Quitting this model...")
+                exit()
+else:
+    if pool_inframe:
+        if os.path.isfile(os.path.join(out_dir.replace("_poolInframe", ""), "filt_matrix.pkl")):
+            df_model_no_poolInframe = pd.read_pickle(os.path.join(out_dir.replace("_poolInframe", ""), "filt_matrix.pkl"))
+            if (len(df_model_no_poolInframe.index.symmetric_difference(filtered_matrix.index)) == 0) & (df_model_no_poolInframe.shape[1] == filtered_matrix.shape[1]):
+                print("Pooling inframe mutations does not affect this model. Quitting this model...")
+                exit()
+            
 filtered_matrix.to_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
 
 # returns a tuple: current, peak memory in bytes 

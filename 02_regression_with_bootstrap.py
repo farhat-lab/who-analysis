@@ -214,8 +214,8 @@ def bootstrap_coef():
         bs_model.fit(X_bs, y_bs)
         coefs.append(np.squeeze(bs_model.coef_))
         
-        if i % (num_bootstrap / 10) == 0:
-            print(i)
+        # if i % (num_bootstrap / 10) == 0:
+        #     print(i)
 
     return pd.DataFrame(coefs)
 

@@ -1,6 +1,1 @@
 
-
-/n/data1/hms/dbmi/farhat/ye12/who/analysis/Levofloxacin/tiers=1/phenos=WHO/dropAF_noSyn
-01_make_model_inputs.py: 10.367245413 GB
-02_regression_with_bootstrap.py: 24.28684977 GB
-03_model_analysis.py: 0.01874966 GB

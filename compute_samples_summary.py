@@ -84,7 +84,8 @@ del save_matrix
 minor_allele_counts_samples = minor_allele_counts.index.values
 del minor_allele_counts
     
-def compute_number_frameshift_by_tier(drug, tiers_lst):
+    
+def compute_num_pooled_mutations(drug, tiers_lst):
     
     # first get all the genotype files associated with the drug
     geno_files = []
@@ -112,14 +113,23 @@ def compute_number_frameshift_by_tier(drug, tiers_lst):
                                  ]
 
         # (sample, gene) pairs with multiple frameshift mutations
-        lof_multi_fs = pd.DataFrame(frameshift.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect > 1").reset_index()
-        return len(lof_multi_fs)
+        multi_fs = pd.DataFrame(frameshift.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect > 1")
+    
+        inframe = df_model.loc[(df_model["predicted_effect"].str.contains("inframe")) & 
+                               (~pd.isnull(df_model["variant_allele_frequency"])) &
+                               (df_model["variant_allele_frequency"] > 0)
+                              ]
+
+        # (sample, gene) pairs with multiple inframe mutations
+        multi_inframe = pd.DataFrame(inframe.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect > 1")
+        
+        return len(multi_fs), len(multi_inframe)
+    
     else:
-        return np.nan
+        return np.nan, np.nan
     
-    
-    
-summary_df = pd.DataFrame(columns=["Drug", "Phenos", "Genos", "Lineages", "SNP_Matrix", "Tier1_Multi_FS", "Tier2_Multi_FS"])
+
+summary_df = pd.DataFrame(columns=["Drug", "Phenos", "Genos", "Lineages", "SNP_Matrix", "Tier1_MultiFrameshift", "Tier1_MultiInframe", "Tier2_MultiFrameshift", "Tier2_MultiInframe"])
 i = 0
 
 for drug in drugs_for_analysis:
@@ -139,8 +149,8 @@ for drug in drugs_for_analysis:
     samples_with_lineages = lineages.loc[lineages["Sample ID"].isin(genos["sample_id"])]
         
     # get the number of isolates with multiple frameshift mutations in them, by tier
-    num_fs_tier1 = compute_number_frameshift_by_tier(drug, ['1'])
-    num_fs_tier2 = compute_number_frameshift_by_tier(drug, ['2'])
+    num_fs_tier1, num_inframe_tier1 = compute_num_pooled_mutations(drug, ['1'])
+    num_fs_tier2, num_inframe_tier2 = compute_num_pooled_mutations(drug, ['2'])
     
     # might also want to compute the number of heterozygous alleles, by tier
 
@@ -150,7 +160,9 @@ for drug in drugs_for_analysis:
                          len(samples_with_lineages),
                          len(num_with_snps),
                          num_fs_tier1,
-                         num_fs_tier2
+                         num_inframe_tier1,
+                         num_fs_tier2,
+                         num_inframe_tier2
                         ]
     i += 1
         
@@ -163,4 +175,4 @@ if len(summary_df.query("Genos != Phenos")) > 0:
 if len(summary_df.query("Genos != SNP_Matrix")) > 0:
     print("There are different numbers of genotypes and SNP matrix entries")
     
-summary_df.to_csv("data/samples_summary.csv", index=False)
+summary_df.to_csv("data/samples_summary_new.csv", index=False)
