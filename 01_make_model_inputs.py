@@ -67,39 +67,34 @@ out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
-print(f"\nSaving results to {out_dir}")
-
-# the corresponding unpooled model should already have been run so that the filt_matrices can be compared to see if the pooled version should be run
-if pool_lof:
-    if pool_inframe:
-        if not (os.path.isdir(out_dir.replace("_poolLOF", "")) & os.path.isdir(out_dir.replace("_poolInframe", ""))):
-            raise ValueError("Please run both corresponding models pooling only 1 type of mutation first!")
-    else:
-        if not os.path.isdir(out_dir.replace("_poolLOF", "")):
-            raise ValueError("Please run the corresponding model without LOF pooling first!")
-else:
-    if pool_inframe:
-        if not os.path.isdir(out_dir.replace("_poolInframe", "")):
-            raise ValueError("Please run the corresponding model without inframe pooling first!")
-            
+print(f"\nSaving results to {out_dir}")            
     
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
+samples_summary = pd.read_csv("data/samples_summary.csv", index_col=[0])
+num_lof_tier1, num_inframe_tier1, num_lof_tier2, num_inframe_tier2 = samples_summary.loc[drug, ["Tier1_LOF", "Tier1_MultiInframe", "Tier2_LOF", "Tier2_MultiInframe"]].values
 
 
 ############# STEP 1: GET ALL AVAILABLE PHENOTYPES #############
 
 
-phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos.csv")
-
+if binary:
+    phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos_binary.csv")
+else:
+    phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos_mic.csv")
+    
 if not os.path.isfile(phenos_file):
     # read them all in, concatenate, and get the number of samples
     df_phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, fName)) for fName in os.listdir(phenos_dir) if "run" in fName], axis=0)
-
-    if len(df_phenos.phenotypic_category.unique()) > 2:
-        raise ValueError("More than 2 phenotypic categories in the dataframe!")
-
+        
+    print(f"Phenotypic categoryies: {df_phenos.phenotypic_category.unique()}")
+    
+    if binary:
+        df_phenos = df_phenos.query("phenotypic_category != 'CC'")
+    else:
+        df_phenos = df_phenos.query("phenotypic_category == 'CC'")
+    
     # get the number of samples that have more than 1 phenotype recorded. Drop such samples (should be 0), but leave as a QC step for now. 
     drop_samples = df_phenos.groupby(["sample_id"]).nunique().query("phenotype > 1").index.values
     if len(drop_samples) > 0:
@@ -119,10 +114,10 @@ if not os.path.isfile(phenos_file):
 else:
     df_phenos = pd.read_csv(phenos_file)
 
-if len(df_phenos.phenotypic_category.unique()) > 2:
-    raise ValueError("More than 2 phenotypic categories! Please check!")
 
+# get only isolates with the desired phenotypic category for this particular model
 df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
+
 
 ############# STEP 2: GET ALL AVAILABLE GENOTYPES #############
           
@@ -162,9 +157,13 @@ def read_in_data():
             # synonymous variants = synonymous, change in start codon that produces V instead of M, and changes in stop codon that preserve stop
             dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))  
             
-    # drop duplicates before returning. Sometimes there are duplicate entries, and they will cause later errors when comparing some lengths
-    #return pd.concat(dfs_lst).sort_values("predicted_effect", ascending=False).drop_duplicates(subset=["sample_id", "variant_category"], keep="first")
-    return pd.concat(dfs_lst).drop_duplicates().reset_index(drop=True)
+    df_model = pd.concat(dfs_lst)
+    del dfs_lst
+    
+    if len(df_model.drop_duplicates(["sample_id", "resolved_symbol", "variant_category"])) != len(df_model):
+        raise ValueError("Some variants are listed twice (likely due to multiple predicted effects)")
+    else:
+        return df_model.reset_index(drop=True)
 
 
 df_model = read_in_data()
@@ -196,13 +195,25 @@ def pool_mutations(df, effect_lst, pool_col):
 
 
 if pool_lof:
-    print("Pooling LOF mutations")
-    df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation"], "lof")
+    if (len(tiers_lst) == 1 and num_lof_tier1 > 0) or (len(tiers_lst) > 1 and (num_lof_tier1 > 0 or num_lof_tier2 > 0)):
+        print("Pooling LOF mutations")
+        df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation"], "lof")
+    else:
+        print("There are no samples with multiple LOF mutations in the same gene")
+        os.rmdir(out_dir)
+        exit()
     
-if pool_inframe:
-    print("Pooling inframe mutations")
-    df_model = pool_mutations(df_model, ["inframe_insertion", "inframe_deletion"], "inframe")
     
+# if this next block is uncommented, need to include the exit statement ONLY if pooling both types of mutations does not make a difference
+# if pool_inframe:
+#     if (len(tiers_lst) == 1 and num_inframe_tier1 > 0) or (len(tiers_lst) > 1 and (num_inframe_tier1 > 0 or num_inframe_tier2 > 0)):
+#         print("Pooling inframe mutations")
+#         # df_model = pool_mutations(df_model, ["inframe_insertion", "inframe_deletion"], "inframe")
+#         pool_inframe_make_diff = True
+#     else:
+#         print("There are no samples with multiple inframe mutations in the same gene")
+#         pool_inframe_make_diff = False
+        
 
 ############# STEP 4: PROCESS AMBIGUOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #############
 
@@ -330,34 +341,6 @@ else:
 # there should not be any more NaNs
 assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
 print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} genetic variants")
-
-
-# check if the filtered matrix has the same dimensions and the same variants as the corresponding models without pooling
-# if they have the same shape, it means that LOF pooling did not make       
-# the corresponding unpooled model should already have been run so that the filt_matrices can be compared to see if the pooled version should be run
-if pool_lof:
-    if os.path.isfile(os.path.join(out_dir.replace("_poolLOF", ""), "filt_matrix.pkl")):
-        df_model_no_poolLOF = pd.read_pickle(os.path.join(out_dir.replace("_poolLOF", ""), "filt_matrix.pkl"))
-        
-        if pool_inframe:
-            if os.path.isfile(os.path.join(out_dir.replace("_poolInframe", ""), "filt_matrix.pkl")):
-                df_model_no_poolInframe = pd.read_pickle(os.path.join(out_dir.replace("_poolInframe", ""), "filt_matrix.pkl"))
-                
-                if ((len(df_model_no_poolLOF.index.symmetric_difference(filtered_matrix.index)) == 0) & (df_model_no_poolLOF.shape[1] == filtered_matrix.shape[1])) | ((len(df_model_no_poolInframe.index.symmetric_difference(filtered_matrix.index)) == 0) & (df_model_no_poolInframe.shape[1] == filtered_matrix.shape[1])):
-                    print("Pooling both types of mutations does not affect this model. Quitting this model...")
-                    exit()
-        else:
-            if (len(df_model_no_poolLOF.index.symmetric_difference(filtered_matrix.index)) == 0) & (df_model_no_poolLOF.shape[1] == filtered_matrix.shape[1]):
-                print("Pooling LOF mutations does not affect this model. Quitting this model...")
-                exit()
-else:
-    if pool_inframe:
-        if os.path.isfile(os.path.join(out_dir.replace("_poolInframe", ""), "filt_matrix.pkl")):
-            df_model_no_poolInframe = pd.read_pickle(os.path.join(out_dir.replace("_poolInframe", ""), "filt_matrix.pkl"))
-            if (len(df_model_no_poolInframe.index.symmetric_difference(filtered_matrix.index)) == 0) & (df_model_no_poolInframe.shape[1] == filtered_matrix.shape[1]):
-                print("Pooling inframe mutations does not affect this model. Quitting this model...")
-                exit()
-            
 filtered_matrix.to_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
 
 # returns a tuple: current, peak memory in bytes 

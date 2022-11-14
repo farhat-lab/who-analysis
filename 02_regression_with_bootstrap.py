@@ -51,7 +51,12 @@ model_inputs = pd.read_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
 # reset index so that sample_id is now a column, which makes slicing easier
 model_inputs = model_inputs.reset_index()
 
-df_phenos = pd.read_csv(os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos.csv"))
+if binary:
+    phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos_binary.csv")
+else:
+    phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos_mic.csv")
+
+df_phenos = pd.read_csv(phenos_file)
 
 
 ############# STEP 2: COMPUTE THE GENETIC RELATEDNESS MATRIX, REMOVING RESISTANCE LOCI #############
@@ -131,9 +136,9 @@ if num_PCs > 0:
     
 else:
     print("Fitting regression without population structure correction")
+    df_phenos = df_phenos.query("sample_id in @model_inputs.sample_id.values").sort_values("sample_id", ascending=True).reset_index(drop=True)
     # sort by sample_id so that everything is in the same order
     model_inputs = model_inputs.sort_values("sample_id", ascending=True).reset_index(drop=True)
-    df_phenos = df_phenos.sort_values("sample_id", ascending=True).reset_index(drop=True)    
     assert len(df_phenos) == len(model_inputs)
 
     # set index so that later only the values can be extracted and save it. This is the actual matrix used for model fitting, after all filtering steps

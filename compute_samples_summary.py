@@ -6,6 +6,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
+_, remake_minor_allele_df = sys.argv
+
+
 ############# GENERATE THE MINOR ALLELE COUNTS DATAFRAME AND THE TABLE OF NUMBERS OF PHENOTYPES AND GENOTYPES ACROSS TIERS AND DRUGS #############
 
 # The purpose of this script is to see how much data we have and check if we're missing anything. 
@@ -24,64 +27,69 @@ print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
 
 lineages = pd.read_pickle("data/combined_lineage_sample_IDs.pkl")
 
-# remake minor alleles dataframe whenever we get new data
-print("Creating matrix of minor allele counts")
+if remake_minor_allele_df.lower() == "true":
+    print("Creating matrix of minor allele counts")
 
-snp_files = [pd.read_csv(os.path.join(snp_dir, fName)) for fName in os.listdir(snp_dir)]
-print(len(snp_files))
+    snp_files = [pd.read_csv(os.path.join(snp_dir, fName)) for fName in os.listdir(snp_dir)]
+    print(len(snp_files))
 
-snp_combined = pd.concat(snp_files, axis=0)
-snp_combined.columns = ["sample_id", "position", "nucleotide", "dp"]
-snp_combined = snp_combined.drop_duplicates()
+    snp_combined = pd.concat(snp_files, axis=0)
+    snp_combined.columns = ["sample_id", "position", "nucleotide", "dp"]
+    snp_combined = snp_combined.drop_duplicates()
 
-# drop sites that are in drug resistance loci. This is a little strict because it removes entire genes, but works fine.
-drugs_loci = pd.read_csv("data/drugs_loci.csv")
+    # drop sites that are in drug resistance loci. This is a little strict because it removes entire genes, but works fine.
+    drugs_loci = pd.read_csv("data/drugs_loci.csv")
 
-# add 1 to the start because it's 0-indexed
-drugs_loci["Start"] += 1
-assert sum(drugs_loci["End"] <= drugs_loci["Start"]) == 0
+    # add 1 to the start because it's 0-indexed
+    drugs_loci["Start"] += 1
+    assert sum(drugs_loci["End"] <= drugs_loci["Start"]) == 0
 
-# get all positions in resistance loci
-remove_pos = [list(range(int(row["Start"]), int(row["End"])+1)) for _, row in drugs_loci.iterrows()]
-remove_pos = list(itertools.chain.from_iterable(remove_pos))
+    # get all positions in resistance loci
+    remove_pos = [list(range(int(row["Start"]), int(row["End"])+1)) for _, row in drugs_loci.iterrows()]
+    remove_pos = list(itertools.chain.from_iterable(remove_pos))
 
-num_pos = len(snp_combined.position.unique())
-snp_combined = snp_combined.query("position not in @remove_pos")
-print(f"Dropped {num_pos-len(snp_combined.position.unique())} positions in resistance-determining regions")
+    num_pos = len(snp_combined.position.unique())
+    snp_combined = snp_combined.query("position not in @remove_pos")
+    print(f"Dropped {num_pos-len(snp_combined.position.unique())} positions in resistance-determining regions")
 
-# pivot to matrix. There should not be any NaNs because the data is complete (i.e. reference alleles are included), then get the major allele at every site.
-print("Pivoting to a matrix")
-matrix = snp_combined.pivot(index="sample_id", columns="position", values="nucleotide")
-assert np.nan not in matrix.values
-major_alleles = matrix.mode(axis=0)
+    # pivot to matrix. There should not be any NaNs because the data is complete (i.e. reference alleles are included), then get the major allele at every site.
+    print("Pivoting to a matrix")
+    matrix = snp_combined.pivot(index="sample_id", columns="position", values="nucleotide")
+    assert np.nan not in matrix.values
+    major_alleles = matrix.mode(axis=0)
 
-# put into dataframe to compare with the SNP dataframe. Most efficient way is to make a dataframe of major alleles where every row is the same. 
-major_alleles_df = pd.concat([major_alleles]*len(matrix), ignore_index=True)
-major_alleles_df.index = matrix.index.values
+    # put into dataframe to compare with the SNP dataframe. Most efficient way is to make a dataframe of major alleles where every row is the same. 
+    major_alleles_df = pd.concat([major_alleles]*len(matrix), ignore_index=True)
+    major_alleles_df.index = matrix.index.values
 
-assert matrix.shape == major_alleles_df.shape
-minor_allele_counts = (matrix != major_alleles_df).astype(int)
+    assert matrix.shape == major_alleles_df.shape
+    minor_allele_counts = (matrix != major_alleles_df).astype(int)
 
-# drop any columns that are 0 (major allele everywhere). Easiest to do this with dropna -- convert 0s to NaNs, drop, then back to 0s.
-minor_allele_counts = minor_allele_counts.replace(0, np.nan).dropna(how='all', axis=1).fillna(0).astype(int)
+    # drop any columns that are 0 (major allele everywhere). Easiest to do this with dropna -- convert 0s to NaNs, drop, then back to 0s.
+    minor_allele_counts = minor_allele_counts.replace(0, np.nan).dropna(how='all', axis=1).fillna(0).astype(int)
 
-# to save in sparse format, need to put the column names and indices into the dataframe, everything must be numerical
-print("Saving minor allele counts dataframe")
-save_matrix = minor_allele_counts.copy()
-save_matrix.loc[0, :] = save_matrix.columns
+    # to save in sparse format, need to put the column names and indices into the dataframe, everything must be numerical
+    print("Saving minor allele counts dataframe")
+    save_matrix = minor_allele_counts.copy()
+    save_matrix.loc[0, :] = save_matrix.columns
 
-# sort -- the first value is 0, which is a placeholder for the sample_id
-save_matrix = save_matrix.sort_values("sample_id", ascending=True)
+    # sort -- the first value is 0, which is a placeholder for the sample_id
+    save_matrix = save_matrix.sort_values("sample_id", ascending=True)
 
-# put the sample_ids into the main body of the matrix and convert everything to integers
-save_matrix = save_matrix.reset_index().astype(int)
+    # put the sample_ids into the main body of the matrix and convert everything to integers
+    save_matrix = save_matrix.reset_index().astype(int)
 
-# check that numbers of columns and rows have each increased by 1 and save
-assert sum(np.array(save_matrix.shape) - np.array(minor_allele_counts.shape) == np.ones(2)) == 2
-sparse.save_npz("data/minor_allele_counts", sparse.COO(save_matrix.values))
-del save_matrix
-    
-minor_allele_counts_samples = minor_allele_counts.index.values
+    # check that numbers of columns and rows have each increased by 1 and save
+    assert sum(np.array(save_matrix.shape) - np.array(minor_allele_counts.shape) == np.ones(2)) == 2
+    sparse.save_npz("data/minor_allele_counts", sparse.COO(save_matrix.values))
+    del save_matrix
+    minor_allele_counts_samples = minor_allele_counts.index.values
+
+else:
+    minor_allele_counts = sparse.load_npz("data/minor_allele_counts.npz").todense()
+    minor_allele_counts_samples = minor_allele_counts[1:, 0]
+
+print(len(minor_allele_counts_samples))
 del minor_allele_counts
     
     
@@ -106,14 +114,14 @@ def compute_num_pooled_mutations(drug, tiers_lst):
     if len(dfs_lst) > 0:
         df_model = pd.concat(dfs_lst)
 
-        # get all frameshift mutations, only those for which variant_allele_frequency != 0
-        frameshift = df_model.loc[(df_model["predicted_effect"] == "frameshift") & 
-                                  (~pd.isnull(df_model["variant_allele_frequency"])) &
-                                  (df_model["variant_allele_frequency"] > 0)
-                                 ]
+        # get all mutations that are considered LOF, only those for which variant_allele_frequency != 0
+        lof = df_model.loc[(df_model["predicted_effect"].isin(["frameshift", "start_lost", "stop_gained", "feature_ablation"])) & 
+                           (~pd.isnull(df_model["variant_allele_frequency"])) &
+                           (df_model["variant_allele_frequency"] > 0)
+                          ]
 
-        # (sample, gene) pairs with multiple frameshift mutations
-        multi_fs = pd.DataFrame(frameshift.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect > 1")
+        # (sample, gene) pairs with multiple mutations that cause LOF 
+        lof_pooled = pd.DataFrame(lof.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect > 1")
     
         inframe = df_model.loc[(df_model["predicted_effect"].str.contains("inframe")) & 
                                (~pd.isnull(df_model["variant_allele_frequency"])) &
@@ -123,13 +131,13 @@ def compute_num_pooled_mutations(drug, tiers_lst):
         # (sample, gene) pairs with multiple inframe mutations
         multi_inframe = pd.DataFrame(inframe.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect > 1")
         
-        return len(multi_fs), len(multi_inframe)
+        return len(lof_pooled), len(multi_inframe)
     
     else:
         return np.nan, np.nan
     
 
-summary_df = pd.DataFrame(columns=["Drug", "Phenos", "Genos", "Lineages", "SNP_Matrix", "Tier1_MultiFrameshift", "Tier1_MultiInframe", "Tier2_MultiFrameshift", "Tier2_MultiInframe"])
+summary_df = pd.DataFrame(columns=["Drug", "Phenos", "Genos", "Lineages", "SNP_Matrix", "Tier1_LOF", "Tier1_MultiInframe", "Tier2_LOF", "Tier2_MultiInframe"])
 i = 0
 
 for drug in drugs_for_analysis:
@@ -145,23 +153,22 @@ for drug in drugs_for_analysis:
     geno_files = [os.path.join(genos_dir, drug, "tier=1", fName) for fName in os.listdir(os.path.join(genos_dir, drug, "tier=1")) if "run" in fName]
     genos = pd.concat([pd.read_csv(fName, usecols=["sample_id"]) for fName in geno_files], axis=0)
     
+    # get numbers of samples represented in the GRM folder and with lineages (this will be less because not all sample_ids were matched to VCF files)
     num_with_snps = set(minor_allele_counts_samples).intersection(genos.sample_id.unique())
     samples_with_lineages = lineages.loc[lineages["Sample ID"].isin(genos["sample_id"])]
         
-    # get the number of isolates with multiple frameshift mutations in them, by tier
-    num_fs_tier1, num_inframe_tier1 = compute_num_pooled_mutations(drug, ['1'])
-    num_fs_tier2, num_inframe_tier2 = compute_num_pooled_mutations(drug, ['2'])
+    # get the numbers of isolates, by tier
+    num_lof_tier1, num_inframe_tier1 = compute_num_pooled_mutations(drug, ['1'])
+    num_lof_tier2, num_inframe_tier2 = compute_num_pooled_mutations(drug, ['2'])
     
-    # might also want to compute the number of heterozygous alleles, by tier
-
     summary_df.loc[i] = [drug.split("=")[1], 
                          len(phenos.sample_id.unique()), 
                          len(genos.sample_id.unique()), 
                          len(samples_with_lineages),
                          len(num_with_snps),
-                         num_fs_tier1,
+                         num_lof_tier1,
                          num_inframe_tier1,
-                         num_fs_tier2,
+                         num_lof_tier2,
                          num_inframe_tier2
                         ]
     i += 1
@@ -175,4 +182,4 @@ if len(summary_df.query("Genos != Phenos")) > 0:
 if len(summary_df.query("Genos != SNP_Matrix")) > 0:
     print("There are different numbers of genotypes and SNP matrix entries")
     
-summary_df.to_csv("data/samples_summary_new.csv", index=False)
+summary_df.to_csv("data/samples_summary.csv", index=False)
