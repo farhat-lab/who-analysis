@@ -157,14 +157,8 @@ def read_in_data():
             # synonymous variants = synonymous, change in start codon that produces V instead of M, and changes in stop codon that preserve stop
             dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))  
             
-    df_model = pd.concat(dfs_lst)
-    del dfs_lst
-    
-    if len(df_model.drop_duplicates(["sample_id", "resolved_symbol", "variant_category"])) != len(df_model):
-        raise ValueError("Some variants are listed twice (likely due to multiple predicted effects)")
-    else:
-        return df_model.reset_index(drop=True)
-
+    # fail-safe if there are duplicate rows
+    return pd.concat(dfs_lst).drop_duplicates().reset_index(drop=True)
 
 df_model = read_in_data()
 # print(f"{tracemalloc.get_traced_memory()[1] / 1e9} GB to read in genotypes dataframe")
