@@ -18,11 +18,13 @@ _, remake_minor_allele_df = sys.argv
 snp_dir = "/n/data1/hms/dbmi/farhat/ye12/who/grm"
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
+mic_dir = '/n/data1/hms/dbmi/farhat/ye12/who/mic'
 
 pheno_drugs = os.listdir(phenos_dir)
 geno_drugs = os.listdir(genos_dir)
+mic_drugs = os.listdir(mic_dir)
 
-drugs_for_analysis = list(set(geno_drugs).intersection(set(pheno_drugs)))
+drugs_for_analysis = list(set(geno_drugs).intersection(set(pheno_drugs)).intersection(set(mic_drugs)))
 print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
 
 lineages = pd.read_pickle("data/combined_lineage_sample_IDs.pkl")
@@ -137,21 +139,22 @@ def compute_num_pooled_mutations(drug, tiers_lst):
         return np.nan, np.nan
     
 
-summary_df = pd.DataFrame(columns=["Drug", "Phenos", "Genos", "Lineages", "SNP_Matrix", "Tier1_LOF", "Tier1_MultiInframe", "Tier2_LOF", "Tier2_MultiInframe"])
+summary_df = pd.DataFrame(columns=["Drug", "Genos", "Binary_Phenos", "MICs", "Lineages", "SNP_Matrix", "Tier1_LOF", "Tier1_MultiInframe", "Tier2_LOF", "Tier2_MultiInframe"])
 i = 0
 
 for drug in drugs_for_analysis:
     
-    # first get phenotypes
-    # get all CSV files containing phenotypes
+    # get all CSV files containing binary phenotypes
     pheno_files = os.listdir(os.path.join(phenos_dir, drug))
-    
-    # read them all in, concatenate, and get the number of samples
     phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, drug, fName), usecols=["sample_id"]) for fName in pheno_files if "run" in fName], axis=0)
     
     # just do tier 1, all samples in tier 1 are represented in tier 2
     geno_files = [os.path.join(genos_dir, drug, "tier=1", fName) for fName in os.listdir(os.path.join(genos_dir, drug, "tier=1")) if "run" in fName]
     genos = pd.concat([pd.read_csv(fName, usecols=["sample_id"]) for fName in geno_files], axis=0)
+    
+    # get all CSV files containing MICs
+    mic_files = os.listdir(os.path.join(mic_dir, drug))
+    mics = pd.concat([pd.read_csv(os.path.join(mic_dir, drug, fName), usecols=["sample_id"]) for fName in mic_files if "run" in fName], axis=0)
     
     # get numbers of samples represented in the GRM folder and with lineages (this will be less because not all sample_ids were matched to VCF files)
     num_with_snps = set(minor_allele_counts_samples).intersection(genos.sample_id.unique())
@@ -162,8 +165,9 @@ for drug in drugs_for_analysis:
     num_lof_tier2, num_inframe_tier2 = compute_num_pooled_mutations(drug, ['2'])
     
     summary_df.loc[i] = [drug.split("=")[1], 
-                         len(phenos.sample_id.unique()), 
                          len(genos.sample_id.unique()), 
+                         len(phenos.sample_id.unique()), 
+                         len(mics.sample_id.unique()),
                          len(samples_with_lineages),
                          len(num_with_snps),
                          num_lof_tier1,
@@ -177,9 +181,9 @@ for drug in drugs_for_analysis:
     
     
 # check and save
-if len(summary_df.query("Genos != Phenos")) > 0:
+if len(summary_df.query("Genos != Binary_Phenos")) > 0:
     print("There are different numbers of genotypes and phenotypes")
 if len(summary_df.query("Genos != SNP_Matrix")) > 0:
     print("There are different numbers of genotypes and SNP matrix entries")
     
-summary_df.sort_values("Drug", ascending=True).to_csv("data/samples_summary.csv", index=False)
+summary_df.sort_values("Drug", ascending=True).to_csv("data/samples_summary_new.csv", index=False)
