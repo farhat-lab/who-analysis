@@ -90,10 +90,13 @@ if not os.path.isfile(phenos_file):
         
     print(f"Phenotypic categoryies: {df_phenos.phenotypic_category.unique()}")
     
+    # when phenotypic_category == CC or CC-ATU, the phenotype is for a binarized MIC, so exclude those from the binary model. 
     if binary:
-        df_phenos = df_phenos.query("phenotypic_category != 'CC'")
-    else:
-        df_phenos = df_phenos.query("phenotypic_category == 'CC'")
+        df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
+        
+    # TODO: MIC data!!!!
+    # else:
+    #     df_phenos = df_phenos.query("phenotypic_category == 'CC'")
     
     # get the number of samples that have more than 1 phenotype recorded. Drop such samples (should be 0), but leave as a QC step for now. 
     drop_samples = df_phenos.groupby(["sample_id"]).nunique().query("phenotype > 1").index.values
