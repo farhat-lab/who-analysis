@@ -146,12 +146,11 @@ else:
     model_inputs.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
     X = model_inputs.values
     assert sum(model_inputs.index != df_phenos["sample_id"]) == 0
+
     
-# now that the model matrix pickle file has been created, delete the original pickle file for the genotypes matrix to save space
-# need this file to compare shapes for LOF cases, so only remove it from an LOF directory
-if pool_lof:
-    os.remove(os.path.join(out_dir, "filt_matrix.pkl"))
-    
+# # to save space, delete this file. Don't need it anymore
+# os.remove(os.path.join(out_dir, "filt_matrix.pkl"))
+
 # scale inputs
 X = scaler.fit_transform(X)
 

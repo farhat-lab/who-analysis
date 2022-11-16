@@ -147,18 +147,18 @@ def compute_downselected_logReg_model(drug, out_dir, binary=True, num_bootstrap=
     # read in all genotypes and phenotypes and combine into a single dataframe. 
     # Take the dataframes with the most genotypes and phenotypes represented: tiers=1+2, phenos=ALL
     # if there are significant LOF variants in res_df, then get the corresponding poolLOF matrix and combine matrices 
-    df_phenos = pd.read_csv(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn", "phenos.csv"))
+    df_phenos = pd.read_csv(os.path.join(out_dir, drug, "phenos_binary.csv"))
     
-    if len(res_df.loc[res_df["orig_variant"].str.contains("lof")]) > 0:
-        model_inputs = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn", "filt_matrix.pkl"))
+    # Take the dataframes with the most genotypes and phenotypes represented: tiers=1+2, phenos=ALL
+    model_inputs = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn", "filt_matrix.pkl"))
+    
+    if os.path.isdir(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF")):
         model_inputs_poolLOF = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF", "filt_matrix.pkl"))
-        
-        # combine dataframes and remove duplicate columns
         model_inputs = pd.concat([model_inputs, model_inputs_poolLOF], axis=1)
-        model_inputs = model_inputs.loc[:,~model_inputs.columns.duplicated()]
-
-    else:
-        model_inputs = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn", "filt_matrix.pkl"))
+    
+    # remove duplicate columns, then drop any NaNs, which occur if some isolates are present in one matrix, but not the other
+    model_inputs = model_inputs.loc[:,~model_inputs.columns.duplicated()]
+    model_inputs.dropna(inplace=True)
         
     # combine into a single dataframe and check that there are no principal components left (because there aren't in df_phenos)
     combined = model_inputs.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id", how="inner").set_index("sample_id")

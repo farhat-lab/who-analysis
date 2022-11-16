@@ -74,7 +74,40 @@ def compute_predictive_values(combined_df, return_stats=[]):
     
     
 
-def compute_univariate_stats(drug, out_dir, num_bootstrap=1000):
+def get_mutation_effect_annotations(drug):
+        
+    genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
+    
+    # first get all the genotype files associated with the drug
+    geno_files = []
+
+    for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
+
+        # subdirectory (tiers)
+        full_subdir = os.path.join(genos_dir, f"drug_name={drug}", subdir)
+
+        # the last character is the tier number. Get variants from both tiers
+        if full_subdir[-1] in ["1", "2"]:
+            for fName in os.listdir(full_subdir):
+                if "run" in fName:
+                    geno_files.append(os.path.join(full_subdir, fName))
+
+    print(f"    {len(geno_files)} files with genotypes")
+
+    dfs_lst = []
+    for i, fName in enumerate(geno_files):
+
+        # print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
+        # read in the dataframe
+        df = pd.read_csv(fName, usecols=["resolved_symbol", "variant_category", "predicted_effect", "neutral", "position"], low_memory=False)
+        dfs_lst.append(df)
+
+    # fail-safe if there are duplicate rows
+    return pd.concat(dfs_lst).drop_duplicates().reset_index(drop=True)
+
+
+
+def compute_univariate_stats(drug, out_dir, df_phenos, num_bootstrap=1000):
 
     # final_analysis file with all significant variants for a drug
     res_df = pd.read_csv(os.path.join(out_dir, drug, "final_analysis.csv"), usecols=['orig_variant', 'coef', 'coef_LB', 'coef_UB', 'pval', 'BH_pval',
@@ -82,22 +115,17 @@ def compute_univariate_stats(drug, out_dir, num_bootstrap=1000):
                                                                                    'OR_LB', 'OR_UB', 'Tier1_only', 'WHO_phenos', 'poolLOF', 'Syn'
                                                                                     ]
                         )
-    
-    # read in all genotypes and phenotypes and combine into a single dataframe. 
+     
     # Take the dataframes with the most genotypes and phenotypes represented: tiers=1+2, phenos=ALL
-    # if there are significant LOF variants in res_df, then get the corresponding poolLOF matrix and combine matrices 
-    df_phenos = pd.read_csv(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn", "phenos.csv"))
+    model_inputs = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn", "filt_matrix.pkl"))
     
-    if len(res_df.loc[res_df["orig_variant"].str.contains("lof")]) > 0:
-        model_inputs = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn", "filt_matrix.pkl"))
+    if os.path.isdir(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF")):
         model_inputs_poolLOF = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF", "filt_matrix.pkl"))
-        
-        # combine dataframes and remove duplicate columns
         model_inputs = pd.concat([model_inputs, model_inputs_poolLOF], axis=1)
-        model_inputs = model_inputs.loc[:,~model_inputs.columns.duplicated()]
-
-    else:
-        model_inputs = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn", "filt_matrix.pkl"))
+    
+    # remove duplicate columns, then drop any NaNs, which occur if some isolates are present in one matrix, but not the other
+    model_inputs = model_inputs.loc[:,~model_inputs.columns.duplicated()]
+    model_inputs.dropna(inplace=True)
         
     combined = model_inputs.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id").reset_index(drop=True)
 
@@ -141,8 +169,8 @@ def compute_univariate_stats(drug, out_dir, num_bootstrap=1000):
         bs_values = compute_predictive_values(bs_combined, return_stats=["orig_variant", "PPV", "Sens", "Spec", "LR+", "LR-"])
         bs_results = pd.concat([bs_results, bs_values.set_index("orig_variant").T], axis=0)
 
-        if i % int(num_bootstrap / 10) == 0:
-            print(i)
+        # if i % int(num_bootstrap / 10) == 0:
+        #     print(i)
 
     # ensure everything is float because had some issues with np.nanpercentile giving an error about incompatible data types
     bs_results = bs_results.astype(float)
@@ -170,16 +198,34 @@ def compute_univariate_stats(drug, out_dir, num_bootstrap=1000):
         # assert sum(res_df[variable] < res_df[f"{variable}_LB"]) == 0
         # assert sum(res_df[variable] > res_df[f"{variable}_UB"]) == 0
         
+    # get effect annotations and merge them with the results dataframe
+    genos = get_mutation_effect_annotations(drug)
+    genos["orig_variant"] = genos["resolved_symbol"] + "_" + genos["variant_category"]
+    del genos["resolved_symbol"]
+    del genos["variant_category"]
+    
+    final_res = res_df.merge(genos, on="orig_variant", how="outer")
+    final_res = final_res.loc[~pd.isnull(final_res["coef"])]
+
+    if len(set(final_res.orig_variant).symmetric_difference(res_df.orig_variant)) != 0:
+        raise ValueError("Not all mutations have associated effects!")
+    else:
+        del res_df
+        
+    if len(final_res.loc[~pd.isnull(final_res["neutral"])]) == 0:
+        del final_res["neutral"]
+        
     # save, overwriting the original dataframe
-    res_df.to_csv(os.path.join(out_dir, drug, "final_analysis.csv"), index=False)
+    final_res.sort_values("coef", ascending=False).to_csv(os.path.join(out_dir, drug, "final_analysis.csv"), index=False)
 
 
 _, drug = sys.argv
 
 out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
+df_phenos = pd.read_csv(os.path.join(out_dir, drug, "phenos_binary.csv"))
 
 # run analysis
-model_analysis_univariate_stats = compute_univariate_stats(drug, out_dir, num_bootstrap=1000)
+model_analysis_univariate_stats = compute_univariate_stats(drug, out_dir, df_phenos, num_bootstrap=1000)
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

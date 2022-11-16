@@ -1,0 +1,231 @@
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1/phenos=WHO/dropAF_noSyn
+    5 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 1.0% of variants per isolate and 0.05% of isolates per variant have missing data
+    Dropped 0/2165 isolates with >1% missingness
+    Dropped 0/703 variants with >25% missingness
+    Dropped 4 isolates with any remaining missingness
+    Kept 2161 isolates and 703 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.5995202  0.21762761 0.09668233 0.03093203 0.02294359]
+    2161 samples and 708 variables in the model
+    Regularization parameter: 0.1
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1/phenos=WHO/dropAF_withSyn
+    5 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 0.72% of variants per isolate and 0.05% of isolates per variant have missing data
+    Dropped 0/2165 isolates with >1% missingness
+    Dropped 0/966 variants with >25% missingness
+    Dropped 4 isolates with any remaining missingness
+    Kept 2161 isolates and 966 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.5995202  0.21762761 0.09668233 0.03093203 0.02294359]
+    2161 samples and 971 variables in the model
+    Regularization parameter: 0.1
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1/phenos=WHO/dropAF_noSyn_poolLOF
+    5 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 0.85% of variants per isolate and 0.05% of isolates per variant have missing data
+    Dropped 0/2165 isolates with >1% missingness
+    Dropped 0/589 variants with >25% missingness
+    Dropped 4 isolates with any remaining missingness
+    Kept 2161 isolates and 589 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.5995202  0.21762761 0.09668233 0.03093203 0.02294359]
+    2161 samples and 594 variables in the model
+    Regularization parameter: 0.1
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1/phenos=WHO/dropAF_withSyn_poolLOF
+    5 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 0.59% of variants per isolate and 0.05% of isolates per variant have missing data
+    Dropped 0/2165 isolates with >1% missingness
+    Dropped 0/852 variants with >25% missingness
+    Dropped 4 isolates with any remaining missingness
+    Kept 2161 isolates and 852 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.5995202  0.21762761 0.09668233 0.03093203 0.02294359]
+    2161 samples and 857 variables in the model
+    Regularization parameter: 0.1
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1+2/phenos=WHO/dropAF_noSyn
+    8 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 0.69% of variants per isolate and 0.32% of isolates per variant have missing data
+    Dropped 0/2165 isolates with >1% missingness
+    Dropped 0/1163 variants with >25% missingness
+    Dropped 12 isolates with any remaining missingness
+    Kept 2153 isolates and 1163 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.59951073 0.21712218 0.09698184 0.03099887 0.02297694]
+    2153 samples and 1168 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1+2/phenos=WHO/dropAF_withSyn
+    8 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 0.42% of variants per isolate and 0.32% of isolates per variant have missing data
+    Dropped 0/2165 isolates with >1% missingness
+    Dropped 0/1898 variants with >25% missingness
+    Dropped 12 isolates with any remaining missingness
+    Kept 2153 isolates and 1898 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.59951073 0.21712218 0.09698184 0.03099887 0.02297694]
+    2153 samples and 1903 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1+2/phenos=WHO/dropAF_noSyn_poolLOF
+    8 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 0.68% of variants per isolate and 0.09% of isolates per variant have missing data
+    Dropped 0/2165 isolates with >1% missingness
+    Dropped 0/1030 variants with >25% missingness
+    Dropped 7 isolates with any remaining missingness
+    Kept 2158 isolates and 1030 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.60024163 0.21679406 0.09674147 0.03099629 0.02290198]
+    2158 samples and 1035 variables in the model
+    Regularization parameter: 0.1
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1+2/phenos=WHO/dropAF_withSyn_poolLOF
+    8 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 0.4% of variants per isolate and 0.09% of isolates per variant have missing data
+    Dropped 0/2165 isolates with >1% missingness
+    Dropped 0/1765 variants with >25% missingness
+    Dropped 7 isolates with any remaining missingness
+    Kept 2158 isolates and 1765 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.60024163 0.21679406 0.09674147 0.03099629 0.02290198]
+    2158 samples and 1770 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1/phenos=ALL/dropAF_noSyn
+    5 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 1.56% of variants per isolate and 0.04% of isolates per variant have missing data
+    Dropped 1/14135 isolates with >1% missingness
+    Dropped 0/703 variants with >25% missingness
+    Dropped 21 isolates with any remaining missingness
+    Kept 14113 isolates and 703 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65872903 0.16773327 0.09377819 0.03991466 0.01395951]
+    14113 samples and 708 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1/phenos=ALL/dropAF_withSyn
+    5 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 1.66% of variants per isolate and 0.04% of isolates per variant have missing data
+    Dropped 1/14135 isolates with >1% missingness
+    Dropped 0/966 variants with >25% missingness
+    Dropped 21 isolates with any remaining missingness
+    Kept 14113 isolates and 966 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65872903 0.16773327 0.09377819 0.03991466 0.01395951]
+    14113 samples and 971 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1/phenos=ALL/dropAF_noSyn_poolLOF
+    5 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 1.53% of variants per isolate and 0.04% of isolates per variant have missing data
+    Dropped 1/14135 isolates with >1% missingness
+    Dropped 0/589 variants with >25% missingness
+    Dropped 20 isolates with any remaining missingness
+    Kept 14114 isolates and 589 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65873276 0.16774034 0.0937714  0.03991231 0.01395956]
+    14114 samples and 594 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1/phenos=ALL/dropAF_withSyn_poolLOF
+    5 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 1.64% of variants per isolate and 0.04% of isolates per variant have missing data
+    Dropped 1/14135 isolates with >1% missingness
+    Dropped 0/852 variants with >25% missingness
+    Dropped 21 isolates with any remaining missingness
+    Kept 14113 isolates and 852 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65872903 0.16773327 0.09377819 0.03991466 0.01395951]
+    14113 samples and 857 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1+2/phenos=ALL/dropAF_noSyn
+    8 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 15.65% of variants per isolate and 0.1% of isolates per variant have missing data
+    Dropped 3/14135 isolates with >1% missingness
+    Dropped 0/1163 variants with >25% missingness
+    Dropped 38 isolates with any remaining missingness
+    Kept 14094 isolates and 1163 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65879095 0.16758957 0.09374344 0.03998461 0.01397761]
+    14094 samples and 1168 variables in the model
+    Regularization parameter: 0.001
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1+2/phenos=ALL/dropAF_withSyn
+    8 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 12.33% of variants per isolate and 0.1% of isolates per variant have missing data
+    Dropped 3/14135 isolates with >1% missingness
+    Dropped 0/1898 variants with >25% missingness
+    Dropped 40 isolates with any remaining missingness
+    Kept 14092 isolates and 1898 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65874594 0.16760289 0.09375721 0.03999358 0.01398081]
+    14092 samples and 1903 variables in the model
+    Regularization parameter: 0.001
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1+2/phenos=ALL/dropAF_noSyn_poolLOF
+    8 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 16.02% of variants per isolate and 0.04% of isolates per variant have missing data
+    Dropped 3/14135 isolates with >1% missingness
+    Dropped 0/1030 variants with >25% missingness
+    Dropped 27 isolates with any remaining missingness
+    Kept 14105 isolates and 1030 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65894006 0.16759989 0.09366595 0.03993935 0.01396218]
+    14105 samples and 1035 variables in the model
+    Regularization parameter: 0.001
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Bedaquiline/tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF
+    8 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 12.29% of variants per isolate and 0.04% of isolates per variant have missing data
+    Dropped 3/14135 isolates with >1% missingness
+    Dropped 0/1765 variants with >25% missingness
+    Dropped 30 isolates with any remaining missingness
+    Kept 14102 isolates and 1765 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65889135 0.16760617 0.09368648 0.03995065 0.01396532]
+    14102 samples and 1770 variables in the model
+    Regularization parameter: 0.001
