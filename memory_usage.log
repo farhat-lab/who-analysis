@@ -124,3 +124,159 @@
 
 /n/data1/hms/dbmi/farhat/ye12/who/analysis/Pyrazinamide/tiers=1/phenos=WHO/dropAF_noSyn
 01_make_model_inputs.py: 5.465940014 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Delamanid/tiers=1+2/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 0.775411803 GB
+02_regression_with_bootstrap.py: 11.487413399 GB
+03_model_analysis.py: 0.017838518 GB
+02_regression_with_bootstrap.py: 11.454828121 GB
+03_model_analysis.py: 0.013449952 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Delamanid/tiers=1+2/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 0.775103361 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Clofazimine/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 1.913311512 GB
+02_regression_with_bootstrap.py: 11.45637526 GB
+03_model_analysis.py: 0.019023956 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Streptomycin/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 15.085988713 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Isoniazid/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 30.098907312 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Delamanid/tiers=1/phenos=ALL/dropAF_noSyn
+01_make_model_inputs.py: 1.867090786 GB
+02_regression_with_bootstrap.py: 11.577720409 GB
+03_model_analysis.py: 0.033895411 GB
+02_regression_with_bootstrap.py: 11.507299774 GB
+03_model_analysis.py: 0.022442643 GB
+02_regression_with_bootstrap.py: 11.520792993 GB
+03_model_analysis.py: 0.026935832 GB
+02_regression_with_bootstrap.py: 11.541206225 GB
+02_regression_with_bootstrap.py: 11.500319605 GB
+03_model_analysis.py: 0.026808152 GB
+03_model_analysis.py: 0.023130928 GB
+02_regression_with_bootstrap.py: 11.545978814 GB
+03_model_analysis.py: 0.023006745 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Linezolid/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 3.081822597 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Clofazimine/tiers=1/phenos=WHO/dropAF_noSyn_poolLOF
+01_make_model_inputs.py: 1.625073294 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 4.145723704 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Kanamycin/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 4.178408086 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 4.288573973 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1+2/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 7.110949889 GB
+02_regression_with_bootstrap.py: 11.498800784 GB
+03_model_analysis.py: 0.011610031 GB
+02_regression_with_bootstrap.py: 11.482913554 GB
+03_model_analysis.py: 0.015982881 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethambutol/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 35.833505652 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Clofazimine/tiers=1/phenos=WHO/dropAF_withSyn_poolLOF
+01_make_model_inputs.py: 1.996498681 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Delamanid/tiers=1/phenos=ALL/dropAF_withSyn
+01_make_model_inputs.py: 2.879725626 GB
+02_regression_with_bootstrap.py: 11.551894916 GB
+03_model_analysis.py: 0.026792763 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 4.537267484 GB
+02_regression_with_bootstrap.py: 11.495833197 GB
+03_model_analysis.py: 0.021272313 GB
+02_regression_with_bootstrap.py: 11.510764699 GB
+03_model_analysis.py: 0.023638062 GB
+02_regression_with_bootstrap.py: 11.54608665 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Clofazimine/tiers=1+2/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 2.349890619 GB
+03_model_analysis.py: 0.018804973 GB
+02_regression_with_bootstrap.py: 11.546132312 GB
+03_model_analysis.py: 0.028102329 GB
+02_regression_with_bootstrap.py: 11.651456969 GB
+03_model_analysis.py: 0.032429229 GB
+02_regression_with_bootstrap.py: 11.538788661 GB
+03_model_analysis.py: 0.033146137 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Linezolid/tiers=1+2/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 3.373216851 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Kanamycin/tiers=1/phenos=WHO/dropAF_noSyn_poolLOF
+01_make_model_inputs.py: 4.290834874 GB
+02_regression_with_bootstrap.py: 11.524180695 GB
+03_model_analysis.py: 0.016121878 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1/phenos=WHO/dropAF_noSyn_poolLOF
+01_make_model_inputs.py: 4.14730686 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Levofloxacin/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 7.953470047 GB
+02_regression_with_bootstrap.py: 11.550923592 GB
+03_model_analysis.py: 0.024045207 GB
+02_regression_with_bootstrap.py: 12.723951093 GB
+03_model_analysis.py: 0.017682535 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Delamanid/tiers=1+2/phenos=ALL/dropAF_noSyn
+01_make_model_inputs.py: 2.285843949 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1/phenos=WHO/dropAF_noSyn_poolLOF
+01_make_model_inputs.py: 4.415000154 GB
+02_regression_with_bootstrap.py: 11.510583437 GB
+03_model_analysis.py: 0.027672882 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Pyrazinamide/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 9.636261924 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Clofazimine/tiers=1+2/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 3.806432286 GB
+02_regression_with_bootstrap.py: 11.596289696 GB
+02_regression_with_bootstrap.py: 11.50589388 GB
+03_model_analysis.py: 0.038788265 GB
+03_model_analysis.py: 0.021769737 GB
+02_regression_with_bootstrap.py: 11.557417367 GB
+03_model_analysis.py: 0.028087333 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1/phenos=WHO/dropAF_withSyn_poolLOF
+01_make_model_inputs.py: 4.145723857 GB
+02_regression_with_bootstrap.py: 11.511951361 GB
+03_model_analysis.py: 0.024054574 GB
+02_regression_with_bootstrap.py: 11.538660782 GB
+03_model_analysis.py: 0.026128715 GB
+02_regression_with_bootstrap.py: 11.509332282 GB
+03_model_analysis.py: 0.013463796 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1/phenos=WHO/dropAF_noSyn_poolLOF
+01_make_model_inputs.py: 4.80150715 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Linezolid/tiers=1+2/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 3.325034196 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1+2/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 10.72002698 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Delamanid/tiers=1+2/phenos=ALL/dropAF_withSyn
+01_make_model_inputs.py: 3.538486862 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Kanamycin/tiers=1/phenos=WHO/dropAF_withSyn_poolLOF
+01_make_model_inputs.py: 4.518856365 GB
+02_regression_with_bootstrap.py: 11.540572754 GB
+03_model_analysis.py: 0.021875001 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1/phenos=WHO/dropAF_withSyn_poolLOF
+01_make_model_inputs.py: 4.642893342 GB
+02_regression_with_bootstrap.py: 11.52389007 GB
+03_model_analysis.py: 0.028013018 GB

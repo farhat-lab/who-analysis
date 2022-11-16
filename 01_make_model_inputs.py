@@ -68,58 +68,84 @@ out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 print(f"\nSaving results to {out_dir}")            
+
+if binary:
+    phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
+    phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos_binary.csv")
+    pheno_col = "phenotype"
+else:
+    phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/mic'
+    phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos_mic.csv")
+    pheno_col = "mic_value"
     
-genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
-phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
+genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 samples_summary = pd.read_csv("data/samples_summary.csv", index_col=[0])
 num_lof_tier1, num_inframe_tier1, num_lof_tier2, num_inframe_tier2 = samples_summary.loc[drug, ["Tier1_LOF", "Tier1_MultiInframe", "Tier2_LOF", "Tier2_MultiInframe"]].values
 
 
-############# STEP 1: GET ALL AVAILABLE PHENOTYPES #############
+############# STEP 1: GET ALL AVAILABLE PHENOTYPES, PROCESS THEM, AND SAVE TO A GENERAL PHENOTYPES FILE FOR EACH MODEL TYPE #############
 
 
-if binary:
-    phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos_binary.csv")
-else:
-    phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos_mic.csv")
+def get_mic_midpoints(mic_df, pheno_col):
+    '''
+    This function processes the MIC data from string ranges to float midpoints.  
+    '''
+    mic_sep = mic_df[pheno_col].str.split(",", expand=True)
+    mic_sep.columns = ["MIC_lower", "MIC_upper"]
+
+    mic_sep["Lower_bracket"] = mic_sep["MIC_lower"].str[0] #.map(bracket_mapping)
+    mic_sep["Upper_bracket"] = mic_sep["MIC_upper"].str[-1] #.map(bracket_mapping)
+
+    mic_sep["MIC_lower"] = mic_sep["MIC_lower"].str[1:]
+    mic_sep["MIC_upper"] = mic_sep["MIC_upper"].str[:-1]
+    mic_sep = mic_sep.replace("", np.nan)
+
+    mic_sep[["MIC_lower", "MIC_upper"]] = mic_sep[["MIC_lower", "MIC_upper"]].astype(float)
+    mic_sep = pd.concat([mic_df[["sample_id", "medium"]], mic_sep], axis=1)
+
+    # exclude isolates with unknown lower concentrations, indicated by square bracket in the lower bound
+    mic_sep = mic_sep.query("Lower_bracket != '['")
+    
+    return mic_sep
+
     
 if not os.path.isfile(phenos_file):
+    
     # read them all in, concatenate, and get the number of samples
     df_phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, fName)) for fName in os.listdir(phenos_dir) if "run" in fName], axis=0)
-        
-    print(f"Phenotypic categoryies: {df_phenos.phenotypic_category.unique()}")
     
     # when phenotypic_category == CC or CC-ATU, the phenotype is for a binarized MIC, so exclude those from the binary model. 
     if binary:
         df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
-        
-    # TODO: MIC data!!!!
-    # else:
-    #     df_phenos = df_phenos.query("phenotypic_category == 'CC'")
+        print(f"Phenotypic categoryies: {df_phenos.phenotypic_category.unique()}")
     
-    # get the number of samples that have more than 1 phenotype recorded. Drop such samples (should be 0), but leave as a QC step for now. 
-    drop_samples = df_phenos.groupby(["sample_id"]).nunique().query("phenotype > 1").index.values
-    if len(drop_samples) > 0:
-        raise ValueError(f"    {len(drop_samples)} isolates are recorded as being both resistant and susceptible to {drug}")
-
-    # then drop any duplicated phenotypes
+    # Drop samples with multiple recorded phenotypes
+    drop_samples = df_phenos.groupby(["sample_id"]).nunique().query(f"{pheno_col} > 1").index.values
+        
+    print(f"    Dropping {len(drop_samples)} isolates with multiple recorded phenotypes")
+    df_phenos = df_phenos.query("sample_id not in @drop_samples")
+    
+    # then drop any duplicated rows. There can be duplicates just because of a minor bug, so protect against that. 
     df_phenos = df_phenos.drop_duplicates(keep="first").reset_index(drop=True)
 
     # check that there is resistance data for all samples
-    assert sum(pd.isnull(df_phenos.phenotype)) == 0
-    assert sum(np.unique(df_phenos["phenotype"]) != np.array(['R', 'S'])) == 0
-
-    df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
-
+    assert sum(pd.isnull(df_phenos[pheno_col])) == 0
+    if binary:
+        assert sum(np.unique(df_phenos["phenotype"]) != np.array(['R', 'S'])) == 0
+        df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
+    else:
+        df_phenos = get_mic_midpoints(mic_df, pheno_col)
+        
     # this is the phenotypes file for all models for the drug. 
     df_phenos.to_csv(phenos_file, index=False)
 else:
     df_phenos = pd.read_csv(phenos_file)
 
 
-# get only isolates with the desired phenotypic category for this particular model
-df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
+# get only isolates with the desired phenotypic category for the binary model
+if binary:
+    df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
 
 
 ############# STEP 2: GET ALL AVAILABLE GENOTYPES #############
@@ -151,7 +177,7 @@ def read_in_data():
         df = pd.read_csv(fName, low_memory=False)
 
         # get only genotypes for samples that have a phenotype
-        df_avail_isolates = df.loc[df.sample_id.isin(df_phenos.sample_id)]
+        df_avail_isolates = df.loc[df.sample_id.isin(df_phenos["sample_id"])]
 
         # keep all variants
         if synonymous:
@@ -301,7 +327,8 @@ else:
 ############# STEP 6: IMPUTE OR DROP REMAINING NANS IN THE GENOTYPES -- THESE ARE LOW FREQUENCY MISSING DATA #############
 
 
-if impute:
+# can only impute as this is written for binary phenotypes. Not going to impute anyway, so I'm not going to adapt this for MIC samples
+if impute and binary:
     # use only samples that are in the filtered matrix for imputation
     df_phenos = df_phenos.query("sample_id in @filtered_matrix.index.values")
     
