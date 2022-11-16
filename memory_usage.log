@@ -280,3 +280,15 @@
 01_make_model_inputs.py: 4.642893342 GB
 02_regression_with_bootstrap.py: 11.52389007 GB
 03_model_analysis.py: 0.028013018 GB
+02_regression_with_bootstrap.py: 11.547056734 GB
+03_model_analysis.py: 0.04283737 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Clofazimine/tiers=1+2/phenos=WHO/dropAF_noSyn_poolLOF
+01_make_model_inputs.py: 2.478963954 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1+2/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 5.269502133 GB
+02_regression_with_bootstrap.py: 40.36219851 GB
+03_model_analysis.py: 0.0227782 GB
+02_regression_with_bootstrap.py: 11.517219636 GB
+03_model_analysis.py: 0.025911001 GB
