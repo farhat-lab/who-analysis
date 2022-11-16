@@ -1,0 +1,195 @@
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=WHO/dropAF_noSyn
+    2 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 0.36% of variants per isolate and 0.02% of isolates per variant have missing data
+    Dropped 0/8439 isolates with >1% missingness
+    Dropped 0/832 variants with >25% missingness
+    Dropped 4 isolates with any remaining missingness
+    Kept 8435 isolates and 832 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.58833685 0.21413914 0.13697913 0.02317653 0.01337906]
+    8435 samples and 837 variables in the model
+    Regularization parameter: 0.1
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=WHO/dropAF_withSyn
+    2 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 0.16% of variants per isolate and 0.02% of isolates per variant have missing data
+    Dropped 0/8439 isolates with >1% missingness
+    Dropped 0/1855 variants with >25% missingness
+    Dropped 6 isolates with any remaining missingness
+    Kept 8433 isolates and 1855 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.58843861 0.2140814  0.13693462 0.02318524 0.01336175]
+    8433 samples and 1860 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=WHO/dropAF_noSyn_poolLOF
+    2 files with genotypes
+There are no samples with multiple LOF mutations in the same gene
+No model for this analysis
+No model for this analysis
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=WHO/dropAF_withSyn_poolLOF
+    2 files with genotypes
+There are no samples with multiple LOF mutations in the same gene
+No model for this analysis
+No model for this analysis
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1+2/phenos=WHO/dropAF_noSyn
+    6 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 2.04% of variants per isolate and 0.7% of isolates per variant have missing data
+    Dropped 5/8439 isolates with >1% missingness
+    Dropped 0/2152 variants with >25% missingness
+    Dropped 88 isolates with any remaining missingness
+    Kept 8346 isolates and 2152 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.58727795 0.21478715 0.13740934 0.02317263 0.01332974]
+    8346 samples and 2157 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1+2/phenos=WHO/dropAF_withSyn
+    6 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 1.79% of variants per isolate and 0.7% of isolates per variant have missing data
+    Dropped 2/8439 isolates with >1% missingness
+    Dropped 0/4020 variants with >25% missingness
+    Dropped 98 isolates with any remaining missingness
+    Kept 8339 isolates and 4020 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.58733066 0.21476868 0.13737334 0.02317493 0.01332174]
+    8339 samples and 4025 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1+2/phenos=WHO/dropAF_noSyn_poolLOF
+    6 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 1.94% of variants per isolate and 0.7% of isolates per variant have missing data
+    Dropped 5/8439 isolates with >1% missingness
+    Dropped 0/2013 variants with >25% missingness
+    Dropped 87 isolates with any remaining missingness
+    Kept 8347 isolates and 2013 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.58718426 0.21482493 0.13747376 0.02316901 0.01332756]
+    8347 samples and 2018 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1+2/phenos=WHO/dropAF_withSyn_poolLOF
+    6 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 1.73% of variants per isolate and 0.7% of isolates per variant have missing data
+    Dropped 2/8439 isolates with >1% missingness
+    Dropped 0/3881 variants with >25% missingness
+    Dropped 98 isolates with any remaining missingness
+    Kept 8339 isolates and 3881 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.58733066 0.21476868 0.13737334 0.02317493 0.01332174]
+    8339 samples and 3886 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=ALL/dropAF_noSyn
+    2 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 1.32% of variants per isolate and 0.01% of isolates per variant have missing data
+    Dropped 2/22783 isolates with >1% missingness
+    Dropped 0/832 variants with >25% missingness
+    Dropped 7 isolates with any remaining missingness
+    Kept 22774 isolates and 832 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.63041282 0.18826645 0.11058274 0.03604818 0.01336375]
+    22774 samples and 837 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=ALL/dropAF_withSyn
+    2 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 1.51% of variants per isolate and 0.01% of isolates per variant have missing data
+    Dropped 2/22783 isolates with >1% missingness
+    Dropped 0/1855 variants with >25% missingness
+    Dropped 11 isolates with any remaining missingness
+    Kept 22770 isolates and 1855 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.63056551 0.18818116 0.11050372 0.03605878 0.01336057]
+    22770 samples and 1860 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=ALL/dropAF_noSyn_poolLOF
+    2 files with genotypes
+There are no samples with multiple LOF mutations in the same gene
+No model for this analysis
+No model for this analysis
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1/phenos=ALL/dropAF_withSyn_poolLOF
+    2 files with genotypes
+There are no samples with multiple LOF mutations in the same gene
+No model for this analysis
+No model for this analysis
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1+2/phenos=ALL/dropAF_noSyn
+    6 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 2.83% of variants per isolate and 2.69% of isolates per variant have missing data
+    Dropped 47/22783 isolates with >1% missingness
+    Dropped 0/2152 variants with >25% missingness
+    Dropped 735 isolates with any remaining missingness
+    Kept 22001 isolates and 2152 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.6388055  0.18273759 0.10547136 0.03746139 0.01372579]
+    22001 samples and 2157 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1+2/phenos=ALL/dropAF_withSyn
+    6 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 2.69% of isolates per variant and 2.16% of variants per isolate have missing data
+    Dropped 0/4020 variants with >25% missingness
+    Dropped 16/22783 isolates with >1% missingness
+    Dropped 793 isolates with any remaining missingness
+    Kept 21974 isolates and 4020 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.63915286 0.18254503 0.10527882 0.0374633  0.01374113]
+    21974 samples and 4025 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1+2/phenos=ALL/dropAF_noSyn_poolLOF
+    6 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 2.83% of variants per isolate and 2.69% of isolates per variant have missing data
+    Dropped 44/22783 isolates with >1% missingness
+    Dropped 0/2013 variants with >25% missingness
+    Dropped 736 isolates with any remaining missingness
+    Kept 22003 isolates and 2013 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.63872744 0.18278511 0.10551115 0.03745641 0.01372388]
+    22003 samples and 2018 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Moxifloxacin/tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF
+    6 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 2.69% of isolates per variant and 2.14% of variants per isolate have missing data
+    Dropped 0/3881 variants with >25% missingness
+    Dropped 16/22783 isolates with >1% missingness
+    Dropped 793 isolates with any remaining missingness
+    Kept 21974 isolates and 3881 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.63915286 0.18254503 0.10527882 0.0374633  0.01374113]
+    21974 samples and 3886 variables in the model
+    Regularization parameter: 0.01

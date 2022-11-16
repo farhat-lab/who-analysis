@@ -1,0 +1,231 @@
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1/phenos=WHO/dropAF_noSyn
+    2 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 67.67% of variants per isolate and 1.09% of isolates per variant have missing data
+    Dropped 194/10025 isolates with >1% missingness
+    Dropped 0/1194 variants with >25% missingness
+    Dropped 31 isolates with any remaining missingness
+    Kept 9800 isolates and 1194 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.76884432 0.09569375 0.04211364 0.03834157 0.0253121 ]
+    9800 samples and 1199 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1/phenos=WHO/dropAF_withSyn
+    2 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 64.28% of variants per isolate and 1.09% of isolates per variant have missing data
+    Dropped 194/10025 isolates with >1% missingness
+    Dropped 0/1257 variants with >25% missingness
+    Dropped 31 isolates with any remaining missingness
+    Kept 9800 isolates and 1257 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.76884432 0.09569375 0.04211364 0.03834157 0.0253121 ]
+    9800 samples and 1262 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1/phenos=WHO/dropAF_noSyn_poolLOF
+    2 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 71.82% of variants per isolate and 1.09% of isolates per variant have missing data
+    Dropped 194/10025 isolates with >1% missingness
+    Dropped 0/1125 variants with >25% missingness
+    Dropped 30 isolates with any remaining missingness
+    Kept 9801 isolates and 1125 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.7688714  0.09568558 0.04210894 0.03833538 0.02530786]
+    9801 samples and 1130 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1/phenos=WHO/dropAF_withSyn_poolLOF
+    2 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 68.01% of variants per isolate and 1.09% of isolates per variant have missing data
+    Dropped 194/10025 isolates with >1% missingness
+    Dropped 0/1188 variants with >25% missingness
+    Dropped 30 isolates with any remaining missingness
+    Kept 9801 isolates and 1188 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.7688714  0.09568558 0.04210894 0.03833538 0.02530786]
+    9801 samples and 1193 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1+2/phenos=WHO/dropAF_noSyn
+    8 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 60.31% of variants per isolate and 17.34% of isolates per variant have missing data
+    Dropped 440/10025 isolates with >1% missingness
+    Dropped 0/3374 variants with >25% missingness
+    Dropped 1324 isolates with any remaining missingness
+    Kept 8261 isolates and 3374 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.78439639 0.09120402 0.04006161 0.03341997 0.02101291]
+    8261 samples and 3379 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1+2/phenos=WHO/dropAF_withSyn
+    8 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 53.91% of variants per isolate and 17.34% of isolates per variant have missing data
+    Dropped 431/10025 isolates with >1% missingness
+    Dropped 0/3775 variants with >25% missingness
+    Dropped 1333 isolates with any remaining missingness
+    Kept 8261 isolates and 3775 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.78439639 0.09120402 0.04006161 0.03341997 0.02101291]
+    8261 samples and 3780 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1+2/phenos=WHO/dropAF_noSyn_poolLOF
+    8 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 63.26% of variants per isolate and 17.34% of isolates per variant have missing data
+    Dropped 445/10025 isolates with >1% missingness
+    Dropped 0/3217 variants with >25% missingness
+    Dropped 1319 isolates with any remaining missingness
+    Kept 8261 isolates and 3217 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.78439639 0.09120402 0.04006161 0.03341997 0.02101291]
+    8261 samples and 3222 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1+2/phenos=WHO/dropAF_withSyn_poolLOF
+    8 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 56.25% of variants per isolate and 17.34% of isolates per variant have missing data
+    Dropped 434/10025 isolates with >1% missingness
+    Dropped 0/3618 variants with >25% missingness
+    Dropped 1330 isolates with any remaining missingness
+    Kept 8261 isolates and 3618 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.78439639 0.09120402 0.04006161 0.03341997 0.02101291]
+    8261 samples and 3623 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1/phenos=ALL/dropAF_noSyn
+    2 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 70.44% of variants per isolate and 1.02% of isolates per variant have missing data
+    Dropped 361/17716 isolates with >1% missingness
+    Dropped 0/1194 variants with >25% missingness
+    Dropped 63 isolates with any remaining missingness
+    Kept 17292 isolates and 1194 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.67902572 0.16070172 0.08398673 0.03229222 0.01760105]
+    17292 samples and 1199 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1/phenos=ALL/dropAF_withSyn
+    2 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 66.91% of variants per isolate and 1.02% of isolates per variant have missing data
+    Dropped 359/17716 isolates with >1% missingness
+    Dropped 0/1257 variants with >25% missingness
+    Dropped 66 isolates with any remaining missingness
+    Kept 17291 isolates and 1257 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.67902147 0.16071042 0.083992   0.032291   0.01759322]
+    17291 samples and 1262 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1/phenos=ALL/dropAF_noSyn_poolLOF
+    2 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 74.76% of variants per isolate and 1.02% of isolates per variant have missing data
+    Dropped 361/17716 isolates with >1% missingness
+    Dropped 0/1125 variants with >25% missingness
+    Dropped 61 isolates with any remaining missingness
+    Kept 17294 isolates and 1125 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.67905446 0.16068834 0.08397607 0.03229162 0.01759828]
+    17294 samples and 1130 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1/phenos=ALL/dropAF_withSyn_poolLOF
+    2 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 70.79% of variants per isolate and 1.02% of isolates per variant have missing data
+    Dropped 361/17716 isolates with >1% missingness
+    Dropped 0/1188 variants with >25% missingness
+    Dropped 62 isolates with any remaining missingness
+    Kept 17293 isolates and 1188 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.67905021 0.16069704 0.08398134 0.03229039 0.01759045]
+    17293 samples and 1193 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1+2/phenos=ALL/dropAF_noSyn
+    8 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 62.92% of variants per isolate and 17.78% of isolates per variant have missing data
+    Dropped 1035/17716 isolates with >1% missingness
+    Dropped 0/3374 variants with >25% missingness
+    Dropped 2158 isolates with any remaining missingness
+    Kept 14523 isolates and 3374 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.69296003 0.1551152  0.07972895 0.03339035 0.01549938]
+    14523 samples and 3379 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1+2/phenos=ALL/dropAF_withSyn
+    8 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 56.24% of variants per isolate and 17.78% of isolates per variant have missing data
+    Dropped 1005/17716 isolates with >1% missingness
+    Dropped 0/3775 variants with >25% missingness
+    Dropped 2188 isolates with any remaining missingness
+    Kept 14523 isolates and 3775 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.69296003 0.1551152  0.07972895 0.03339035 0.01549938]
+    14523 samples and 3780 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1+2/phenos=ALL/dropAF_noSyn_poolLOF
+    8 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 65.99% of variants per isolate and 17.78% of isolates per variant have missing data
+    Dropped 1047/17716 isolates with >1% missingness
+    Dropped 0/3217 variants with >25% missingness
+    Dropped 2146 isolates with any remaining missingness
+    Kept 14523 isolates and 3217 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.69296003 0.1551152  0.07972895 0.03339035 0.01549938]
+    14523 samples and 3222 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Capreomycin/tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF
+    8 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 58.68% of variants per isolate and 17.78% of isolates per variant have missing data
+    Dropped 1014/17716 isolates with >1% missingness
+    Dropped 0/3618 variants with >25% missingness
+    Dropped 2179 isolates with any remaining missingness
+    Kept 14523 isolates and 3618 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.69296003 0.1551152  0.07972895 0.03339035 0.01549938]
+    14523 samples and 3623 variables in the model
+    Regularization parameter: 0.01

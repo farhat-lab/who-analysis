@@ -1,0 +1,231 @@
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1/phenos=WHO/dropAF_noSyn
+    3 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 58.63% of variants per isolate and 0.1% of isolates per variant have missing data
+    Dropped 7/5999 isolates with >1% missingness
+    Dropped 0/1431 variants with >25% missingness
+    Dropped 23 isolates with any remaining missingness
+    Kept 5969 isolates and 1431 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.73634292 0.11687034 0.05657797 0.05216087 0.01812021]
+    5969 samples and 1436 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1/phenos=WHO/dropAF_withSyn
+    3 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 51.63% of variants per isolate and 0.1% of isolates per variant have missing data
+    Dropped 7/5999 isolates with >1% missingness
+    Dropped 0/1809 variants with >25% missingness
+    Dropped 29 isolates with any remaining missingness
+    Kept 5963 isolates and 1809 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.73604753 0.11697568 0.05663761 0.05224095 0.01814932]
+    5963 samples and 1814 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1/phenos=WHO/dropAF_noSyn_poolLOF
+    3 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 52.55% of variants per isolate and 0.1% of isolates per variant have missing data
+    Dropped 7/5999 isolates with >1% missingness
+    Dropped 0/1119 variants with >25% missingness
+    Dropped 20 isolates with any remaining missingness
+    Kept 5972 isolates and 1119 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.73639359 0.11682922 0.05654626 0.05217878 0.0181252 ]
+    5972 samples and 1124 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1/phenos=WHO/dropAF_withSyn_poolLOF
+    3 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 45.62% of variants per isolate and 0.1% of isolates per variant have missing data
+    Dropped 7/5999 isolates with >1% missingness
+    Dropped 0/1497 variants with >25% missingness
+    Dropped 28 isolates with any remaining missingness
+    Kept 5964 isolates and 1497 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.73603932 0.11696469 0.05662651 0.05226097 0.01815876]
+    5964 samples and 1502 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1+2/phenos=WHO/dropAF_noSyn
+    7 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 38.87% of variants per isolate and 0.48% of isolates per variant have missing data
+    Dropped 16/5999 isolates with >1% missingness
+    Dropped 0/2398 variants with >25% missingness
+    Dropped 59 isolates with any remaining missingness
+    Kept 5924 isolates and 2398 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.7368041  0.11711377 0.05680274 0.05236907 0.01810902]
+    5924 samples and 2403 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1+2/phenos=WHO/dropAF_withSyn
+    7 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 34.04% of variants per isolate and 0.48% of isolates per variant have missing data
+    Dropped 15/5999 isolates with >1% missingness
+    Dropped 0/3129 variants with >25% missingness
+    Dropped 67 isolates with any remaining missingness
+    Kept 5917 isolates and 3129 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.73676323 0.11703012 0.05677358 0.05246493 0.01814337]
+    5917 samples and 3134 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1+2/phenos=WHO/dropAF_noSyn_poolLOF
+    7 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 35.17% of variants per isolate and 0.48% of isolates per variant have missing data
+    Dropped 15/5999 isolates with >1% missingness
+    Dropped 0/1928 variants with >25% missingness
+    Dropped 56 isolates with any remaining missingness
+    Kept 5928 isolates and 1928 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.73688689 0.1170593  0.05676079 0.05237702 0.0181073 ]
+    5928 samples and 1933 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1+2/phenos=WHO/dropAF_withSyn_poolLOF
+    7 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 30.5% of variants per isolate and 0.48% of isolates per variant have missing data
+    Dropped 14/5999 isolates with >1% missingness
+    Dropped 0/2659 variants with >25% missingness
+    Dropped 66 isolates with any remaining missingness
+    Kept 5919 isolates and 2659 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.73678731 0.11700603 0.05675251 0.05247408 0.01814675]
+    5919 samples and 2664 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1/phenos=ALL/dropAF_noSyn
+    3 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 58.63% of variants per isolate and 0.21% of isolates per variant have missing data
+    Dropped 48/20936 isolates with >1% missingness
+    Dropped 0/1431 variants with >25% missingness
+    Dropped 118 isolates with any remaining missingness
+    Kept 20770 isolates and 1431 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65141287 0.17280547 0.09731293 0.03802096 0.01588093]
+    20770 samples and 1436 variables in the model
+    Regularization parameter: 0.001
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1/phenos=ALL/dropAF_withSyn
+    3 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 51.63% of variants per isolate and 0.21% of isolates per variant have missing data
+    Dropped 48/20936 isolates with >1% missingness
+    Dropped 0/1809 variants with >25% missingness
+    Dropped 136 isolates with any remaining missingness
+    Kept 20752 isolates and 1809 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65134086 0.1728118  0.09732182 0.0380633  0.01589745]
+    20752 samples and 1814 variables in the model
+    Regularization parameter: 0.001
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1/phenos=ALL/dropAF_noSyn_poolLOF
+    3 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 52.55% of variants per isolate and 0.21% of isolates per variant have missing data
+    Dropped 50/20936 isolates with >1% missingness
+    Dropped 0/1119 variants with >25% missingness
+    Dropped 107 isolates with any remaining missingness
+    Kept 20779 isolates and 1119 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65152839 0.17275694 0.09726705 0.03801672 0.01587231]
+    20779 samples and 1124 variables in the model
+    Regularization parameter: 0.001
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1/phenos=ALL/dropAF_withSyn_poolLOF
+    3 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 45.62% of variants per isolate and 0.21% of isolates per variant have missing data
+    Dropped 48/20936 isolates with >1% missingness
+    Dropped 0/1497 variants with >25% missingness
+    Dropped 129 isolates with any remaining missingness
+    Kept 20759 isolates and 1497 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65143094 0.17277461 0.0972863  0.03805914 0.01589065]
+    20759 samples and 1502 variables in the model
+    Regularization parameter: 0.001
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1+2/phenos=ALL/dropAF_noSyn
+    7 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 38.87% of variants per isolate and 0.78% of isolates per variant have missing data
+    Dropped 84/20936 isolates with >1% missingness
+    Dropped 0/2398 variants with >25% missingness
+    Dropped 311 isolates with any remaining missingness
+    Kept 20541 isolates and 2398 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65008661 0.17431797 0.09842272 0.03827746 0.01597442]
+    20541 samples and 2403 variables in the model
+    Regularization parameter: 0.001
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1+2/phenos=ALL/dropAF_withSyn
+    7 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 34.04% of variants per isolate and 0.78% of isolates per variant have missing data
+    Dropped 82/20936 isolates with >1% missingness
+    Dropped 0/3129 variants with >25% missingness
+    Dropped 333 isolates with any remaining missingness
+    Kept 20521 isolates and 3129 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65012897 0.174263   0.09837753 0.03832343 0.01597708]
+    20521 samples and 3134 variables in the model
+    Regularization parameter: 0.001
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1+2/phenos=ALL/dropAF_noSyn_poolLOF
+    7 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 35.17% of variants per isolate and 0.78% of isolates per variant have missing data
+    Dropped 83/20936 isolates with >1% missingness
+    Dropped 0/1928 variants with >25% missingness
+    Dropped 302 isolates with any remaining missingness
+    Kept 20551 isolates and 1928 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65021645 0.17426305 0.0983709  0.03827045 0.0159641 ]
+    20551 samples and 1933 variables in the model
+    Regularization parameter: 0.001
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Ethionamide/tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF
+    7 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 30.5% of variants per isolate and 0.78% of isolates per variant have missing data
+    Dropped 79/20936 isolates with >1% missingness
+    Dropped 0/2659 variants with >25% missingness
+    Dropped 328 isolates with any remaining missingness
+    Kept 20529 isolates and 2659 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.65023299 0.17421964 0.09833633 0.03831643 0.01596874]
+    20529 samples and 2664 variables in the model
+    Regularization parameter: 0.001

@@ -1,0 +1,231 @@
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1/phenos=WHO/dropAF_noSyn
+    3 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 59.99% of variants per isolate and 1.29% of isolates per variant have missing data
+    Dropped 202/8958 isolates with >1% missingness
+    Dropped 0/1422 variants with >25% missingness
+    Dropped 28 isolates with any remaining missingness
+    Kept 8728 isolates and 1422 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.76650205 0.09187468 0.04303786 0.03647953 0.02939536]
+    8728 samples and 1427 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1/phenos=WHO/dropAF_withSyn
+    3 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 56.83% of variants per isolate and 1.29% of isolates per variant have missing data
+    Dropped 201/8958 isolates with >1% missingness
+    Dropped 0/1501 variants with >25% missingness
+    Dropped 29 isolates with any remaining missingness
+    Kept 8728 isolates and 1501 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.76650205 0.09187468 0.04303786 0.03647953 0.02939536]
+    8728 samples and 1506 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1/phenos=WHO/dropAF_noSyn_poolLOF
+    3 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 61.68% of variants per isolate and 1.29% of isolates per variant have missing data
+    Dropped 202/8958 isolates with >1% missingness
+    Dropped 0/1383 variants with >25% missingness
+    Dropped 28 isolates with any remaining missingness
+    Kept 8728 isolates and 1383 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.76650205 0.09187468 0.04303786 0.03647953 0.02939536]
+    8728 samples and 1388 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1/phenos=WHO/dropAF_withSyn_poolLOF
+    3 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 58.34% of variants per isolate and 1.29% of isolates per variant have missing data
+    Dropped 202/8958 isolates with >1% missingness
+    Dropped 0/1462 variants with >25% missingness
+    Dropped 28 isolates with any remaining missingness
+    Kept 8728 isolates and 1462 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.76650205 0.09187468 0.04303786 0.03647953 0.02939536]
+    8728 samples and 1467 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1+2/phenos=WHO/dropAF_noSyn
+    7 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 36.5% of variants per isolate and 16.45% of isolates per variant have missing data
+    Dropped 204/8958 isolates with >1% missingness
+    Dropped 0/2367 variants with >25% missingness
+    Dropped 1282 isolates with any remaining missingness
+    Kept 7472 isolates and 2367 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.78605999 0.08410172 0.038198   0.03465874 0.02398404]
+    7472 samples and 2372 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1+2/phenos=WHO/dropAF_withSyn
+    7 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 28.58% of variants per isolate and 16.45% of isolates per variant have missing data
+    Dropped 196/8958 isolates with >1% missingness
+    Dropped 0/3023 variants with >25% missingness
+    Dropped 1290 isolates with any remaining missingness
+    Kept 7472 isolates and 3023 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.78605999 0.08410172 0.038198   0.03465874 0.02398404]
+    7472 samples and 3028 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1+2/phenos=WHO/dropAF_noSyn_poolLOF
+    7 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 38.62% of variants per isolate and 16.45% of isolates per variant have missing data
+    Dropped 204/8958 isolates with >1% missingness
+    Dropped 0/2237 variants with >25% missingness
+    Dropped 1282 isolates with any remaining missingness
+    Kept 7472 isolates and 2237 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.78605999 0.08410172 0.038198   0.03465874 0.02398404]
+    7472 samples and 2242 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1+2/phenos=WHO/dropAF_withSyn_poolLOF
+    7 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 29.87% of variants per isolate and 16.45% of isolates per variant have missing data
+    Dropped 198/8958 isolates with >1% missingness
+    Dropped 0/2893 variants with >25% missingness
+    Dropped 1288 isolates with any remaining missingness
+    Kept 7472 isolates and 2893 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.78605999 0.08410172 0.038198   0.03465874 0.02398404]
+    7472 samples and 2898 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1/phenos=ALL/dropAF_noSyn
+    3 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 63.85% of variants per isolate and 1.13% of isolates per variant have missing data
+    Dropped 551/24710 isolates with >1% missingness
+    Dropped 0/1422 variants with >25% missingness
+    Dropped 125 isolates with any remaining missingness
+    Kept 24034 isolates and 1422 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.67867103 0.15428794 0.08208512 0.04031479 0.01644238]
+    24034 samples and 1427 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1/phenos=ALL/dropAF_withSyn
+    3 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 60.49% of variants per isolate and 1.13% of isolates per variant have missing data
+    Dropped 543/24710 isolates with >1% missingness
+    Dropped 0/1501 variants with >25% missingness
+    Dropped 133 isolates with any remaining missingness
+    Kept 24034 isolates and 1501 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.67867103 0.15428794 0.08208512 0.04031479 0.01644238]
+    24034 samples and 1506 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1/phenos=ALL/dropAF_noSyn_poolLOF
+    3 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 65.65% of variants per isolate and 1.13% of isolates per variant have missing data
+    Dropped 556/24710 isolates with >1% missingness
+    Dropped 0/1383 variants with >25% missingness
+    Dropped 119 isolates with any remaining missingness
+    Kept 24035 isolates and 1383 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.6786772  0.15428226 0.08208142 0.0403129  0.01644197]
+    24035 samples and 1388 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1/phenos=ALL/dropAF_withSyn_poolLOF
+    3 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 62.11% of variants per isolate and 1.13% of isolates per variant have missing data
+    Dropped 551/24710 isolates with >1% missingness
+    Dropped 0/1462 variants with >25% missingness
+    Dropped 124 isolates with any remaining missingness
+    Kept 24035 isolates and 1462 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.6786772  0.15428226 0.08208142 0.0403129  0.01644197]
+    24035 samples and 1467 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1+2/phenos=ALL/dropAF_noSyn
+    7 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 38.83% of variants per isolate and 18.67% of isolates per variant have missing data
+    Dropped 571/24710 isolates with >1% missingness
+    Dropped 0/2367 variants with >25% missingness
+    Dropped 4064 isolates with any remaining missingness
+    Kept 20075 isolates and 2367 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.70230863 0.14050231 0.07182534 0.04354036 0.01657818]
+    20075 samples and 2372 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1+2/phenos=ALL/dropAF_withSyn
+    7 files with genotypes
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 30.4% of variants per isolate and 18.67% of isolates per variant have missing data
+    Dropped 529/24710 isolates with >1% missingness
+    Dropped 0/3023 variants with >25% missingness
+    Dropped 4106 isolates with any remaining missingness
+    Kept 20075 isolates and 3023 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.70230863 0.14050231 0.07182534 0.04354036 0.01657818]
+    20075 samples and 3028 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1+2/phenos=ALL/dropAF_noSyn_poolLOF
+    7 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 41.08% of variants per isolate and 18.67% of isolates per variant have missing data
+    Dropped 574/24710 isolates with >1% missingness
+    Dropped 0/2237 variants with >25% missingness
+    Dropped 4061 isolates with any remaining missingness
+    Kept 20075 isolates and 2237 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.70230863 0.14050231 0.07182534 0.04354036 0.01657818]
+    20075 samples and 2242 variables in the model
+    Regularization parameter: 0.01
+
+Saving results to /n/data1/hms/dbmi/farhat/ye12/who/analysis/Amikacin/tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF
+    7 files with genotypes
+Pooling LOF mutations
+Dropped 0 isolates with any intermediate AFs. Remainder are binary
+    Up to 31.77% of variants per isolate and 18.67% of isolates per variant have missing data
+    Dropped 539/24710 isolates with >1% missingness
+    Dropped 0/2893 variants with >25% missingness
+    Dropped 4096 isolates with any remaining missingness
+    Kept 20075 isolates and 2893 genetic variants
+Fitting regression with population structure correction with 5 principal components
+Min MAF: 0.01, Max MAF: 0.5
+Explained variance ratios of 5 principal components: [0.70230863 0.14050231 0.07182534 0.04354036 0.01657818]
+    20075 samples and 2898 variables in the model
+    Regularization parameter: 0.01

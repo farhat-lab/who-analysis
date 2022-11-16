@@ -169,8 +169,8 @@ def compute_univariate_stats(drug, out_dir, df_phenos, num_bootstrap=1000):
         bs_values = compute_predictive_values(bs_combined, return_stats=["orig_variant", "PPV", "Sens", "Spec", "LR+", "LR-"])
         bs_results = pd.concat([bs_results, bs_values.set_index("orig_variant").T], axis=0)
 
-        # if i % int(num_bootstrap / 10) == 0:
-        #     print(i)
+        if i % int(num_bootstrap / 10) == 0:
+            print(i)
 
     # ensure everything is float because had some issues with np.nanpercentile giving an error about incompatible data types
     bs_results = bs_results.astype(float)
