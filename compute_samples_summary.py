@@ -95,7 +95,7 @@ print(len(minor_allele_counts_samples))
 del minor_allele_counts
     
     
-def compute_num_pooled_mutations(drug, tiers_lst):
+def compute_num_mutations(drug, tiers_lst):
     
     # first get all the genotype files associated with the drug
     geno_files = []
@@ -116,30 +116,29 @@ def compute_num_pooled_mutations(drug, tiers_lst):
     if len(dfs_lst) > 0:
         df_model = pd.concat(dfs_lst)
 
-        # get all mutations that are considered LOF, only those for which variant_allele_frequency != 0
+        # get all mutations that are positive for LOF. Ignore ambiguous variants in this count
         lof = df_model.loc[(df_model["predicted_effect"].isin(["frameshift", "start_lost", "stop_gained", "feature_ablation"])) & 
-                           (~pd.isnull(df_model["variant_allele_frequency"])) &
-                           (df_model["variant_allele_frequency"] > 0)
+                           (df_model["variant_binary_status"] == 1)
                           ]
 
-        # (sample, gene) pairs with multiple mutations that cause LOF 
-        lof_pooled = pd.DataFrame(lof.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect > 1")
+#         # (sample, gene) pairs with multiple mutations that cause LOF 
+#         lof_pooled = pd.DataFrame(lof.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect > 1")
     
+        # get all mutations that are positive for inframe mutations. Ignore ambiguous variants in this count
         inframe = df_model.loc[(df_model["predicted_effect"].str.contains("inframe")) & 
-                               (~pd.isnull(df_model["variant_allele_frequency"])) &
-                               (df_model["variant_allele_frequency"] > 0)
+                               (df_model["variant_binary_status"] == 1)
                               ]
 
-        # (sample, gene) pairs with multiple inframe mutations
-        multi_inframe = pd.DataFrame(inframe.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect > 1")
+        # # (sample, gene) pairs with multiple inframe mutations
+        # multi_inframe = pd.DataFrame(inframe.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect > 1")
         
-        return len(lof_pooled), len(multi_inframe)
+        return len(lof["sample_id"].unique()), len(inframe["sample_id"].unique())
     
     else:
         return np.nan, np.nan
     
 
-summary_df = pd.DataFrame(columns=["Drug", "Genos", "Binary_Phenos", "MICs", "Lineages", "SNP_Matrix", "Tier1_LOF", "Tier1_MultiInframe", "Tier2_LOF", "Tier2_MultiInframe"])
+summary_df = pd.DataFrame(columns=["Drug", "Genos", "Binary_Phenos", "SNP_Matrix", "MICs", "Lineages", "Tier1_LOF", "Tier1_Inframe", "Tier2_LOF", "Tier2_Inframe"])
 i = 0
 
 for drug in drugs_for_analysis:
@@ -161,15 +160,15 @@ for drug in drugs_for_analysis:
     samples_with_lineages = lineages.loc[lineages["Sample ID"].isin(genos["sample_id"])]
         
     # get the numbers of isolates, by tier
-    num_lof_tier1, num_inframe_tier1 = compute_num_pooled_mutations(drug, ['1'])
-    num_lof_tier2, num_inframe_tier2 = compute_num_pooled_mutations(drug, ['2'])
+    num_lof_tier1, num_inframe_tier1 = compute_num_mutations(drug, ['1'])
+    num_lof_tier2, num_inframe_tier2 = compute_num_mutations(drug, ['2'])
     
     summary_df.loc[i] = [drug.split("=")[1], 
                          len(genos.sample_id.unique()), 
                          len(phenos.sample_id.unique()), 
+                         len(num_with_snps),
                          len(mics.sample_id.unique()),
                          len(samples_with_lineages),
-                         len(num_with_snps),
                          num_lof_tier1,
                          num_inframe_tier1,
                          num_lof_tier2,

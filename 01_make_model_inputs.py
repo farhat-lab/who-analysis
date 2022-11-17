@@ -18,6 +18,7 @@ kwargs = yaml.safe_load(open(config_file))
 
 tiers_lst = kwargs["tiers_lst"]
 pheno_category_lst = kwargs["pheno_category_lst"]
+mics_category = kwargs["mics_category"]
 
 missing_isolate_thresh = kwargs["missing_isolate_thresh"]
 missing_feature_thresh = kwargs["missing_feature_thresh"]
@@ -80,8 +81,6 @@ else:
     
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
-samples_summary = pd.read_csv("data/samples_summary.csv", index_col=[0])
-num_lof_tier1, num_inframe_tier1, num_lof_tier2, num_inframe_tier2 = samples_summary.loc[drug, ["Tier1_LOF", "Tier1_MultiInframe", "Tier2_LOF", "Tier2_MultiInframe"]].values
 
 
 ############# STEP 1: GET ALL AVAILABLE PHENOTYPES, PROCESS THEM, AND SAVE TO A GENERAL PHENOTYPES FILE FOR EACH MODEL TYPE #############
@@ -146,6 +145,8 @@ else:
 # get only isolates with the desired phenotypic category for the binary model
 if binary:
     df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
+# else:
+#     df_phenos = df_phenos.query("")
 
 
 ############# STEP 2: GET ALL AVAILABLE GENOTYPES #############
@@ -198,45 +199,23 @@ df_model = read_in_data()
 
 def pool_mutations(df, effect_lst, pool_col):
     
-    df.loc[df["predicted_effect"].isin(effect_lst), pool_col] = 1
+    df.loc[df["predicted_effect"].isin(effect_lst), ["variant_category", "predicted_effect", "position"]] = [pool_col, pool_col, np.nan]
 
-    # sort descending to keep the largest variant_binary_status and variant_allele_frequency first. In this way, LOF mutations that are actually present are preserved
-    # drop duplicates includes the lof column because all lof mutations in the same gene will have lof = 1, regardless of the value of variant_binary_status
-    df_pool = df.query(f"{pool_col} == 1").sort_values(by=["variant_binary_status", "variant_allele_frequency"], ascending=False, na_position="last").drop_duplicates(subset=["sample_id", "resolved_symbol", pool_col])
-    
-    # for LOF mutations that are not present (i.e. variant_binary_status != 1), there will be no predicted_effect because here we are combining all LOF mutations that are present
-    # in a gene (resolved_symbol) to get an overall LOF variable
-    annot_df = pd.DataFrame(df.query(f"{pool_col} == 1 & variant_binary_status == 1").groupby(["sample_id", "resolved_symbol"])["predicted_effect"].unique()).reset_index()
-    annot_df[f"predicted_effect_{pool_col}"] = [",".join(val) for val in annot_df["predicted_effect"]]
-    del annot_df["predicted_effect"]
+    # sort descending to keep the largest variant_binary_status and variant_allele_frequency first. In this way, pooled mutations that are actually present are preserved
+    df_pooled = df.query("variant_category == @pool_col").sort_values(by=["variant_binary_status", "variant_allele_frequency"], ascending=False, na_position="last").drop_duplicates(subset=["sample_id", "resolved_symbol"], keep="first")
 
-    df_pool = df_pool.merge(annot_df, on=["sample_id", "resolved_symbol"], how="outer")
-    df_pool = pd.concat([df_pool, df.query(f"{pool_col} != 1")], axis=0)
-    df_pool.loc[df_pool[pool_col] == 1, "variant_category"] = pool_col
-
-    return df_pool
+    # combine with the unpooled variants and return
+    return pd.concat([df_pooled, df.query("variant_category != @pool_col")], axis=0)
 
 
 if pool_lof:
-    if (len(tiers_lst) == 1 and num_lof_tier1 > 0) or (len(tiers_lst) > 1 and (num_lof_tier1 > 0 or num_lof_tier2 > 0)):
-        print("Pooling LOF mutations")
-        df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation"], "lof")
-    else:
-        print("There are no samples with multiple LOF mutations in the same gene")
-        os.rmdir(out_dir)
-        exit()
-    
-    
-# if this next block is uncommented, need to include the exit statement ONLY if pooling both types of mutations does not make a difference
-# if pool_inframe:
-#     if (len(tiers_lst) == 1 and num_inframe_tier1 > 0) or (len(tiers_lst) > 1 and (num_inframe_tier1 > 0 or num_inframe_tier2 > 0)):
-#         print("Pooling inframe mutations")
-#         # df_model = pool_mutations(df_model, ["inframe_insertion", "inframe_deletion"], "inframe")
-#         pool_inframe_make_diff = True
-#     else:
-#         print("There are no samples with multiple inframe mutations in the same gene")
-#         pool_inframe_make_diff = False
-        
+    print("Pooling LOF mutations")
+    df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation"], "lof")
+
+if pool_inframe:
+    print("Pooling inframe mutations")
+    df_model = pool_mutations(df_model, ["inframe_insertion", "inframe_deletion"], "inframe")
+
 
 ############# STEP 4: PROCESS AMBIGUOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #############
 
@@ -265,6 +244,7 @@ elif amb_mode == "DROP":
     
 # check after this step that the only NaNs left are truly missing data --> NaN in variant_binary_status must also be NaN in variant_allele_frequency
 assert len(df_model.loc[(~pd.isnull(df_model["variant_allele_frequency"])) & (pd.isnull(df_model["variant_binary_status"]))]) == 0
+
 
 ############# STEP 5: PIVOT TO MATRIX AND DROP HIGH-FREQUENCY MISSINGNESS #############
 
