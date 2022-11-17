@@ -1518,3 +1518,18 @@
 
 /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Clofazimine/tiers=1/phenos=WHO/dropAF_withSyn
 01_make_model_inputs.py: 1.738721472 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 0.77536745 GB
+02_regression_with_bootstrap.py: 11.462060321 GB
+03_model_analysis.py: 0.012798335 GB
+02_regression_with_bootstrap.py: 11.503835461 GB
+03_model_analysis.py: 0.021059308 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Bedaquiline/tiers=1+2/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 1.636400585 GB
+02_regression_with_bootstrap.py: 11.454827783 GB
+03_model_analysis.py: 0.013450164 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 0.775057623 GB

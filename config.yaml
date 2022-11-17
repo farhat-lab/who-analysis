@@ -1,12 +1,13 @@
 binary: true
-tiers_lst:
-- '1'
 pheno_category_lst:
 - WHO
-amb_mode: DROP
-pool_lof: true
-pool_inframe: false
+- ALL
+tiers_lst:
+- '1'
+- '2'
+unpooled: false
 synonymous: false
+amb_mode: DROP
 AF_thresh: 0.75
 missing_isolate_thresh: 0.01
 missing_feature_thresh: 0.25
