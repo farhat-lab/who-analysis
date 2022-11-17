@@ -7,6 +7,7 @@ from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge
 import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
+analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
 
 ############# STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES #############
@@ -25,15 +26,13 @@ model_prefix = kwargs["model_prefix"]
 num_PCs = kwargs["num_PCs"]
 num_bootstrap = kwargs["num_bootstrap"]
 binary = kwargs["binary"]
-pool_lof = kwargs["pool_lof"]
 
-out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
 if "ALL" in pheno_category_lst:
     phenos_name = "ALL"
 else:
     phenos_name = "WHO"
 
-out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
+out_dir = os.path.join(analysis_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
 
 if not os.path.isdir(out_dir):
     print("No model for this analysis")
@@ -52,9 +51,9 @@ model_inputs = pd.read_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
 model_inputs = model_inputs.reset_index()
 
 if binary:
-    phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos_binary.csv")
+    phenos_file = os.path.join(analysis_dir, drug, "phenos_binary.csv")
 else:
-    phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos_mic.csv")
+    phenos_file = os.path.join(analysis_dir, drug, "phenos_mic.csv")
 
 df_phenos = pd.read_csv(phenos_file)
 

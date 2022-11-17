@@ -1228,3 +1228,293 @@
 01_make_model_inputs.py: 81.01745755 GB
 02_regression_with_bootstrap.py: 58.0475817 GB
 03_model_analysis.py: 0.096650759 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn_poolInframe
+01_make_model_inputs.py: 0.77066756 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn_poolLOF_poolInframe
+01_make_model_inputs.py: 0.770667145 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Rifampicin/tiers=1+2/phenos=ALL/dropAF_noSyn_poolLOF
+01_make_model_inputs.py: 82.142938007 GB
+02_regression_with_bootstrap.py: 70.581699818 GB
+03_model_analysis.py: 0.147777128 GB
+
+/n/data1/hms/dbmi/farhat/ye12/who/analysis/Isoniazid/tiers=1+2/phenos=ALL/dropAF_noSyn_poolLOF
+01_make_model_inputs.py: 90.078633992 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs_inframe.py: 0.770666918 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs_inframe.py: 0.770667264 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/encodeAF_noSyn_unpooled
+01_make_model_inputs_inframe.py: 0.770667254 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs_inframe.py: 0.775367231 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs_inframe.py: 0.770666286 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs_inframe.py: 0.770665608 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs_inframe.py: 0.767661051 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs_inframe.py: 0.770667356 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/dropAF_noSyn
+01_make_model_inputs_inframe.py: 0.775367048 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs_inframe.py: 0.775367445 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/dropAF_withSyn
+01_make_model_inputs_inframe.py: 0.775057356 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs_inframe.py: 0.776697049 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs_inframe.py: 0.770666491 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs_inframe.py: 0.770666672 GB
+02_regression_with_bootstrap_inframe.py: 11.454210449 GB
+03_model_analysis_inframe.py: 0.011254061 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs_inframe.py: 0.770666414 GB
+03_model_analysis.py: 0.011598124 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs_inframe.py: 0.770666438 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs_inframe.py: 0.767660299 GB
+03_model_analysis.py: 0.016104165 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs_inframe.py: 0.770666546 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/dropAF_noSyn
+01_make_model_inputs_inframe.py: 0.775366415 GB
+03_model_analysis.py: 0.013449574 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs_inframe.py: 0.775366439 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs_inframe.py: 0.770666536 GB
+02_regression_with_bootstrap_inframe.py: 11.454210745 GB
+03_model_analysis_inframe.py: 0.011254562 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs_inframe.py: 0.770666687 GB
+02_regression_with_bootstrap_inframe.py: 11.454307071 GB
+03_model_analysis_inframe.py: 0.011598195 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs_inframe.py: 0.767660108 GB
+02_regression_with_bootstrap_inframe.py: 11.455467172 GB
+03_model_analysis_inframe.py: 0.015756702 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs_inframe.py: 0.770666538 GB
+02_regression_with_bootstrap_inframe.py: 11.454210314 GB
+03_model_analysis_inframe.py: 0.011254072 GB
+02_regression_with_bootstrap.py: 60.008366815 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/dropAF_noSyn
+01_make_model_inputs_inframe.py: 0.77536672 GB
+03_model_analysis.py: 0.096165202 GB
+02_regression_with_bootstrap_inframe.py: 11.454611022 GB
+03_model_analysis_inframe.py: 0.01267878 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs_inframe.py: 0.775366627 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Moxifloxacin/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs_inframe.py: 6.104369073 GB
+02_regression_with_bootstrap_inframe.py: 11.454828004 GB
+03_model_analysis_inframe.py: 0.013449352 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/dropAF_withSyn
+01_make_model_inputs_inframe.py: 0.775056344 GB
+02_regression_with_bootstrap_inframe.py: 11.456159219 GB
+03_model_analysis_inframe.py: 0.018252285 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs_inframe.py: 0.775366233 GB
+02_regression_with_bootstrap_inframe.py: 11.45461155 GB
+03_model_analysis_inframe.py: 0.012678027 GB
+02_regression_with_bootstrap_inframe.py: 11.508496062 GB
+03_model_analysis_inframe.py: 0.017012276 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Moxifloxacin/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs_inframe.py: 6.102656447 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=ALL/dropAF_noSyn
+01_make_model_inputs_inframe.py: 1.867050045 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Moxifloxacin/tiers=1/phenos=ALL/dropAF_noSyn
+01_make_model_inputs_inframe.py: 7.699892778 GB
+02_regression_with_bootstrap_inframe.py: 11.497354182 GB
+03_model_analysis_inframe.py: 0.011265228 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=ALL/dropAF_noSyn_unpooled
+01_make_model_inputs_inframe.py: 1.867049685 GB
+02_regression_with_bootstrap_inframe.py: 11.508630488 GB
+03_model_analysis_inframe.py: 0.017045063 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Moxifloxacin/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs_inframe.py: 5.819486063 GB
+02_regression_with_bootstrap_inframe.py: 11.498800727 GB
+03_model_analysis_inframe.py: 0.011609843 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=ALL/dropAF_withSyn
+01_make_model_inputs_inframe.py: 2.801103295 GB
+02_regression_with_bootstrap_inframe.py: 11.522402671 GB
+03_model_analysis_inframe.py: 0.015775063 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=ALL/encodeAF_noSyn
+01_make_model_inputs_inframe.py: 1.867049731 GB
+02_regression_with_bootstrap_inframe.py: 11.577584976 GB
+03_model_analysis_inframe.py: 0.033862382 GB
+02_regression_with_bootstrap_inframe.py: 11.497354598 GB
+03_model_analysis_inframe.py: 0.011265342 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Moxifloxacin/tiers=1/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs_inframe.py: 6.102656434 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=ALL/dropAF_noSyn
+01_make_model_inputs_inframe.py: 2.244763243 GB
+02_regression_with_bootstrap_inframe.py: 16.7568344 GB
+03_model_analysis_inframe.py: 0.017022191 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Moxifloxacin/tiers=1/phenos=ALL/dropAF_noSyn_unpooled
+01_make_model_inputs_inframe.py: 7.699892283 GB
+02_regression_with_bootstrap_inframe.py: 11.505554659 GB
+03_model_analysis_inframe.py: 0.012692305 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=ALL/dropAF_noSyn_unpooled
+01_make_model_inputs_inframe.py: 2.285810227 GB
+02_regression_with_bootstrap_inframe.py: 11.508495263 GB
+03_model_analysis_inframe.py: 0.01701568 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Moxifloxacin/tiers=1+2/phenos=WHO/dropAF_noSyn
+01_make_model_inputs_inframe.py: 7.110905574 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Amikacin/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 4.197965713 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Capreomycin/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 3.861322306 GB
+02_regression_with_bootstrap_inframe.py: 11.509332408 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Linezolid/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 3.083395837 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Linezolid/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 3.081775364 GB
+02_regression_with_bootstrap.py: 11.507300327 GB
+03_model_analysis.py: 0.022442406 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Linezolid/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 3.081776245 GB
+02_regression_with_bootstrap.py: 11.507300001 GB
+03_model_analysis.py: 0.022442652 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Linezolid/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 3.081776074 GB
+02_regression_with_bootstrap.py: 11.510764672 GB
+03_model_analysis.py: 0.023638471 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Amikacin/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 4.197965965 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Bedaquiline/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 1.220169107 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Linezolid/tiers=1/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs.py: 3.081776006 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 0.771995637 GB
+02_regression_with_bootstrap.py: 11.462060466 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Capreomycin/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 3.861322595 GB
+03_model_analysis.py: 0.012796506 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Clofazimine/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 1.626462947 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Bedaquiline/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 1.218678959 GB
+02_regression_with_bootstrap.py: 11.454210544 GB
+03_model_analysis.py: 0.011253873 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 0.770667845 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethionamide/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 4.148892457 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Moxifloxacin/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 6.104366493 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Kanamycin/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 4.180121332 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Levofloxacin/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 8.362110313 GB
+02_regression_with_bootstrap.py: 11.454307438 GB
+03_model_analysis.py: 0.011598446 GB
+02_regression_with_bootstrap.py: 11.464302767 GB
+03_model_analysis.py: 0.014930576 GB
+02_regression_with_bootstrap.py: 11.482351472 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 0.767661001 GB
+03_model_analysis.py: 0.015749862 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Bedaquiline/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 1.20789824 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Clofazimine/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 1.625026956 GB
+02_regression_with_bootstrap.py: 11.455466683 GB
+03_model_analysis.py: 0.015756891 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs.py: 0.7706672 GB
+02_regression_with_bootstrap.py: 11.46663092 GB
+03_model_analysis.py: 0.017122342 GB
+02_regression_with_bootstrap.py: 11.507299959 GB
+03_model_analysis.py: 0.022454477 GB
+02_regression_with_bootstrap.py: 11.454210491 GB
+03_model_analysis.py: 0.011254382 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Bedaquiline/tiers=1/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs.py: 1.218678812 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 0.775367242 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Pyrazinamide/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 5.16690853 GB
+02_regression_with_bootstrap.py: 11.48741341 GB
+03_model_analysis.py: 0.017839023 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Linezolid/tiers=1+2/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 3.373171366 GB
+02_regression_with_bootstrap.py: 11.454611477 GB
+03_model_analysis.py: 0.012678715 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Clofazimine/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 1.738721472 GB

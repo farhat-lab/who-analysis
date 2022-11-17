@@ -9,6 +9,8 @@ import glob, os, yaml
 import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
+analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
+
 
 # starting the memory monitoring
 tracemalloc.start()
@@ -124,11 +126,7 @@ def run_all(out_dir, drug, drug_abbr, **kwargs):
     pheno_category_lst = kwargs["pheno_category_lst"]
     model_prefix = kwargs["model_prefix"]
     synonymous = kwargs["synonymous"]
-    pool_lof = kwargs["pool_lof"]
-    AF_thresh = kwargs["AF_thresh"]
 
-    num_PCs = kwargs["num_PCs"]
-    num_bootstrap = kwargs["num_bootstrap"]
     alpha = kwargs["alpha"]
     binary = kwargs["binary"]
     
@@ -182,13 +180,12 @@ pheno_category_lst = kwargs["pheno_category_lst"]
 model_prefix = kwargs["model_prefix"]
 synonymous = kwargs["synonymous"]
 
-out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
 if "ALL" in pheno_category_lst:
     phenos_name = "ALL"
 else:
     phenos_name = "WHO"
 
-out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
+out_dir = os.path.join(analysis_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
 
 if not os.path.isdir(out_dir):
     print("No model for this analysis")

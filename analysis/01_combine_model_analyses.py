@@ -9,6 +9,7 @@ import glob, os, yaml
 import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
+analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
 
 # starting the memory monitoring
@@ -17,20 +18,13 @@ tracemalloc.start()
 _, drug = sys.argv
 
 # get the core model for the drug: tier 1 only, WHO phenos only, no synonymous mutations, pool LOF (if it's not different from unpool LOF, use the unpooled model)
-out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
-
-core_out_dir = os.path.join(out_dir, drug, "tiers=1/phenos=WHO")
-core_model_path = os.path.join(core_out_dir, "dropAF_noSyn_poolLOF")
-
-# if pooling LOFs does not affect, then use this model
-if not os.path.isdir(core_model_path):
-    core_model_path = os.path.join(core_out_dir, "dropAF_noSyn")
+core_model_path = os.path.join(analysis_dir, drug, "tiers=1/phenos=WHO/dropAF_noSyn")
 
 core_analysis = pd.read_csv(os.path.join(core_model_path, "model_analysis.csv"))
-core_analysis["Tier1_only"] = 1
-core_analysis["WHO_phenos"] = 1
-core_analysis["poolLOF"] = 1
-core_analysis["Syn"] = 0
+core_analysis["Tier"] = 1
+core_analysis["Phenos"] = "WHO"
+core_analysis["unpooled"] = 0
+core_analysis["synonymous"] = 0
 
 # create dictionary of the additional model analyses
 add_analyses = {}
@@ -45,14 +39,16 @@ for tier in os.listdir(os.path.join(out_dir, drug)):
 
                 analysis_fName = os.path.join(model_path, "model_analysis.csv")
                 if os.path.isfile(analysis_fName):
-                    if model_path != core_model_path:
+                    
+                    # only include models where HETs were dropped because we can not compute univariate stats for continuous AFs
+                    if (model_path != core_model_path) & ("encodeAF" not in model_path):
                         add_analysis = pd.read_csv(analysis_fName)
                         add_path = model_path.split(os.path.join(out_dir, drug))[1].strip("/").replace("dropAF_", "")
 
-                        add_analysis["Tier1_only"] = int("2" not in add_path)
-                        add_analysis["WHO_phenos"] = int("WHO" in add_path)
-                        add_analysis["poolLOF"] = int("LOF" in add_path)
-                        add_analysis["Syn"] = int("withSyn" in add_path)
+                        add_analysis["Tier"] = [2 if "+2" in add_path else 1][0]
+                        add_analysis["Phenos"] = ["ALL" if "ALL" in add_path else "WHO"][0]
+                        add_analysis["unpooled"] = int("unpooled" in add_path)
+                        add_analysis["synonymous"] = int("withSyn" in add_path)
 
                         # keep all significant variants at an FDR threshold of 0.01
                         add_analyses[add_path] = add_analysis

@@ -4,6 +4,7 @@ import glob, os, yaml, sys
 import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
+analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
 
 ############# STEP 0: READ IN PARAMETERS FILE AND MAKE OUTPUT DIRECTORIES #############
@@ -17,8 +18,9 @@ _, config_file, drug, drug_WHO_abbr = sys.argv
 kwargs = yaml.safe_load(open(config_file))
 
 tiers_lst = kwargs["tiers_lst"]
+binary = kwargs["binary"]
 pheno_category_lst = kwargs["pheno_category_lst"]
-mics_category = kwargs["mics_category"]
+# mics_category = kwargs["mics_category"]
 
 missing_isolate_thresh = kwargs["missing_isolate_thresh"]
 missing_feature_thresh = kwargs["missing_feature_thresh"]
@@ -26,14 +28,11 @@ amb_mode = kwargs["amb_mode"]
 AF_thresh = kwargs["AF_thresh"]
 impute = kwargs["impute"]
 synonymous = kwargs["synonymous"]
-pool_lof = kwargs["pool_lof"]
-pool_inframe = kwargs["pool_inframe"]
-binary = kwargs["binary"]
+unpooled = kwargs["unpooled"]
 
-out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
 if "ALL" in pheno_category_lst:
     phenos_name = "ALL"
-    # make sure that both phenotypes are included in this case (in case user forgets to include WHO in the list)
+    # make sure that both phenotypes are included in this case
     pheno_category_lst = ["ALL", "WHO"]
 else:
     phenos_name = "WHO"
@@ -53,10 +52,8 @@ if synonymous:
 else:
     model_prefix += "_noSyn"
     
-if pool_lof:
-    model_prefix += "_poolLOF" 
-if pool_inframe:
-    model_prefix += "_poolInframe"
+if unpooled:
+    model_prefix += "_unpooled" 
     
 # add to config file for use in the second and third scripts
 kwargs["model_prefix"] = model_prefix
@@ -64,7 +61,7 @@ kwargs["model_prefix"] = model_prefix
 with open(config_file, "w") as file:
     yaml.dump(kwargs, file, default_flow_style=False, sort_keys=False)
   
-out_dir = os.path.join(out_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
+out_dir = os.path.join(analysis_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
@@ -72,11 +69,11 @@ print(f"\nSaving results to {out_dir}")
 
 if binary:
     phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
-    phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos_binary.csv")
+    phenos_file = os.path.join(analysis_dir, drug, "phenos_binary.csv")
     pheno_col = "phenotype"
 else:
     phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/mic'
-    phenos_file = os.path.join('/n/data1/hms/dbmi/farhat/ye12/who/analysis', drug, "phenos_mic.csv")
+    phenos_file = os.path.join(analysis_dir, drug, "phenos_mic.csv")
     pheno_col = "mic_value"
     
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
@@ -122,8 +119,9 @@ if not os.path.isfile(phenos_file):
     # Drop samples with multiple recorded phenotypes
     drop_samples = df_phenos.groupby(["sample_id"]).nunique().query(f"{pheno_col} > 1").index.values
         
-    print(f"    Dropping {len(drop_samples)} isolates with multiple recorded phenotypes")
-    df_phenos = df_phenos.query("sample_id not in @drop_samples")
+    if len(drop_samples) > 0:
+        print(f"    Dropping {len(drop_samples)} isolates with multiple recorded phenotypes")
+        df_phenos = df_phenos.query("sample_id not in @drop_samples")
     
     # then drop any duplicated rows. There can be duplicates just because of a minor bug, so protect against that. 
     df_phenos = df_phenos.drop_duplicates(keep="first").reset_index(drop=True)
@@ -208,12 +206,9 @@ def pool_mutations(df, effect_lst, pool_col):
     return pd.concat([df_pooled, df.query("variant_category != @pool_col")], axis=0)
 
 
-if pool_lof:
-    print("Pooling LOF mutations")
+if not unpooled:
+    print("Pooling LOF and inframe mutations ")
     df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation"], "lof")
-
-if pool_inframe:
-    print("Pooling inframe mutations")
     df_model = pool_mutations(df_model, ["inframe_insertion", "inframe_deletion"], "inframe")
 
 
@@ -229,9 +224,6 @@ if amb_mode == "BINARY":
 # use ambiguous AF as the matrix value for variants with AF > 0.25. Below 0.25, the AF measurements aren't reliable
 elif amb_mode == "AF":
     print("Encoding ambiguous variants with their AF")
-    
-    # encode only variants with intermediate AF with their AF
-    # df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (~pd.isnull(df_model["variant_allele_frequency"])), "variant_binary_status"] = df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (~pd.isnull(df_model["variant_allele_frequency"])), "variant_allele_frequency"].values
     
     # encode all variants with AF > 0.25 with their AF
     df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_binary_status"] = df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_allele_frequency"].values
