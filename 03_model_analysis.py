@@ -8,13 +8,7 @@ import sys
 import glob, os, yaml
 import warnings
 warnings.filterwarnings("ignore")
-import tracemalloc
 analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
-
-
-# starting the memory monitoring
-tracemalloc.start()
-
 who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resistance_variants_all.csv")
 
 
@@ -196,11 +190,3 @@ model_analysis = run_all(out_dir, drug, drug_WHO_abbr, **kwargs)
 
 # save
 model_analysis.to_csv(os.path.join(out_dir, "model_analysis.csv"), index=False)
-
-# returns a tuple: current, peak memory in bytes 
-script_memory = tracemalloc.get_traced_memory()[1] / 1e9
-tracemalloc.stop()
-
-# write peak memory usage in GB
-with open("memory_usage.log", "a+") as file:
-    file.write(f"{os.path.basename(__file__)}: {script_memory} GB\n")
