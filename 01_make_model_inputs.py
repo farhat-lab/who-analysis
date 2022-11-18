@@ -30,13 +30,12 @@ impute = kwargs["impute"]
 synonymous = kwargs["synonymous"]
 unpooled = kwargs["unpooled"]
 
+# make sure that both phenotypes are included in this case
 if "ALL" in pheno_category_lst:
     phenos_name = "ALL"
-    # make sure that both phenotypes are included in this case
     pheno_category_lst = ["ALL", "WHO"]
 else:
     phenos_name = "WHO"
-
 
 if amb_mode == "DROP":
     model_prefix = "dropAF"
@@ -78,7 +77,7 @@ else:
     
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
-
+genos_file = os.path.join(analysis_dir, drug, "genos.csv.gz")
 
 ############# STEP 1: GET ALL AVAILABLE PHENOTYPES, PROCESS THEM, AND SAVE TO A GENERAL PHENOTYPES FILE FOR EACH MODEL TYPE #############
 
@@ -179,15 +178,15 @@ def read_in_all_genos(drug):
     return pd.concat(dfs_lst).drop_duplicates().reset_index(drop=True)
 
 
-if not os.path.isfile(os.path.join(analysis_dir, drug, "genos.csv.gz")):
+if not os.path.isfile(genos_file):
     # read in all available genotypes and save to a compressed file for each drug
     df_model = read_in_all_genos(drug)
 
     if len(df_model.loc[~pd.isnull(df_model["neutral"])]) == 0:
         del df_model["neutral"]
-    df_model.to_csv(os.path.join(analysis_dir, drug, "genos.csv.gz"), compression="gzip", index=False)
+    df_model.to_csv(genos_file, compression="gzip", index=False)
 else:
-    df_model = pd.read_csv(os.path.join(analysis_dir, drug, "genos.csv.gz"), compression="gzip")
+    df_model = pd.read_csv(genos_file, compression="gzip")
 
 # keep only samples that are in the phenotypes dataframe for this model
 df_model = df_model.loc[df_model["sample_id"].isin(df_phenos["sample_id"])]

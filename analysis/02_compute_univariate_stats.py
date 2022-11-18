@@ -12,6 +12,7 @@ import tracemalloc
 
 # starting the memory monitoring
 tracemalloc.start()
+analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
 
 def compute_predictive_values(combined_df, return_stats=[]):
@@ -75,8 +76,6 @@ def compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000):
 
     # final_analysis file with all significant variants for a drug
     res_df = pd.read_csv(os.path.join(analysis_dir, drug, "final_analysis.csv"))
-    res_df = res_df[res_df.columns[~res_df.columns.str.contains("|".join(["_x", "y"]))]]
-
     df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv"))
     df_genos = pd.read_csv(os.path.join(analysis_dir, drug, "genos.csv.gz"), compression="gzip")
     df_genos["orig_variant"] = df_genos["resolved_symbol"] + "_" + df_genos["variant_category"]
@@ -182,13 +181,10 @@ def compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000):
     else:
         del res_df
 
-    # save, overwriting the original dataframe
     final_res.sort_values("coef", ascending=False).to_csv(os.path.join(analysis_dir, drug, "final_analysis.csv"), index=False)
 
 
 _, drug = sys.argv
-
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
 # run analysis
 model_analysis_univariate_stats = compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000)
