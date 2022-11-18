@@ -1556,3 +1556,84 @@
 01_make_model_inputs.py: 30.937053568 GB
 02_compute_univariate_stats.py: 5.636519796 GB
 01_combine_model_analyses.py: 0.005142719 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 76.074261746 GB
+02_regression_with_bootstrap.py: 37.329450033 GB
+03_model_analysis.py: 0.095162134 GB
+02_regression_with_bootstrap.py: 15.851771808 GB
+03_model_analysis.py: 0.036210384 GB
+01_combine_model_analyses.py: 0.008897977 GB
+02_compute_univariate_stats.py: 12.505973478 GB
+01_combine_model_analyses.py: 0.003852996 GB
+02_regression_with_bootstrap.py: 14.775937203 GB
+03_model_analysis.py: 0.055290782 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Pyrazinamide/tiers=1+2/phenos=ALL/encodeAF_noSyn
+01_make_model_inputs.py: 19.584545315 GB
+02_compute_univariate_stats.py: 11.254740555 GB
+01_combine_model_analyses.py: 0.009225612 GB
+02_regression_with_bootstrap.py: 23.141600555 GB
+03_model_analysis.py: 0.040455417 GB
+01_combine_model_analyses.py: 0.008113106 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Isoniazid/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 117.712823853 GB
+02_regression_with_bootstrap.py: 14.58105995 GB
+03_model_analysis.py: 0.032189218 GB
+01_combine_model_analyses.py: 0.009848783 GB
+01_combine_model_analyses.py: 0.00889791 GB
+01_combine_model_analyses.py: 0.00811329 GB
+02_regression_with_bootstrap.py: 32.062180378 GB
+03_model_analysis.py: 0.091286026 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Rifampicin/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 92.252445546 GB
+02_compute_univariate_stats.py: 40.838399562 GB
+02_compute_univariate_stats.py: 31.453200083 GB
+01_combine_model_analyses.py: 0.006637297 GB
+02_compute_univariate_stats.py: 52.471429581 GB
+02_compute_univariate_stats.py: 16.813365748 GB
+01_combine_model_analyses.py: 0.007006992 GB
+01_combine_model_analyses.py: 0.009848985 GB
+02_regression_with_bootstrap.py: 32.230720376 GB
+03_model_analysis.py: 0.096144805 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Streptomycin/tiers=1/phenos=ALL/dropAF_withSyn
+01_make_model_inputs.py: 30.937053559 GB
+02_compute_univariate_stats.py: 34.399597682 GB
+01_combine_model_analyses.py: 0.007124122 GB
+02_compute_univariate_stats.py: 33.83019319 GB
+01_combine_model_analyses.py: 0.008872319 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 85.761376764 GB
+02_compute_univariate_stats.py: 30.559329435 GB
+02_regression_with_bootstrap.py: 32.13470666 GB
+03_model_analysis.py: 0.096632553 GB
+02_regression_with_bootstrap.py: 36.317581008 GB
+03_model_analysis.py: 0.105112161 GB
+02_regression_with_bootstrap.py: 19.18701827 GB
+03_model_analysis.py: 0.065723687 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Rifampicin/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 106.699631211 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Streptomycin/tiers=1/phenos=ALL/encodeAF_noSyn
+01_make_model_inputs.py: 23.742526467 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Isoniazid/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 87.710020765 GB
+01_combine_model_analyses.py: 0.003504397 GB
+02_regression_with_bootstrap.py: 19.104413511 GB
+03_model_analysis.py: 0.050788086 GB
+02_compute_univariate_stats.py: 5.636519528 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Streptomycin/tiers=1+2/phenos=ALL/dropAF_noSyn
+01_make_model_inputs.py: 23.74252433 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Pyrazinamide/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 21.520173152 GB
+02_regression_with_bootstrap.py: 32.788493437 GB
+03_model_analysis.py: 0.142297877 GB
+01_combine_model_analyses.py: 0.003781512 GB

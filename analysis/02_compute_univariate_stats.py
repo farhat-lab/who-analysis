@@ -57,7 +57,7 @@ def compute_predictive_values(combined_df, return_stats=[]):
     assert len(final) == len(final.drop_duplicates("orig_variant"))
         
     final["Num_Isolates"] = final["TP"] + final["FP"]
-    final["Total_Isolates"] = final["TP"] + final["FP"] + final["TN"] + final["FN"]
+    final["Total_Isolates"] = final[["TP", "FP", "TN", "FN"]].sum(axis=1)
     final["PPV"] = final["TP"] / (final["TP"] + final["FP"])
     final["Sens"] = final["TP"] / (final["TP"] + final["FN"])
     final["Spec"] = final["TN"] / (final["TN"] + final["FP"])
