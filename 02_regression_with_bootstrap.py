@@ -147,8 +147,8 @@ else:
     assert sum(model_inputs.index != df_phenos["sample_id"]) == 0
 
     
-# # to save space, delete this file. Don't need it anymore
-# os.remove(os.path.join(out_dir, "filt_matrix.pkl"))
+# to save space, delete this file. Don't need it anymore
+os.remove(os.path.join(out_dir, "filt_matrix.pkl"))
 
 # scale inputs
 X = scaler.fit_transform(X)

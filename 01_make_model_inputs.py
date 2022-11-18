@@ -65,7 +65,7 @@ out_dir = os.path.join(analysis_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phe
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
-print(f"\nSaving results to {out_dir}")            
+print(f"\nSaving model results to {out_dir}")            
 
 if binary:
     phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
@@ -150,8 +150,8 @@ if binary:
 ############# STEP 2: GET ALL AVAILABLE GENOTYPES #############
           
         
-def read_in_data():
-        
+def read_in_all_genos(drug):
+            
     # first get all the genotype files associated with the drug
     geno_files = []
 
@@ -160,8 +160,8 @@ def read_in_data():
         # subdirectory (tiers)
         full_subdir = os.path.join(genos_dir, f"drug_name={drug}", subdir)
 
-        # the last character is the tier number
-        if full_subdir[-1] in tiers_lst:
+        # the last character is the tier number. Get variants from both tiers
+        if full_subdir[-1] in ["1", "2"]:
             for fName in os.listdir(full_subdir):
                 if "run" in fName:
                     geno_files.append(os.path.join(full_subdir, fName))
@@ -172,37 +172,40 @@ def read_in_data():
     for i, fName in enumerate(geno_files):
 
         # print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
-        # read in the dataframe
         df = pd.read_csv(fName, low_memory=False)
+        dfs_lst.append(df)
 
-        # get only genotypes for samples that have a phenotype
-        df_avail_isolates = df.loc[df.sample_id.isin(df_phenos["sample_id"])]
-
-        # keep all variants
-        if synonymous:
-            dfs_lst.append(df_avail_isolates)
-        else:
-            # synonymous variants = synonymous, change in start codon that produces V instead of M, and changes in stop codon that preserve stop
-            dfs_lst.append(df_avail_isolates.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']"))  
-            
     # fail-safe if there are duplicate rows
     return pd.concat(dfs_lst).drop_duplicates().reset_index(drop=True)
 
-df_model = read_in_data()
-# print(f"{tracemalloc.get_traced_memory()[1] / 1e9} GB to read in genotypes dataframe")
 
+if not os.path.isfile(os.path.join(analysis_dir, drug, "genos.csv.gz")):
+    # read in all available genotypes and save to a compressed file for each drug
+    df_model = read_in_all_genos(drug)
+
+    if len(df_model.loc[~pd.isnull(df_model["neutral"])]) == 0:
+        del df_model["neutral"]
+    df_model.to_csv(os.path.join(analysis_dir, drug, "genos.csv.gz"), compression="gzip", index=False)
+else:
+    df_model = pd.read_csv(os.path.join(analysis_dir, drug, "genos.csv.gz"), compression="gzip")
+
+# keep only samples that are in the phenotypes dataframe for this model
+df_model = df_model.loc[df_model["sample_id"].isin(df_phenos["sample_id"])]
+    
+if not synonymous:
+    df_model = df_model.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']").reset_index(drop=True)
 
 ############# STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #############
 
 
 def pool_mutations(df, effect_lst, pool_col):
     
-    df.loc[df["predicted_effect"].isin(effect_lst), ["variant_category", "predicted_effect", "position"]] = [pool_col, pool_col, np.nan]
+    df.loc[df["predicted_effect"].isin(effect_lst), ["variant_category", "position"]] = [pool_col, np.nan]
 
     # sort descending to keep the largest variant_binary_status and variant_allele_frequency first. In this way, pooled mutations that are actually present are preserved
     df_pooled = df.query("variant_category == @pool_col").sort_values(by=["variant_binary_status", "variant_allele_frequency"], ascending=False, na_position="last").drop_duplicates(subset=["sample_id", "resolved_symbol"], keep="first")
 
-    # combine with the unpooled variants and return
+    # combine with the unpooled variants and the other variants and return
     return pd.concat([df_pooled, df.query("variant_category != @pool_col")], axis=0)
 
 

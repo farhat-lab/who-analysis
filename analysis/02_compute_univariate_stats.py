@@ -54,9 +54,6 @@ def compute_predictive_values(combined_df, return_stats=[]):
 
     assert len(final) == len(melted["variable"].unique())
     assert len(final) == len(final.drop_duplicates("orig_variant"))
-    
-    # check that all feature rows have the same number of samples    
-    assert len(np.unique(final[["TP", "FP", "TN", "FN"]].sum(axis=1))) == 1
         
     final["Num_Isolates"] = final["TP"] + final["FP"]
     final["Total_Isolates"] = final["TP"] + final["FP"] + final["TN"] + final["FN"]
@@ -72,76 +69,52 @@ def compute_predictive_values(combined_df, return_stats=[]):
     else:
         return final[return_stats]
     
-    
-
-def get_mutation_effect_annotations(drug):
-        
-    genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
-    
-    # first get all the genotype files associated with the drug
-    geno_files = []
-
-    for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
-
-        # subdirectory (tiers)
-        full_subdir = os.path.join(genos_dir, f"drug_name={drug}", subdir)
-
-        # the last character is the tier number. Get variants from both tiers
-        if full_subdir[-1] in ["1", "2"]:
-            for fName in os.listdir(full_subdir):
-                if "run" in fName:
-                    geno_files.append(os.path.join(full_subdir, fName))
-
-    print(f"    {len(geno_files)} files with genotypes")
-
-    dfs_lst = []
-    for i, fName in enumerate(geno_files):
-
-        # print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
-        # read in the dataframe
-        df = pd.read_csv(fName, usecols=["resolved_symbol", "variant_category", "predicted_effect", "neutral", "position"], low_memory=False)
-        dfs_lst.append(df)
-
-    # fail-safe if there are duplicate rows
-    return pd.concat(dfs_lst).drop_duplicates().reset_index(drop=True)
 
 
-
-def compute_univariate_stats(drug, out_dir, df_phenos, num_bootstrap=1000):
+def compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000):
 
     # final_analysis file with all significant variants for a drug
-    res_df = pd.read_csv(os.path.join(out_dir, drug, "final_analysis.csv"), usecols=['orig_variant', 'coef', 'coef_LB', 'coef_UB', 'pval', 'BH_pval',
-                                                                                   'Bonferroni_pval', 'genome_index', 'confidence_WHO_2021', 'Odds_Ratio',
-                                                                                   'OR_LB', 'OR_UB', 'Tier1_only', 'WHO_phenos', 'poolLOF', 'Syn'
-                                                                                    ]
-                        )
-     
-    # Take the dataframes with the most genotypes and phenotypes represented: tiers=1+2, phenos=ALL
-    model_inputs = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn", "filt_matrix.pkl"))
-    
-    if os.path.isdir(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF")):
-        model_inputs_poolLOF = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF", "filt_matrix.pkl"))
-        model_inputs = pd.concat([model_inputs, model_inputs_poolLOF], axis=1)
-    
-    # remove duplicate columns, then drop any NaNs, which occur if some isolates are present in one matrix, but not the other
-    model_inputs = model_inputs.loc[:,~model_inputs.columns.duplicated()]
-    model_inputs.dropna(inplace=True)
-        
-    combined = model_inputs.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id").reset_index(drop=True)
+    res_df = pd.read_csv(os.path.join(analysis_dir, drug, "final_analysis.csv"))
+    res_df = res_df[res_df.columns[~res_df.columns.str.contains("|".join(["_x", "y"]))]]
 
-    # Can't compute univariate stats for PCs.
-    keep_variants = list(res_df.loc[~res_df["orig_variant"].str.contains("PC")]["orig_variant"].values)
+    df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv"))
+    df_genos = pd.read_csv(os.path.join(analysis_dir, drug, "genos.csv.gz"), compression="gzip")
+    df_genos["orig_variant"] = df_genos["resolved_symbol"] + "_" + df_genos["variant_category"]
+    df_copy = df_genos.copy()
+
+    # pool LOF and inframe mutations
+    df_copy.loc[df_copy["predicted_effect"].isin(["frameshift", "start_lost", "stop_gained", "feature_ablation"]), ["variant_category", "position"]] = ["lof", np.nan]
+    df_copy.loc[df_copy["predicted_effect"].isin(["inframe_insertion", "inframe_deletion"]), ["variant_category", "position"]] = ["inframe", np.nan]
+
+    # update the orig_variant column using the new variant categories (lof and inframe) and combine the pooled and unpooled variants
+    df_copy["orig_variant"] = df_copy["resolved_symbol"] + "_" + df_copy["variant_category"]
+    df_pooled = df_copy.query(f"variant_category in ['lof', 'inframe']").sort_values(by=["variant_binary_status", "variant_allele_frequency"], ascending=False, na_position="last").drop_duplicates(subset=["sample_id", "orig_variant"], keep="first")
+    del df_copy
+    df_genos_full = pd.concat([df_genos, df_pooled], axis=0)
+    del df_genos
+    del df_pooled
+    
+    # keep only variants that are in the final_analysis dataframe and drop NaNs (NaNs = either isolate didn't pass QC or it's a Het) 
+    # We can't process Hets here because they need to be binary to have univariate statistics
+    df_genos_full = df_genos_full.loc[(df_genos_full["orig_variant"].isin(res_df["orig_variant"].values))].dropna(subset="variant_binary_status")
+    
+    # check that the only variants that are in res_df but not in df_genos_full are the principal components
+    if sum(~pd.Series(list(set(res_df["orig_variant"]) - set(df_genos_full["orig_variant"]))).str.contains("PC")) > 0:
+        raise ValueError("Variants are missing from df_genos_full!")
         
-    # check that all samples were preserved
-    combined_small = combined[["sample_id", "phenotype"] + keep_variants]
-    assert len(combined_small) == len(combined)
+    combined = df_genos_full.pivot(index="sample_id", columns="orig_variant", values="variant_binary_status")
+    
+    # predicted effect annotations for later
+    annotated_genos = df_genos_full.query("variant_category not in ['lof', 'inframe']").drop_duplicates(["orig_variant", "predicted_effect"])[["orig_variant", "predicted_effect"]]
+    del df_genos_full
+    combined = combined.merge(df_phenos[["sample_id", "phenotype"]], left_index=True, right_on="sample_id").reset_index(drop=True)
         
     # get dataframe of predictive values for the non-zero coefficients and add them to the results dataframe
-    full_predict_values = compute_predictive_values(combined_small)
+    full_predict_values = compute_predictive_values(combined)
     res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
     
     # save the analysis dataframe with the univariate stats. Do this in case an error occurs during the 
-    res_df.to_csv(os.path.join(out_dir, drug, "final_analysis.csv"), index=False)
+    res_df.to_csv(os.path.join(analysis_dir, drug, "final_analysis.csv"), index=False)
 
     print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates")
     # Can't compute univariate stats for PCs. For tractability, only compute bootstrap stats for variants with positive coefficients.
@@ -182,9 +155,9 @@ def compute_univariate_stats(drug, out_dir, df_phenos, num_bootstrap=1000):
 
         lower, upper = np.nanpercentile(bs_results.loc[variable, :], q=[2.5, 97.5], axis=0)
 
-        # LR+ can be infinite if spec is 1, and after percentile, it will be NaN, so replace with infinity
+        # LR+ can be infinite if spec is 1, and after percentile, it will be NaN, so replace with infinity. Ignore principal components because they will be NaN
         if variable == "LR+":
-            res_df[variable] = res_df[variable].fillna(np.inf)
+            res_df.loc[~res_df["orig_variant"].str.contains("PC"), variable] = res_df.loc[~res_df["orig_variant"].str.contains("PC"), variable].fillna(np.inf)
             lower[np.isnan(lower)] = np.inf
             upper[np.isnan(upper)] = np.inf
 
@@ -199,33 +172,26 @@ def compute_univariate_stats(drug, out_dir, df_phenos, num_bootstrap=1000):
         # assert sum(res_df[variable] > res_df[f"{variable}_UB"]) == 0
         
     # get effect annotations and merge them with the results dataframe
-    genos = get_mutation_effect_annotations(drug)
-    genos["orig_variant"] = genos["resolved_symbol"] + "_" + genos["variant_category"]
-    del genos["resolved_symbol"]
-    del genos["variant_category"]
-    
-    final_res = res_df.merge(genos, on="orig_variant", how="outer")
+    final_res = res_df.merge(annotated_genos, on="orig_variant", how="outer")
     final_res = final_res.loc[~pd.isnull(final_res["coef"])]
+    final_res.loc[final_res["orig_variant"].str.contains("lof"), "predicted_effect"] = "lof"
+    final_res.loc[final_res["orig_variant"].str.contains("inframe"), "predicted_effect"] = "inframe"
 
     if len(set(final_res.orig_variant).symmetric_difference(res_df.orig_variant)) != 0:
         raise ValueError("Not all mutations have associated effects!")
     else:
         del res_df
-        
-    if len(final_res.loc[~pd.isnull(final_res["neutral"])]) == 0:
-        del final_res["neutral"]
-        
+
     # save, overwriting the original dataframe
-    final_res.sort_values("coef", ascending=False).to_csv(os.path.join(out_dir, drug, "final_analysis.csv"), index=False)
+    final_res.sort_values("coef", ascending=False).to_csv(os.path.join(analysis_dir, drug, "final_analysis.csv"), index=False)
 
 
 _, drug = sys.argv
 
-out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
-df_phenos = pd.read_csv(os.path.join(out_dir, drug, "phenos_binary.csv"))
+analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
 # run analysis
-model_analysis_univariate_stats = compute_univariate_stats(drug, out_dir, df_phenos, num_bootstrap=1000)
+model_analysis_univariate_stats = compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000)
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

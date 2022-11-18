@@ -1,29 +1,25 @@
 #!/bin/bash 
 #SBATCH -c 10
-#SBATCH -t 3-00:00
-#SBATCH -p medium 
-#SBATCH --mem=150G 
+#SBATCH -t 0-11:59
+#SBATCH -p short 
+#SBATCH --mem=100G 
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
-#SBATCH --mail-user=yasha_ektefaie@g.harvard.edu
+#SBATCH --mail-user=skulkarni@g.harvard.edu
 
-# list of config files to use
-config_array=(
- 'config.yaml'
-)
 
 # list of drugs and associated abbreviations
 drug_array=(
- 'Ethambutol'
+ # 'Ethambutol'
  'Amikacin'
  'Clofazimine'
- 'Delamanid'
+ # 'Delamanid'
  'Capreomycin'
- 'Rifampicin'
+ # 'Rifampicin'
  'Ethionamide'
  'Kanamycin'
- 'Isoniazid'
+ # 'Isoniazid'
  'Streptomycin'
  'Pyrazinamide'
  'Linezolid'
@@ -31,16 +27,17 @@ drug_array=(
  'Moxifloxacin'
  'Levofloxacin'
 )
+
 abbr_array=(
- 'EMB'
+ # 'EMB'
  'AMI'
  'CFZ'
- 'DLM'
+ # 'DLM'
  'CAP'
- 'RIF'
+ # 'RIF'
  'ETH'
  'KAN'
- 'INH'
+ # 'INH'
  'STM'
  'PZA'
  'LZD'
@@ -49,16 +46,7 @@ abbr_array=(
  'LEV'
 )
 
+
 for k in ${!drug_array[@]}; do 
-    for i in ${!config_array[@]}; do 
-        python3 -u 01_make_model_inputs.py "${config_array[$i]}" "${drug_array[$k]}" "${abbr_array[$k]}"
-        python3 -u 02_regression_with_bootstrap.py "${config_array[$i]}" "${drug_array[$k]}" "${abbr_array[$k]}"
-        python3 -u 03_model_analysis.py "${config_array[$i]}" "${drug_array[$k]}" "${abbr_array[$k]}"
-    
-    # combine model results and compute univariate statistics for the significant variants
-    python3 -u analysis/01_combine_model_analyses.py "${drug_array[$k]}"
-    python3 -u analysis/02_compute_univariate_stats.py "${drug_array[$k]}"
-    python3 -u analysis/03_model_metrics.py "${drug_array[$k]}"
-    
-    done
+    python3 -u 01_make_model_inputs.py config_files/config_01.yaml "${drug_array[$k]}" "${abbr_array[$k]}"
 done
