@@ -745,3 +745,13 @@
 01_make_model_inputs.py: 15.299842902 GB
 02_regression_with_bootstrap.py: 11.541230194 GB
 03_model_analysis.py: 0.034167369 GB
+02_regression_with_bootstrap.py: 11.482382535 GB
+03_model_analysis.py: 0.032093124 GB
+02_regression_with_bootstrap.py: 11.571440828 GB
+03_model_analysis.py: 0.040590144 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Bedaquiline/tiers=1/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs.py: 5.05944108 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethionamide/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 12.558707688 GB
