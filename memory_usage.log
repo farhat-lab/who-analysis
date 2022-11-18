@@ -715,3 +715,33 @@
 
 /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Clofazimine/tiers=1/phenos=WHO/dropAF_noSyn
 01_make_model_inputs.py: 6.746221182 GB
+02_regression_with_bootstrap.py: 11.469631237 GB
+03_model_analysis.py: 0.019990971 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Pyrazinamide/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 18.926146415 GB
+02_regression_with_bootstrap.py: 11.585788561 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Bedaquiline/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 5.059440956 GB
+03_model_analysis.py: 0.040017412 GB
+02_regression_with_bootstrap.py: 11.511429513 GB
+03_model_analysis.py: 0.023875141 GB
+02_regression_with_bootstrap.py: 11.472220512 GB
+03_model_analysis.py: 0.022486645 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Linezolid/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 5.11482109 GB
+02_regression_with_bootstrap.py: 11.505161202 GB
+03_model_analysis.py: 0.025366011 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Bedaquiline/tiers=1/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 5.059441185 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Clofazimine/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 6.746221573 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Amikacin/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 15.299842902 GB
+02_regression_with_bootstrap.py: 11.541230194 GB
+03_model_analysis.py: 0.034167369 GB
