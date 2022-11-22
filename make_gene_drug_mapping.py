@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import glob, os, yaml, subprocess, sparse, sys
 
-_, out_file = sys.argv
 
 # genotypes broken down by gene (tier1 and tier2)
 geno_dir = "/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes"
@@ -39,6 +38,5 @@ for drug in drugs_lst:
             for gene in output.strip("\n").split("\n"):
                 drug_gene_df = pd.concat([drug_gene_df, pd.DataFrame({"Drug": drug, "Gene": gene, "Tier": int(single_tier_dir[-1])}, index=[0])], ignore_index=True) 
                 
-
-# save for later
-drug_gene_df.to_csv(out_file, index=False)
+                
+drug_gene_df.to_csv("data/drug_gene_mapping.csv", index=False)
