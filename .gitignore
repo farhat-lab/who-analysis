@@ -6,7 +6,7 @@ sandbox.ipynb
 
 # extra config and bash files made during testing
 config_*.yaml
-run_*.sh
+*.sh
 config_files/
 
 # confidential information
