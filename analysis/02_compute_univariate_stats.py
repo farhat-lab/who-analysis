@@ -104,26 +104,26 @@ def compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000):
     combined = df_genos_full.pivot(index="sample_id", columns="orig_variant", values="variant_binary_status")
     
     # predicted effect annotations for later
-    annotated_genos = df_genos_full.query("variant_category not in ['lof', 'inframe']").drop_duplicates(["orig_variant", "predicted_effect"])[["orig_variant", "predicted_effect"]]
+    annotated_genos = df_genos_full.query("variant_category not in ['lof', 'inframe']").drop_duplicates(["orig_variant", "predicted_effect", "position"])[["orig_variant", "predicted_effect", "position"]]
     del df_genos_full
     combined = combined.merge(df_phenos[["sample_id", "phenotype"]], left_index=True, right_on="sample_id").reset_index(drop=True)
+    
+    # Can't compute univariate stats for PCs or for variants in the HET models. Because the mutations were encoded with AF, there are no positives and negatives
+    keep_variants = list(res_df.loc[(~res_df["orig_variant"].str.contains("PC")) & (res_df["HET"] != 'AF')]["orig_variant"].values)
+    combined = combined[["sample_id", "phenotype"] + keep_variants]
         
     # get dataframe of predictive values for the non-zero coefficients and add them to the results dataframe
     full_predict_values = compute_predictive_values(combined)
     res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
     
     # save the analysis dataframe with the univariate stats. Do this in case an error occurs during the 
-    res_df.to_csv(os.path.join(analysis_dir, drug, "final_analysis.csv"), index=False)
+    res_df.to_csv(os.path.join(analysis_dir, drug, "final_analysis_with_univariate.csv"), index=False)
 
     print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates")
-    # Can't compute univariate stats for PCs. For tractability, only compute bootstrap stats for variants with positive coefficients.
-    # The stats for variants with negative coefficients are often edge numbers and not informative, so this saves time. 
-    keep_variants = list(res_df.loc[(~res_df["orig_variant"].str.contains("PC")) & (res_df["coef"] > 0)]["orig_variant"].values)
-    
-    # Remake this dataframe with fewer features because only going to bootstrap stats for variants with positive coefficients.
-    # check that all samples were preserved. 
-    combined_small = combined[["sample_id", "phenotype"] + keep_variants]
-    assert len(combined_small) == len(combined)
+    # For tractability, remove variants with negative coefficients before bootstrapping
+    # The stats for variants with negative coefficients are often not informative or give errors because of NaNs and other edge cases, so this saves time. 
+    keep_variants = list(set(keep_variants) - set(res_df.query("coef < 0")["orig_variant"].values))
+    combined = combined[["sample_id", "phenotype"] + keep_variants]
     
     bs_results = pd.DataFrame(columns = keep_variants)
 
@@ -131,8 +131,8 @@ def compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000):
     for i in range(num_bootstrap):
 
         # get bootstrap sample
-        bs_idx = np.random.choice(np.arange(0, len(combined_small)), size=len(combined_small), replace=True)
-        bs_combined = combined_small.iloc[bs_idx, :]
+        bs_idx = np.random.choice(np.arange(0, len(combined)), size=len(combined), replace=True)
+        bs_combined = combined.iloc[bs_idx, :]
         
         # check ordering of features because we're just going to append bootstrap dataframes
         assert sum(bs_combined.columns[2:] != bs_results.columns) == 0
@@ -146,8 +146,6 @@ def compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000):
 
     # ensure everything is float because had some issues with np.nanpercentile giving an error about incompatible data types
     bs_results = bs_results.astype(float)
-    if len(bs_results.index.unique()) != 5:
-        print(bs_results.index.unique())
 
     # add the confidence intervals to the dataframe
     for variable in ["PPV", "Sens", "Spec", "LR+", "LR-"]:
@@ -181,13 +179,13 @@ def compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000):
     else:
         del res_df
 
-    final_res.sort_values("coef", ascending=False).to_csv(os.path.join(analysis_dir, drug, "final_analysis.csv"), index=False)
+    final_res.sort_values("coef", ascending=False).to_csv(os.path.join(analysis_dir, drug, "final_analysis_with_univariate.csv"), index=False)
 
 
 _, drug = sys.argv
 
 # run analysis
-model_analysis_univariate_stats = compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000)
+compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000)
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

@@ -18,31 +18,21 @@ import tracemalloc
 tracemalloc.start()
     
     
-def read_in_matrix_compute_grm(fName, samples):
-    minor_allele_counts = sparse.load_npz(fName).todense()
+minor_allele_counts = sparse.load_npz("data/minor_allele_counts.npz").todense()
 
-    # convert to dataframe
-    minor_allele_counts = pd.DataFrame(minor_allele_counts)
-    minor_allele_counts.columns = minor_allele_counts.iloc[0, :]
-    minor_allele_counts = minor_allele_counts.iloc[1:, :]
-    minor_allele_counts.rename(columns={0:"sample_id"}, inplace=True)
-    minor_allele_counts["sample_id"] = minor_allele_counts["sample_id"].astype(int)
+# convert to dataframe
+minor_allele_counts = pd.DataFrame(minor_allele_counts)
+minor_allele_counts.columns = minor_allele_counts.iloc[0, :]
+minor_allele_counts = minor_allele_counts.iloc[1:, :]
+minor_allele_counts.rename(columns={0:"sample_id"}, inplace=True)
+minor_allele_counts["sample_id"] = minor_allele_counts["sample_id"].astype(int)
 
-    # make sample ids the index again
-    minor_allele_counts = minor_allele_counts.set_index("sample_id")
+# make sample ids the index again
+minor_allele_counts = minor_allele_counts.set_index("sample_id")
 
-    mean_maf = pd.DataFrame(minor_allele_counts.mean(axis=0))
-    print(f"Min MAF: {round(mean_maf[0].min(), 2)}, Max MAF: {round(mean_maf[0].max(), 2)}")
-
-    # compute GRM using the mino allele counts of only the samples in the model
-    minor_allele_counts = minor_allele_counts.query("sample_id in @samples")
-    grm = np.cov(minor_allele_counts.values)
-
-    minor_allele_counts_samples = minor_allele_counts.index.values
-    del minor_allele_counts
-    return grm, minor_allele_counts_samples
-
-
+mean_maf = pd.DataFrame(minor_allele_counts.mean(axis=0))
+print(f"Min MAF: {round(mean_maf[0].min(), 2)}, Max MAF: {round(mean_maf[0].max(), 2)}")
+del mean_maf
 
             
 def get_threshold_val(y, y_proba, print_thresh=False):
@@ -127,7 +117,7 @@ def generate_model_output(X, y, model, binary=True, print_thresh=False):
 
 
 
-def compute_downselected_logReg_model(drug, out_dir, binary=True, num_bootstrap=1000):
+def compute_downselected_logReg_model(drug, analysis_dir, pheno_category_lst, binary=True, num_bootstrap=1000):
     '''
     This model computes a logistic regression model using the significant predictors from the first model.
     
@@ -135,39 +125,72 @@ def compute_downselected_logReg_model(drug, out_dir, binary=True, num_bootstrap=
     builds another L2-penalized logistic regression to compute sensitivity, specificity, AUC, accuracy, and balanced accuracy. 
     '''
     
-    # final_analysis file with all significant variants for a drug
-    res_df = pd.read_csv(os.path.join(out_dir, drug, "final_analysis.csv"))
+    # all features with non-zero coefficients in LR
+    res_df = pd.read_csv(os.path.join(analysis_dir, drug, "final_analysis.csv"))
     
-    # # get only significant variants: 0.05 for core features, 0.01 for the rest
-    # res_df = res_df.query("(Tier1_only == 1 & WHO_phenos == 1 & poolLOF == 1 & Syn == 0 & BH_pval < 0.05) | (~(Tier1_only == 1 & WHO_phenos == 1 & poolLOF == 1 & Syn == 0) & BH_pval < 0.01)")
-    
-    # build model using all features with confidence intervals that lie entirely above or below 0
+    # keep only features that were in the core model and with confidence intervals that lie entirely above or below 0
+    # sometimes features may not pass all these filters (i.e. Delamanid), so in that case, only keep significant features, including non-core features
+    # if len(res_df.query("Tier==1 & Phenos=='WHO' & unpooled==0 & synonymous==0 & ((coef_LB > 0 & coef_UB > 0) | (coef_LB < 0 & coef_UB < 0))")) == 0:
+    #     res_df = res_df.query("(coef_LB > 0 & coef_UB > 0) | (coef_LB < 0 & coef_UB < 0)")
+    #     print("Building predictive model with all significant predictors")
+    # else:
+    #     res_df = res_df.query("Tier==1 & Phenos=='WHO' & unpooled==0 & synonymous==0 & ((coef_LB > 0 & coef_UB > 0) | (coef_LB < 0 & coef_UB < 0))")
+    #     print("Building predictive model with all significant core predictors")
     res_df = res_df.query("(coef_LB > 0 & coef_UB > 0) | (coef_LB < 0 & coef_UB < 0)")
 
-    # read in all genotypes and phenotypes and combine into a single dataframe. 
-    # Take the dataframes with the most genotypes and phenotypes represented: tiers=1+2, phenos=ALL
-    # if there are significant LOF variants in res_df, then get the corresponding poolLOF matrix and combine matrices 
-    df_phenos = pd.read_csv(os.path.join(out_dir, drug, "phenos_binary.csv"))
+    # remove principal components and the pooled variables
+    res_df = res_df.loc[~res_df["orig_variant"].str.contains("|".join(["inframe", "lof", "PC"]))]
     
-    # Take the dataframes with the most genotypes and phenotypes represented: tiers=1+2, phenos=ALL
-    model_inputs = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn", "filt_matrix.pkl"))
+    df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv"), usecols=['sample_id', 'phenotypic_category', 'phenotype']).query("phenotypic_category in @pheno_category_lst")
+    df_genos_full = pd.read_csv(os.path.join(analysis_dir, drug, "genos.csv.gz"), compression="gzip", usecols=['sample_id', 'resolved_symbol', 'variant_category', 'predicted_effect', 'variant_allele_frequency', 'variant_binary_status'])
     
-    if os.path.isdir(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF")):
-        model_inputs_poolLOF = pd.read_pickle(os.path.join(out_dir, drug, "tiers=1+2/phenos=ALL/dropAF_withSyn_poolLOF", "filt_matrix.pkl"))
-        model_inputs = pd.concat([model_inputs, model_inputs_poolLOF], axis=1)
+#     def pool_mutations(df_genos, effect_lst, pool_col):
+
+#         df = df_genos.copy()
+#         df.loc[df["predicted_effect"].isin(effect_lst), ["variant_category", "position"]] = [pool_col, np.nan]
+
+#         # sort descending to keep the largest variant_binary_status and variant_allele_frequency first. In this way, pooled mutations that are actually present are preserved
+#         return df.query("variant_category == @pool_col").sort_values(by=["variant_binary_status", "variant_allele_frequency"], ascending=False, na_position="last").drop_duplicates(subset=["sample_id", "resolved_symbol"], keep="first")
+
+
+#     if len(res_df.loc[res_df["orig_variant"].str.contains("lof")]) > 0:
+#         df_pooled_lof = pool_mutations(df_genos, ["frameshift", "start_lost", "stop_gained", "feature_ablation"], "lof")
+#         df_genos_full = pd.concat([df_genos, df_pooled_lof], axis=0)
+#         del df_pooled_lof
+
+#         if len(res_df.loc[res_df["orig_variant"].str.contains("inframe")]) > 0:
+#             df_pooled_inframe = pool_mutations(df_genos, ["inframe_insertion", "inframe_deletion"], "inframe").reset_index(drop=True)
+#             df_genos_full = pd.concat([df_genos_full, df_pooled_inframe], axis=0).reset_index(drop=True)
+#     else:
+#         if len(res_df.loc[res_df["orig_variant"].str.contains("inframe")]) > 0:
+#             df_pooled_inframe = pool_mutations(df_genos, ["inframe_insertion", "inframe_deletion"], "inframe").reset_index(drop=True)
+#             df_genos_full = pd.concat([df_genos, df_pooled_inframe], axis=0).reset_index(drop=True)
+#             del df_pooled_inframe
+#         else:
+#             df_genos_full = df_genos.copy()
+
+    # del df_genos
+    df_genos_full["mutation"] = df_genos_full["resolved_symbol"] + "_" + df_genos_full["variant_category"]
+
+    assert len(set(res_df["orig_variant"]) - set(df_genos_full["mutation"])) == 0
+    df_genos_full = df_genos_full.loc[df_genos_full["mutation"].isin(res_df["orig_variant"])]
     
-    # remove duplicate columns, then drop any NaNs, which occur if some isolates are present in one matrix, but not the other
-    model_inputs = model_inputs.loc[:,~model_inputs.columns.duplicated()]
-    model_inputs.dropna(inplace=True)
-        
-    # combine into a single dataframe and check that there are no principal components left (because there aren't in df_phenos)
-    combined = model_inputs.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id", how="inner").set_index("sample_id")
-    assert sum(combined.columns.str.contains("PC")) == 0
+    drop_isolates = df_genos_full.loc[(pd.isnull(df_genos_full["variant_binary_status"])) & (df_genos_full["variant_allele_frequency"] <= 0.75)].sample_id.unique()
+    df_genos_full = df_genos_full.query("sample_id not in @drop_isolates")
+    model_matrix = df_genos_full.pivot(index="sample_id", columns="mutation", values="variant_binary_status")
     
-    # compute GRM and get only samples that are represented in the GRM (it should be everything, but this is just to avoid errors)
-    # GRM is in the order of minor_allele_counts_samples (N x N)
-    grm, minor_allele_counts_samples = read_in_matrix_compute_grm("data/minor_allele_counts.npz", combined.index.values)
-    combined = combined.loc[minor_allele_counts_samples, :]
+    # drop any remaining isolates with any missingness (axis = 0)
+    model_matrix = model_matrix.dropna(axis=0)
+    model_matrix = model_matrix.merge(df_phenos[["sample_id", "phenotype"]], left_index=True, right_on="sample_id").set_index("sample_id")
+    print(model_matrix.shape)
+
+    # compute GRM using the minor allele counts of only the samples in the model
+    single_drug_samples = model_matrix.index.values
+    minor_allele_counts_single_drug = minor_allele_counts.query("sample_id in @single_drug_samples")
+    grm = np.cov(minor_allele_counts_single_drug.values)
+    
+    minor_allele_counts_samples = minor_allele_counts_single_drug.index.values
+    model_matrix = model_matrix.loc[minor_allele_counts_samples, :]
     
     scaler = StandardScaler()
     pca = PCA(n_components=5)
@@ -179,12 +202,12 @@ def compute_downselected_logReg_model(drug, out_dir, binary=True, num_bootstrap=
     eigenvec_df.index = minor_allele_counts_samples
     
     # combine with eigevectors, then separate the phenotypes
-    combined = combined.merge(eigenvec_df, left_index=True, right_index=True)
+    model_matrix = model_matrix.merge(eigenvec_df, left_index=True, right_index=True)
     if binary:
-        y = combined["phenotype"].values
-        del combined["phenotype"]
+        y = model_matrix["phenotype"].values
+        del model_matrix["phenotype"]
     
-    X = scaler.fit_transform(combined.values)
+    X = scaler.fit_transform(model_matrix.values)
     
     # fit a regression model on the downselected data (only variants with non-zero coefficients and significant p-values after FDR)
     if binary:
@@ -207,10 +230,10 @@ def compute_downselected_logReg_model(drug, out_dir, binary=True, num_bootstrap=
     model.fit(X, y)
     if binary:
         print(f"    Regularization parameter: {model.C_[0]}")
-        pickle.dump(model, open(os.path.join(out_dir, drug, 'logReg_model'),'wb'))
+        pickle.dump(model, open(os.path.join(analysis_dir, drug, 'core_logReg_model'),'wb'))
     else:
         print(f"    Regularization parameter: {model.alpha_}")
-        pickle.dump(model, open(os.path.join(out_dir, drug, 'linReg_model'),'wb'))
+        pickle.dump(model, open(os.path.join(analysis_dir, drug, 'linReg_model'),'wb'))
 
 
     # get the summary stats for the overall model
@@ -237,27 +260,26 @@ def compute_downselected_logReg_model(drug, out_dir, binary=True, num_bootstrap=
         summary = generate_model_output(X_bs, y_bs, bs_model, binary=binary, print_thresh=False)
         summary["BS"] = 1
         model_outputs = pd.concat([model_outputs, summary], axis=0)
-        
-        if i % (num_bootstrap / 10) == 0:
-            print(i)
 
     return pd.DataFrame(model_outputs)
     
 
-_, drug = sys.argv
+analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
-out_dir = '/n/data1/hms/dbmi/farhat/ye12/who/analysis'
-
-# run logistic regression model using only significant predictors saved in the model_analysis.csv file
-#if (amb_mode != "AF") & (synonymous == True) and (len(tiers_lst) > 1):
 binary = True
+pheno_category_lst = ["WHO"]
 
-summary_df = compute_downselected_logReg_model(drug, out_dir, binary=binary, num_bootstrap=1000)
+#drugs_lst = ['Moxifloxacin', 'Capreomycin', 'Amikacin', 'Kanamycin', 'Ethionamide', 'Levofloxacin', 'Clofazimine', 'Linezolid', 'Bedaquiline', 'Delamanid', 'Streptomycin', 'Pyrazinamide', 'Ethambutol']
+drugs_lst = ["Rifampicin"]
 
-if binary:
-    summary_df.to_csv(os.path.join(out_dir, drug, "logReg_summary.csv"), index=False)
-else:
-    summary_df.to_csv(os.path.join(out_dir, drug, "linReg_summary.csv"), index=False)
+for drug in drugs_lst:
+    print(f"\nWorking on {drug}")
+    summary_df = compute_downselected_logReg_model(drug, analysis_dir, pheno_category_lst, binary=binary, num_bootstrap=1000)
+
+    if binary:
+        summary_df.to_csv(os.path.join(analysis_dir, drug, "core_logReg_summary.csv"), index=False)
+    else:
+        summary_df.to_csv(os.path.join(analysis_dir, drug, "linReg_summary.csv"), index=False)
     
     
 # returns a tuple: current, peak memory in bytes 

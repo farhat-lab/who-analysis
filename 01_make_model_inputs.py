@@ -5,6 +5,7 @@ import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
 analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
+drug_gene_mapping = pd.read_csv("data/drug_gene_mapping.csv")
 
 
 ############# STEP 0: READ IN PARAMETERS FILE AND MAKE OUTPUT DIRECTORIES #############
@@ -171,7 +172,7 @@ def read_in_all_genos(drug):
     for i, fName in enumerate(geno_files):
 
         # print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
-        df = pd.read_csv(fName, low_memory=False)
+        df = pd.read_csv(fName, low_memory=False)            
         dfs_lst.append(df)
 
     # fail-safe if there are duplicate rows
@@ -188,9 +189,15 @@ if not os.path.isfile(genos_file):
 else:
     df_model = pd.read_csv(genos_file, compression="gzip")
 
-# keep only samples that are in the phenotypes dataframe for this model
-df_model = df_model.loc[df_model["sample_id"].isin(df_phenos["sample_id"])]
-    
+# keep only samples that are in the phenotypes dataframe and variants in the desired tiers
+keep_genes = drug_gene_mapping.loc[(drug_gene_mapping["Drug"] == drug) & 
+                      (drug_gene_mapping["Tier"].isin(np.array(tiers_lst).astype(int)))
+                     ]["Gene"].values
+
+df_model = df_model.loc[(df_model["sample_id"].isin(df_phenos["sample_id"].values)) & 
+             (df_model["resolved_symbol"].isin(keep_genes))
+            ]
+
 if not synonymous:
     df_model = df_model.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']").reset_index(drop=True)
 
