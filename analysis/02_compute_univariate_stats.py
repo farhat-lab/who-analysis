@@ -114,7 +114,7 @@ def compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000):
         
     # get dataframe of predictive values for the non-zero coefficients and add them to the results dataframe
     full_predict_values = compute_predictive_values(combined)
-    res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer")
+    res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer").drop_duplicates("orig_variant", keep="first")
     
     # save the analysis dataframe with the univariate stats. Do this in case an error occurs during the 
     res_df.to_csv(os.path.join(analysis_dir, drug, "final_analysis_with_univariate.csv"), index=False)
@@ -161,7 +161,7 @@ def compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000):
         res_df = res_df.merge(pd.DataFrame({"orig_variant": bs_results.columns, 
                             f"{variable}_LB": lower,
                             f"{variable}_UB": upper,
-                           }), on="orig_variant", how="outer")
+                           }), on="orig_variant", how="outer").drop_duplicates("orig_variant", keep="first")
 
         # sanity checks -- lower bounds should be <= true values, and upper bounds should be >= true values
         # numerical precision can make this fail though, so commented out for now

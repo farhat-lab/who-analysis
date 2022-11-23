@@ -2374,3 +2374,22 @@
 02_regression_with_bootstrap.py: 76.362621753 GB
 02_regression_with_bootstrap.py: 73.075460758 GB
 02_regression_with_bootstrap.py: 34.712511037 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1/phenos=ALL/dropAF_noSyn
+01_make_model_inputs.py: 76.074628864 GB
+02_regression_with_bootstrap.py: 64.826243306 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1/phenos=ALL/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 76.074628993 GB
+02_regression_with_bootstrap.py: 64.834095455 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1/phenos=ALL/dropAF_withSyn
+01_make_model_inputs.py: 76.074629357 GB
+02_regression_with_bootstrap.py: 65.393418594 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1/phenos=ALL/encodeAF_noSyn
+01_make_model_inputs.py: 76.074628946 GB
+02_regression_with_bootstrap.py: 64.826243176 GB
+02_compute_univariate_stats.py: 226.893576909 GB
+02_compute_univariate_stats.py: 235.201918804 GB
+02_compute_univariate_stats.py: 192.064371909 GB
