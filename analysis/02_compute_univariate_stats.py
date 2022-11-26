@@ -15,7 +15,7 @@ tracemalloc.start()
 analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
 
-def compute_predictive_values(combined_df, return_stats=[]):
+def compute_univariate_stats(combined_df, variant_coef_dict, return_stats=[]):
     '''
     Compute positive predictive value. 
     Compute sensitivity, specificity, and positive and negative likelihood ratios. 
@@ -39,6 +39,15 @@ def compute_predictive_values(combined_df, return_stats=[]):
     grouped_df = pd.DataFrame(melted_2.groupby(["phenotype", "variable"]).value_counts()).reset_index()
     grouped_df = grouped_df.rename(columns={"variable": "orig_variant", "value": "variant", 0:"count"})
     
+    # add coefficients, create new column for the switched phenotypes (keep the old ones in actual_pheno)
+    grouped_df["coef"] = grouped_df["orig_variant"].map(variant_coef_dict)
+    grouped_df["actual_pheno"] = grouped_df["phenotype"].copy()
+    assert sum(grouped_df["phenotype"] != grouped_df["actual_pheno"]) == 0
+
+    # switch sign of the phenotypes for the negative coefficients and check
+    grouped_df.loc[grouped_df["coef"] < 0, "phenotype"] = 1 - grouped_df.loc[grouped_df["coef"] < 0, "actual_pheno"]
+    assert sum(grouped_df["phenotype"] != grouped_df["actual_pheno"]) == len(grouped_df.query("coef < 0"))
+    
     # dataframes of the counts of the 4 values
     true_pos_df = grouped_df.query("variant == 1 & phenotype == 1").rename(columns={"count": "TP"})
     false_pos_df = grouped_df.query("variant == 1 & phenotype == 0").rename(columns={"count": "FP"})
@@ -59,20 +68,65 @@ def compute_predictive_values(combined_df, return_stats=[]):
     final["Num_Isolates"] = final["TP"] + final["FP"]
     final["Total_Isolates"] = final[["TP", "FP", "TN", "FN"]].sum(axis=1)
     final["PPV"] = final["TP"] / (final["TP"] + final["FP"])
+    final["NPV"] = final["TN"] / (final["TN"] + final["FN"])
     final["Sens"] = final["TP"] / (final["TP"] + final["FN"])
     final["Spec"] = final["TN"] / (final["TN"] + final["FP"])
     final["LR+"] = final["Sens"] / (1 - final["Spec"])
     final["LR-"] = (1 - final["Sens"]) / final["Spec"]
-    #final["NPV"] = final["TN"] / (final["TN"] + final["FN"])
     
     if len(return_stats) == 0:
-        return final[["orig_variant", "Num_Isolates", "Total_Isolates", "TP", "FP", "TN", "FN", "PPV", "Sens", "Spec", "LR+", "LR-"]]
+        return final[["orig_variant", "Num_Isolates", "Total_Isolates", "TP", "FP", "TN", "FN", "PPV", "NPV", "Sens", "Spec", "LR+", "LR-"]]
     else:
         return final[return_stats]
     
 
 
-def compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000):
+def compute_wilson_conf_interval(var, alpha, res_df):
+    '''
+    Compute confidence intervals for values that range between 0 and 1. Use this for sensitivity, specificity, and PPV. 
+    Both the normal approximation (i.e. Wald interval) and  Wilson interval are used for such binomial cases. 
+    But the Wilson interval is preferred when the number of trials (big N) is small or the probabilities are extreme (i.e. 0 or 1)
+    
+    There are many cases of extreme sensitivity, specificity, or PPV in this analysis, so we will use Wilson intervals. 
+    '''
+    
+    if var == "PPV":
+        N = res_df["TP"] + res_df["FP"]
+    elif var == "NPV":
+        N = res_df["TN"] + res_df["FN"]
+    elif var == "Sens":
+        N = res_df["TP"] + res_df["FN"]
+    elif var == "Spec":
+        N = res_df["TN"] + res_df["FP"]
+        
+    z = np.abs(st.t.ppf(q=alpha/2, df=N, loc=0, scale=1))
+    
+    center = 1 / (1 + z**2 / N) * (res_df[var] + z**2 / (2 * N))
+
+    error = z / (1 + z**2 / N) * np.sqrt(res_df[var] * (1 - res_df[var]) / N + z**2 / (4 * N**2))
+        
+    return (center - error, center + error)
+
+
+    
+def compute_likelihood_ratio_confidence_intervals(alpha, res_df):
+    
+    z = np.abs(st.t.ppf(q=alpha/2, df=res_df["Total_Isolates"]-1, loc=0, scale=1))
+    
+    LRpos_error = np.exp(z * np.sqrt(1/res_df["TP"] - 1/(res_df["TP"] + res_df["FN"]) + 1/res_df["FP"] - 1/(res_df["FP"] + res_df["TN"])))
+    LRneg_error = np.exp(z * np.sqrt(1/res_df["FN"] - 1/(res_df["TP"] + res_df["FN"]) + 1/res_df["TN"] - 1/(res_df["FP"] + res_df["TN"])))
+    
+    res_df["LR+_LB"] = res_df["LR+"] / LRpos_error
+    res_df["LR+_UB"] = res_df["LR+"] * LRpos_error
+    
+    res_df["LR-_LB"] = res_df["LR-"] / LRneg_error
+    res_df["LR-_UB"] = res_df["LR-"] * LRneg_error
+
+    return res_df
+
+
+
+def run_all(drug, analysis_dir, alpha=0.05):
 
     # final_analysis file with all significant variants for a drug
     res_df = pd.read_csv(os.path.join(analysis_dir, drug, "final_analysis.csv"))
@@ -112,61 +166,27 @@ def compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000):
     keep_variants = list(res_df.loc[(~res_df["orig_variant"].str.contains("PC")) & (res_df["HET"] != 'AF')]["orig_variant"].values)
     combined = combined[["sample_id", "phenotype"] + keep_variants]
         
-    # get dataframe of predictive values for the non-zero coefficients and add them to the results dataframe
-    full_predict_values = compute_predictive_values(combined)
+    # coefficient dictionary to keep track of which variants have positive and negative coefficients
+    variant_coef_dict = dict(zip(res_df["orig_variant"], res_df["coef"]))
+
+    # get dataframe of the univariate stats add them to the results dataframe
+    full_predict_values = compute_univariate_stats(combined, variant_coef_dict)
     res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer").drop_duplicates("orig_variant", keep="first")
     
     # save the analysis dataframe with the univariate stats. Do this in case an error occurs during the 
     res_df.to_csv(os.path.join(analysis_dir, drug, "final_analysis_with_univariate.csv"), index=False)
-
-    print(f"Computing and bootstrapping predictive values with {num_bootstrap} replicates")
-    # For tractability, remove variants with negative coefficients before bootstrapping
-    # The stats for variants with negative coefficients are often not informative or give errors because of NaNs and other edge cases, so this saves time. 
-    keep_variants = list(set(keep_variants) - set(res_df.query("coef < 0")["orig_variant"].values))
-    combined = combined[["sample_id", "phenotype"] + keep_variants]
     
-    bs_results = pd.DataFrame(columns = keep_variants)
-
-    # need confidence intervals for 5 stats: PPV, sens, spec, + likelihood ratio, - likelihood ratio
-    for i in range(num_bootstrap):
-
-        # get bootstrap sample
-        bs_idx = np.random.choice(np.arange(0, len(combined)), size=len(combined), replace=True)
-        bs_combined = combined.iloc[bs_idx, :]
+    # add confidence intervals for all stats except the likelihood ratios
+    for var in ["PPV", "NPV", "Sens", "Spec"]:
         
-        # check ordering of features because we're just going to append bootstrap dataframes
-        assert sum(bs_combined.columns[2:] != bs_results.columns) == 0
+        var_lb, var_ub = compute_wilson_conf_interval(var, alpha, res_df)
+        
+        # in case there are any numbers outside the range [0, 1] 
+        res_df[f"{var}_LB"] = np.max([var_lb, np.zeros(len(res_df))], axis=0)
+        res_df[f"{var}_UB"] = np.min([var_ub, np.ones(len(res_df))], axis=0)
 
-        # get predictive values from the dataframe of bootstrapped samples. Only return the 5 we want CI for, and the variant
-        bs_values = compute_predictive_values(bs_combined, return_stats=["orig_variant", "PPV", "Sens", "Spec", "LR+", "LR-"])
-        bs_results = pd.concat([bs_results, bs_values.set_index("orig_variant").T], axis=0)
-
-        if i % int(num_bootstrap / 10) == 0:
-            print(i)
-
-    # ensure everything is float because had some issues with np.nanpercentile giving an error about incompatible data types
-    bs_results = bs_results.astype(float)
-
-    # add the confidence intervals to the dataframe
-    for variable in ["PPV", "Sens", "Spec", "LR+", "LR-"]:
-
-        lower, upper = np.nanpercentile(bs_results.loc[variable, :], q=[2.5, 97.5], axis=0)
-
-        # LR+ can be infinite if spec is 1, and after percentile, it will be NaN, so replace with infinity. Ignore principal components because they will be NaN
-        if variable == "LR+":
-            res_df.loc[~res_df["orig_variant"].str.contains("PC"), variable] = res_df.loc[~res_df["orig_variant"].str.contains("PC"), variable].fillna(np.inf)
-            lower[np.isnan(lower)] = np.inf
-            upper[np.isnan(upper)] = np.inf
-
-        res_df = res_df.merge(pd.DataFrame({"orig_variant": bs_results.columns, 
-                            f"{variable}_LB": lower,
-                            f"{variable}_UB": upper,
-                           }), on="orig_variant", how="outer").drop_duplicates("orig_variant", keep="first")
-
-        # sanity checks -- lower bounds should be <= true values, and upper bounds should be >= true values
-        # numerical precision can make this fail though, so commented out for now
-        # assert sum(res_df[variable] < res_df[f"{variable}_LB"]) == 0
-        # assert sum(res_df[variable] > res_df[f"{variable}_UB"]) == 0
+    # add confidence intervals for the likelihood ratios
+    res_df = compute_likelihood_ratio_confidence_intervals(alpha, res_df)
         
     # get effect annotations and merge them with the results dataframe
     final_res = res_df.merge(annotated_genos, on="orig_variant", how="outer")
@@ -179,13 +199,14 @@ def compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000):
     else:
         del res_df
 
-    final_res.sort_values("coef", ascending=False).to_csv(os.path.join(analysis_dir, drug, "final_analysis_with_univariate.csv"), index=False)
+    final_res.sort_values("coef", ascending=False).drop_duplicates("orig_variant", keep="first").to_csv(os.path.join(analysis_dir, drug, "final_analysis_with_univariate.csv"), index=False)
 
 
 _, drug = sys.argv
 
 # run analysis
-compute_univariate_stats(drug, analysis_dir, num_bootstrap=1000)
+run_all(drug, analysis_dir, alpha=0.05)
+print(f"Finished {drug}!")
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
