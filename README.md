@@ -57,7 +57,7 @@ If <code>fast-lineage-caller</code> does not install properly from the environme
 3. <code>drugs_loci.csv</code>: Dataframe of resistance loci and their coordinates in H37Rv. The Start column is 0-indexed, and the End column is 1-indexed.
 4. <code>minor_allele_counts.npz</code>: Minor allele counts from the SNP matrices: 1 for a minor allele, 0 for a major allele. The genetic relatedness matrix is computed from this.
 5. <code>overview_MIC_data.xlsx</code>: Overviews of MIC data, counts, sources, number resistant vs. susceptible, etc.
-6. <code>samples_summary.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, binary phenotypes, SNP counts, MICs, lineages, and the numbers of LOF and inframe mutations (to see how many get pooled).
+6. <code>samples_summary.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, binary phenotypes, SNP counts, MICs, lineages, and the numbers of (sample, gene) pairs with LOF and inframe mutations (to see how many get pooled).
 7. <code>v1_to_v2_variants_mapping.csv</code>: File mapping the variant names between the 2021 and 2022 iterations of the catalog.
 
 ## Running the Analysis
@@ -124,8 +124,8 @@ Parameters in the yaml file are as follows:
 AFTER running the 3 scripts in the home directory for a given drug, run the 3 numbered scripts in the `analysis` directory in order. Each script requires only the drug name as an argument. The analysis scripts must be run AFTER running all models with all parameter combinations. The analysis scripts combine the results from multiple models and output a single final dataframe. 
   
 1. <code>analysis/01_combine_model_analyses.py</code> combines the `model_analysis.csv` files from different models for the same drug and generates a summary dataframe of variants and in which type of model they were detected. The core model has <b> tier 1 genes only, WHO phenotypes only, no synonymous mutations, and pooling LOF mutations</b>. This dataframe will contain additional boolean columns indicating in which model a variant was detected. 
-2. <code>analysis/02_compute_univariate_stats.py</code> computes univariate statistics, such as <b>sensitivity, specificity, likelihood ratios</b>, and <b>positive predictive value</b>. These columns are appended to the `model_analysis.csv` file created by script #3. 
-3. <code>analysis/03_model_metrics.py</code> fits a new regression model using only the significant features (coefficient confidence interval does not include 0) and performs nonparametric bootstrapping to get confidence intervals for model statistics. 
+2. <code>analysis/02_compute_univariate_stats.py</code> computes univariate statistics and confidence intervals.
+<!-- 3. <code>analysis/03_model_metrics.py</code> fits a new regression model using only the significant features (coefficient confidence interval does not include 0) and performs nonparametric bootstrapping to get confidence intervals for model statistics.  -->
  
 ### Pooling LOF Mutations
     
