@@ -104,20 +104,6 @@ Parameters in the yaml file are as follows:
 
 1. Tier 1, WHO, no synonymous, DROP Hets
 2. Tier 1, WHO, no synonymous, DROP Hets, <span style="background-color: #BFF8D4">unpool LOFs and inframes</span>
-	3. Tier 1, WHO, with synonymous, DROP Hets
-	4. Tier 1+2, WHO, no synonymous, DROP Hets
-	5. Tier 1+2, WHO, no synonymous, DROP Hets, unpool LOFs and inframes
-	6. Tier 1+2, WHO, with synonymous, DROP Hets
-	7. Tier 1, ALL, no synonymous, DROP Hets
-	8. Tier 1, ALL, no synonymous, DROP Hets, unpool LOFs and inframes
-	9. Tier 1, ALL, with synonymous, DROP Hets
-	10. Tier 1+2, ALL, no synonymous, DROP Hets
-	11. Tier 1+2, ALL, no synonymous, DROP Hets, unpool LOFs and inframes
-	12. Tier 1+2, ALL, with synonymous, DROP Hets
-	13. Tier 1, WHO, no synonymous, Hets as AF
-	14. Tier 1+2, WHO, no synonymous, Hets as AF
-	15. Tier 1, ALL, no synonymous, Hets as AF
-Tier 1+2, ALL, no synonymous, Hets as AF
 
 ### Analysis Scripts:
 
