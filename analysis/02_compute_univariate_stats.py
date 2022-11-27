@@ -37,10 +37,10 @@ def compute_univariate_stats(combined_df, variant_coef_dict, return_stats=[]):
     
     # get counts of isolates grouped by phenotype and variant -- so how many isolates have a variant and have a phenotype (all 4 possibilities)
     grouped_df = pd.DataFrame(melted_2.groupby(["phenotype", "variable"]).value_counts()).reset_index()
-    grouped_df = grouped_df.rename(columns={"variable": "orig_variant", "value": "variant", 0:"count"})
+    grouped_df = grouped_df.rename(columns={"variable": "variant", "value": "present", 0:"count"})
     
     # add coefficients, create new column for the switched phenotypes (keep the old ones in actual_pheno)
-    grouped_df["coef"] = grouped_df["orig_variant"].map(variant_coef_dict)
+    grouped_df["coef"] = grouped_df["variant"].map(variant_coef_dict)
     grouped_df["actual_pheno"] = grouped_df["phenotype"].copy()
     assert sum(grouped_df["phenotype"] != grouped_df["actual_pheno"]) == 0
 
@@ -49,21 +49,21 @@ def compute_univariate_stats(combined_df, variant_coef_dict, return_stats=[]):
     assert sum(grouped_df["phenotype"] != grouped_df["actual_pheno"]) == len(grouped_df.query("coef < 0"))
     
     # dataframes of the counts of the 4 values
-    true_pos_df = grouped_df.query("variant == 1 & phenotype == 1").rename(columns={"count": "TP"})
-    false_pos_df = grouped_df.query("variant == 1 & phenotype == 0").rename(columns={"count": "FP"})
-    true_neg_df = grouped_df.query("variant == 0 & phenotype == 0").rename(columns={"count": "TN"})
-    false_neg_df = grouped_df.query("variant == 0 & phenotype == 1").rename(columns={"count": "FN"})
+    true_pos_df = grouped_df.query("present == 1 & phenotype == 1").rename(columns={"count": "TP"})
+    false_pos_df = grouped_df.query("present == 1 & phenotype == 0").rename(columns={"count": "FP"})
+    true_neg_df = grouped_df.query("present == 0 & phenotype == 0").rename(columns={"count": "TN"})
+    false_neg_df = grouped_df.query("present == 0 & phenotype == 1").rename(columns={"count": "FN"})
 
     assert len(true_pos_df) + len(false_pos_df) + len(true_neg_df) + len(false_neg_df) == len(grouped_df)
     
     # combine the 4 dataframes into a single dataframe (concatenating on axis = 1)
-    final = true_pos_df[["orig_variant", "TP"]].merge(
-            false_pos_df[["orig_variant", "FP"]], on="orig_variant", how="outer").merge(
-            true_neg_df[["orig_variant", "TN"]], on="orig_variant", how="outer").merge(
-            false_neg_df[["orig_variant", "FN"]], on="orig_variant", how="outer").fillna(0)
+    final = true_pos_df[["variant", "TP"]].merge(
+            false_pos_df[["variant", "FP"]], on="variant", how="outer").merge(
+            true_neg_df[["variant", "TN"]], on="variant", how="outer").merge(
+            false_neg_df[["variant", "FN"]], on="variant", how="outer").fillna(0)
 
     assert len(final) == len(melted["variable"].unique())
-    assert len(final) == len(final.drop_duplicates("orig_variant"))
+    assert len(final) == len(final.drop_duplicates("variant"))
         
     final["Num_Isolates"] = final["TP"] + final["FP"]
     final["Total_Isolates"] = final[["TP", "FP", "TN", "FN"]].sum(axis=1)
@@ -75,7 +75,7 @@ def compute_univariate_stats(combined_df, variant_coef_dict, return_stats=[]):
     final["LR-"] = (1 - final["Sens"]) / final["Spec"]
     
     if len(return_stats) == 0:
-        return final[["orig_variant", "Num_Isolates", "Total_Isolates", "TP", "FP", "TN", "FN", "PPV", "NPV", "Sens", "Spec", "LR+", "LR-"]]
+        return final[["variant", "Num_Isolates", "Total_Isolates", "TP", "FP", "TN", "FN", "PPV", "NPV", "Sens", "Spec", "LR+", "LR-"]]
     else:
         return final[return_stats]
     
@@ -130,18 +130,22 @@ def run_all(drug, analysis_dir, alpha=0.05):
 
     # final_analysis file with all significant variants for a drug
     res_df = pd.read_csv(os.path.join(analysis_dir, drug, "final_analysis.csv"))
+    insig_df = pd.read_csv(os.path.join(analysis_dir, drug, "all_insignificant_features.csv"))
+    res_df = pd.concat([res_df, insig_df], axis=0)
+    del insig_df
+    
     df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv"))
     df_genos = pd.read_csv(os.path.join(analysis_dir, drug, "genos.csv.gz"), compression="gzip")
-    df_genos["orig_variant"] = df_genos["resolved_symbol"] + "_" + df_genos["variant_category"]
+    df_genos["variant"] = df_genos["resolved_symbol"] + "_" + df_genos["variant_category"]
     df_copy = df_genos.copy()
 
     # pool LOF and inframe mutations
     df_copy.loc[df_copy["predicted_effect"].isin(["frameshift", "start_lost", "stop_gained", "feature_ablation"]), ["variant_category", "position"]] = ["lof", np.nan]
     df_copy.loc[df_copy["predicted_effect"].isin(["inframe_insertion", "inframe_deletion"]), ["variant_category", "position"]] = ["inframe", np.nan]
 
-    # update the orig_variant column using the new variant categories (lof and inframe) and combine the pooled and unpooled variants
-    df_copy["orig_variant"] = df_copy["resolved_symbol"] + "_" + df_copy["variant_category"]
-    df_pooled = df_copy.query(f"variant_category in ['lof', 'inframe']").sort_values(by=["variant_binary_status", "variant_allele_frequency"], ascending=False, na_position="last").drop_duplicates(subset=["sample_id", "orig_variant"], keep="first")
+    # update the variant column using the new variant categories (lof and inframe) and combine the pooled and unpooled variants
+    df_copy["variant"] = df_copy["resolved_symbol"] + "_" + df_copy["variant_category"]
+    df_pooled = df_copy.query(f"variant_category in ['lof', 'inframe']").sort_values(by=["variant_binary_status", "variant_allele_frequency"], ascending=False, na_position="last").drop_duplicates(subset=["sample_id", "variant"], keep="first")
     del df_copy
     df_genos_full = pd.concat([df_genos, df_pooled], axis=0)
     del df_genos
@@ -149,29 +153,29 @@ def run_all(drug, analysis_dir, alpha=0.05):
     
     # keep only variants that are in the final_analysis dataframe and drop NaNs (NaNs = either isolate didn't pass QC or it's a Het) 
     # We can't process Hets here because they need to be binary to have univariate statistics
-    df_genos_full = df_genos_full.loc[(df_genos_full["orig_variant"].isin(res_df["orig_variant"].values))].dropna(subset="variant_binary_status")
+    df_genos_full = df_genos_full.loc[(df_genos_full["variant"].isin(res_df["variant"].values))].dropna(subset="variant_binary_status")
     
     # check that the only variants that are in res_df but not in df_genos_full are the principal components
-    if sum(~pd.Series(list(set(res_df["orig_variant"]) - set(df_genos_full["orig_variant"]))).str.contains("PC")) > 0:
+    if sum(~pd.Series(list(set(res_df["variant"]) - set(df_genos_full["variant"]))).str.contains("PC")) > 0:
         raise ValueError("Variants are missing from df_genos_full!")
         
-    combined = df_genos_full.pivot(index="sample_id", columns="orig_variant", values="variant_binary_status")
+    combined = df_genos_full.pivot(index="sample_id", columns="variant", values="variant_binary_status")
     
     # predicted effect annotations for later
-    annotated_genos = df_genos_full.query("variant_category not in ['lof', 'inframe']").drop_duplicates(["orig_variant", "predicted_effect", "position"])[["orig_variant", "predicted_effect", "position"]]
+    annotated_genos = df_genos_full.query("variant_category not in ['lof', 'inframe']").drop_duplicates(["variant", "predicted_effect", "position"])[["variant", "predicted_effect", "position"]]
     del df_genos_full
     combined = combined.merge(df_phenos[["sample_id", "phenotype"]], left_index=True, right_on="sample_id").reset_index(drop=True)
     
     # Can't compute univariate stats for PCs or for variants in the HET models. Because the mutations were encoded with AF, there are no positives and negatives
-    keep_variants = list(res_df.loc[(~res_df["orig_variant"].str.contains("PC")) & (res_df["HET"] != 'AF')]["orig_variant"].values)
+    keep_variants = list(res_df.loc[(~res_df["variant"].str.contains("PC")) & (res_df["HET"] != 'AF')]["variant"].values)
     combined = combined[["sample_id", "phenotype"] + keep_variants]
         
     # coefficient dictionary to keep track of which variants have positive and negative coefficients
-    variant_coef_dict = dict(zip(res_df["orig_variant"], res_df["coef"]))
+    variant_coef_dict = dict(zip(res_df["variant"], res_df["coef"]))
 
     # get dataframe of the univariate stats add them to the results dataframe
     full_predict_values = compute_univariate_stats(combined, variant_coef_dict)
-    res_df = res_df.merge(full_predict_values, on="orig_variant", how="outer").drop_duplicates("orig_variant", keep="first")
+    res_df = res_df.merge(full_predict_values, on="variant", how="outer").drop_duplicates("variant", keep="first")
     
     # save the analysis dataframe with the univariate stats. Do this in case an error occurs during the 
     res_df.to_csv(os.path.join(analysis_dir, drug, "final_analysis_with_univariate.csv"), index=False)
@@ -189,17 +193,17 @@ def run_all(drug, analysis_dir, alpha=0.05):
     res_df = compute_likelihood_ratio_confidence_intervals(alpha, res_df)
         
     # get effect annotations and merge them with the results dataframe
-    final_res = res_df.merge(annotated_genos, on="orig_variant", how="outer")
+    final_res = res_df.merge(annotated_genos, on="variant", how="outer")
     final_res = final_res.loc[~pd.isnull(final_res["coef"])]
-    final_res.loc[final_res["orig_variant"].str.contains("lof"), "predicted_effect"] = "lof"
-    final_res.loc[final_res["orig_variant"].str.contains("inframe"), "predicted_effect"] = "inframe"
+    final_res.loc[final_res["variant"].str.contains("lof"), "predicted_effect"] = "lof"
+    final_res.loc[final_res["variant"].str.contains("inframe"), "predicted_effect"] = "inframe"
 
-    if len(set(final_res.orig_variant).symmetric_difference(res_df.orig_variant)) != 0:
+    if len(set(final_res["variant"]).symmetric_difference(res_df["variant"])) != 0:
         raise ValueError("Not all mutations have associated effects!")
     else:
         del res_df
 
-    final_res.sort_values("coef", ascending=False).drop_duplicates("orig_variant", keep="first").to_csv(os.path.join(analysis_dir, drug, "final_analysis_with_univariate.csv"), index=False)
+    final_res.sort_values("coef", ascending=False).drop_duplicates("variant", keep="first").to_csv(os.path.join(analysis_dir, drug, "final_analysis_with_univariate.csv"), index=False)
 
 
 _, drug = sys.argv

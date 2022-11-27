@@ -345,6 +345,10 @@ else:
         
 # there should not be any more NaNs
 assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
+
+# remove features that are 0 everywhere (there is no signal essentially)
+filtered_matrix = filtered_matrix[filtered_matrix.columns[~(filtered_matrix == 0).all()]]
+
 print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} genetic variants")
 filtered_matrix.to_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
 
