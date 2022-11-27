@@ -57,7 +57,7 @@ If <code>fast-lineage-caller</code> does not install properly from the environme
 3. <code>drugs_loci.csv</code>: Dataframe of resistance loci and their coordinates in H37Rv. The Start column is 0-indexed, and the End column is 1-indexed.
 4. <code>minor_allele_counts.npz</code>: Minor allele counts from the SNP matrices: 1 for a minor allele, 0 for a major allele. The genetic relatedness matrix is computed from this.
 5. <code>overview_MIC_data.xlsx</code>: Overviews of MIC data, counts, sources, number resistant vs. susceptible, etc.
-6. <code>samples_summary.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, phenotypes, SNP counts, lineages, and the number of (sample, gene) pairs with multiple frameshift mutations.
+6. <code>samples_summary.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, phenotypes, SNP counts, lineages, and the numbers of LOF and inframe mutations (to see how many get pooled).
 7. <code>v1_to_v2_variants_mapping.csv</code>: File mapping the variant names between the 2021 and 2022 iterations of the catalog.
 
 ## Running the Analysis
