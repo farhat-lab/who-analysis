@@ -20,7 +20,8 @@ def compute_univariate_stats(combined_df, variant_coef_dict, return_stats=[]):
     Compute positive predictive value. 
     Compute sensitivity, specificity, and positive and negative likelihood ratios. 
     
-    PPV = true_positive / all_positive. NPV = true_negative / all_negative
+    PPV = true_positive / all_positive
+    NPV = true_negative / all_negative
     Sens = true_positive / (true_positive + false_negative)
     Spec = true_negative / (true_negative + false_positive)
     
