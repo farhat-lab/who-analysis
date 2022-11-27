@@ -52,9 +52,13 @@ If <code>fast-lineage-caller</code> does not install properly from the environme
 
 ## Files in the Data Directory
 
-1. <code>drugs_loci.csv</code>: Dataframe of resistance loci and their coordinates in H37Rv. The Start column is 0-indexed, and the End column is 1-indexed.
-2. <code>minor_allele_counts.npz</code>: Minor allele counts from the SNP matrices: 1 for a minor allele, 0 for a major allele. The genetic relatedness matrix is computed from this.
-3. <code>samples_summary.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, phenotypes, SNP counts, lineages, and the number of (sample, gene) pairs with multiple frameshift mutations.
+1. <code>drug_CC.csv</code>: Critical concentrations for each drug used for binarization of MIC data.
+2. <code>drug_gene_mapping.csv</code>: Names of genes and tiers used to build models for each drug.
+3. <code>drugs_loci.csv</code>: Dataframe of resistance loci and their coordinates in H37Rv. The Start column is 0-indexed, and the End column is 1-indexed.
+4. <code>minor_allele_counts.npz</code>: Minor allele counts from the SNP matrices: 1 for a minor allele, 0 for a major allele. The genetic relatedness matrix is computed from this.
+5. <code>overview_MIC_data.xlsx</code>: Overviews of MIC data, counts, sources, number resistant vs. susceptible, etc.
+6. <code>samples_summary.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, phenotypes, SNP counts, lineages, and the number of (sample, gene) pairs with multiple frameshift mutations.
+7. <code>v1_to_v2_variants_mapping.csv</code>: File mapping the variant names between the 2021 and 2022 iterations of the catalog.
 
 ## Running the Analysis
         
@@ -65,9 +69,9 @@ If <code>fast-lineage-caller</code> does not install properly from the environme
     <li>Isolates with WHO-approved phenotypes</li>
     <li>No synonymous mutations</li>
     <li>Pool loss-of-function (LOF) mutations</li>
+    <li>Pool inframe (insertions and deletions) mutations</li>
+    <li>Drop isolates with ambiguous allele frequencies (i.e. "HETs")</li>
 </ul>
-    
-Genetic features that are significant in a regression model (Benjamini-Hochberg corrected p-value less than 0.05) will be reported in a summary. After running additional models, additional features with a Benjamini-Hochberg corrected p-value less than 0.01 will also be included in the summary.
     
 ### Model Scripts
 
@@ -96,7 +100,24 @@ Parameters in the yaml file are as follows:
     <li><code>alpha</code>: significance level</li>
 </ul>
 
-### Parameter combinations:
+### Order of Models:
+
+1. Tier 1, WHO, no synonymous, DROP Hets
+2. Tier 1, WHO, no synonymous, DROP Hets, <span style="background-color: #BFF8D4">unpool LOFs and inframes</span>
+	3. Tier 1, WHO, with synonymous, DROP Hets
+	4. Tier 1+2, WHO, no synonymous, DROP Hets
+	5. Tier 1+2, WHO, no synonymous, DROP Hets, unpool LOFs and inframes
+	6. Tier 1+2, WHO, with synonymous, DROP Hets
+	7. Tier 1, ALL, no synonymous, DROP Hets
+	8. Tier 1, ALL, no synonymous, DROP Hets, unpool LOFs and inframes
+	9. Tier 1, ALL, with synonymous, DROP Hets
+	10. Tier 1+2, ALL, no synonymous, DROP Hets
+	11. Tier 1+2, ALL, no synonymous, DROP Hets, unpool LOFs and inframes
+	12. Tier 1+2, ALL, with synonymous, DROP Hets
+	13. Tier 1, WHO, no synonymous, Hets as AF
+	14. Tier 1+2, WHO, no synonymous, Hets as AF
+	15. Tier 1, ALL, no synonymous, Hets as AF
+Tier 1+2, ALL, no synonymous, Hets as AF
 
 ### Analysis Scripts:
 
