@@ -103,8 +103,7 @@ Parameters in the yaml file are as follows:
 ### Order of Models:
 
 1. Tier 1, WHO, no synonymous, DROP Hets
-<!-- 2. Tier 1, WHO, no synonymous, DROP Hets, <span style="background-color: #BFF8D4">unpool LOFs and inframes</span> -->
-2.  Tier 1, WHO, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
+2. Tier 1, WHO, no synonymous, DROP Hets, <mark>unpool LOFs and inframes</mark>
 3. 	Tier 1, WHO, with synonymous, DROP Hets
 4. 	Tier 1+2, WHO, no synonymous, DROP Hets
 5. 	Tier 1+2, WHO, no synonymous, DROP Hets, unpool LOFs and inframes
