@@ -106,14 +106,14 @@ Parameters in the yaml file are as follows:
 2. Tier 1, WHO, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
 3. Tier 1, WHO, <b>with synonymous</b>, DROP Hets
 4. <b>Tier 1+2</b>, WHO, no synonymous, DROP Hets
-5. Tier 1+2, WHO, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
-6. Tier 1+2, WHO, <b>with synonymous</b>, DROP Hets
+5. <b>Tier 1+2</b>, WHO, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
+6. <b>Tier 1+2</b>, WHO, <b>with synonymous</b>, DROP Hets
 7. Tier 1, <b>ALL</b>, no synonymous, DROP Hets
 8. Tier 1, ALL, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
-9. Tier 1, ALL, <b>with synonymous</b>, DROP Hets
-10. <b>Tier 1+2</b>, ALL, no synonymous, DROP Hets
-11. Tier 1+2, ALL, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
-12. Tier 1+2, ALL, <b>with synonymous</b>, DROP Hets
+9. Tier 1, <b>ALL, with synonymous</b>, DROP Hets
+10. <b>Tier 1+2, ALL</b>, no synonymous, DROP Hets
+11. <b>Tier 1+2, ALL</b>, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
+12. <b>Tier 1+2, ALL</b>, <b>with synonymous</b>, DROP Hets
 13. Tier 1, WHO, no synonymous, <b>Hets as AF</b>
 14. <b>Tier 1+2</b>, WHO, no synonymous, Hets as AF
 15. Tier 1, <b>ALL</b>, no synonymous, Hets as AF
