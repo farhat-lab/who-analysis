@@ -54,7 +54,7 @@ merged_df = pd.concat(analyses, axis=0).drop_duplicates(["variant"], keep="first
 if len(merged_df.loc[pd.isnull(merged_df["pval"])]) != 0:
     print(f"{drug} analysis dataframe contains NaN p-values")
 else:
-    print(f"Finished {drug}!")
+    print(f"\nFinished {drug}!")
 
 merged_df.to_csv(os.path.join(os.path.join(analysis_dir, drug, "final_analysis.csv")), index=False)
 
