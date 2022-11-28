@@ -806,3 +806,154 @@
 01_make_model_inputs.py: 21.846664846 GB
 02_regression_with_bootstrap.py: 11.800195198 GB
 02_regression_with_bootstrap.py: 13.223002935 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Rifampicin/tiers=1+2/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 106.6995114 GB
+02_regression_with_bootstrap.py: 20.299553699 GB
+02_regression_with_bootstrap.py: 14.628723064 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Streptomycin/tiers=1/phenos=ALL/encodeAF_noSyn
+01_make_model_inputs.py: 20.766160125 GB
+02_regression_with_bootstrap.py: 35.825721285 GB
+02_regression_with_bootstrap.py: 23.217253806 GB
+02_regression_with_bootstrap.py: 13.01494444 GB
+02_regression_with_bootstrap.py: 31.777872976 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Pyrazinamide/tiers=1+2/phenos=ALL/encodeAF_noSyn
+01_make_model_inputs.py: 22.263527465 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Levofloxacin/tiers=1+2/phenos=ALL/encodeAF_noSyn
+01_make_model_inputs.py: 22.639087191 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1+2/phenos=WHO/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 76.074135065 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Isoniazid/tiers=1+2/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 87.709901096 GB
+02_regression_with_bootstrap.py: 14.579031615 GB
+02_regression_with_bootstrap.py: 20.425381986 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Streptomycin/tiers=1+2/phenos=ALL/dropAF_noSyn
+01_make_model_inputs.py: 23.742404722 GB
+02_regression_with_bootstrap.py: 23.13095356 GB
+02_compute_univariate_stats.py: 36.466763382 GB
+02_regression_with_bootstrap.py: 32.015226018 GB
+02_compute_univariate_stats.py: 36.542721951 GB
+02_regression_with_bootstrap.py: 18.954909376 GB
+02_compute_univariate_stats.py: 36.970836827 GB
+02_regression_with_bootstrap.py: 31.811472549 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Streptomycin/tiers=1+2/phenos=ALL/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 25.714249204 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Rifampicin/tiers=1+2/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs.py: 92.252318893 GB
+02_compute_univariate_stats.py: 56.151852962 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1+2/phenos=WHO/dropAF_withSyn
+01_make_model_inputs.py: 85.761257195 GB
+02_compute_univariate_stats.py: 42.114838175 GB
+02_compute_univariate_stats.py: 37.21907414 GB
+02_regression_with_bootstrap.py: 18.980372675 GB
+02_regression_with_bootstrap.py: 37.073825655 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Streptomycin/tiers=1+2/phenos=ALL/dropAF_withSyn
+01_make_model_inputs.py: 30.93693383 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Isoniazid/tiers=1+2/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs.py: 103.970494122 GB
+02_regression_with_bootstrap.py: 31.796588094 GB
+02_regression_with_bootstrap.py: 32.047118189 GB
+02_regression_with_bootstrap.py: 18.960172285 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Rifampicin/tiers=1/phenos=ALL/dropAF_noSyn
+01_make_model_inputs.py: 92.252815085 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Streptomycin/tiers=1+2/phenos=ALL/encodeAF_noSyn
+01_make_model_inputs.py: 23.742406543 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1+2/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs.py: 76.074135462 GB
+02_regression_with_bootstrap.py: 72.994645921 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Rifampicin/tiers=1/phenos=ALL/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 92.252815479 GB
+02_regression_with_bootstrap.py: 19.076478537 GB
+02_regression_with_bootstrap.py: 37.027673968 GB
+02_regression_with_bootstrap.py: 73.008369338 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Isoniazid/tiers=1/phenos=ALL/dropAF_noSyn
+01_make_model_inputs.py: 82.481469248 GB
+02_compute_univariate_stats.py: 51.782397176 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Rifampicin/tiers=1/phenos=ALL/dropAF_withSyn
+01_make_model_inputs.py: 92.252815101 GB
+02_regression_with_bootstrap.py: 31.905311365 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1/phenos=ALL/dropAF_noSyn
+01_make_model_inputs.py: 76.074629058 GB
+02_regression_with_bootstrap.py: 76.285156679 GB
+02_regression_with_bootstrap.py: 73.181754082 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Rifampicin/tiers=1/phenos=ALL/encodeAF_noSyn
+01_make_model_inputs.py: 92.252814894 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Isoniazid/tiers=1/phenos=ALL/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 82.481468762 GB
+02_regression_with_bootstrap.py: 64.694122324 GB
+02_regression_with_bootstrap.py: 73.074699579 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1/phenos=ALL/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 76.074629265 GB
+02_regression_with_bootstrap.py: 72.992608097 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Rifampicin/tiers=1+2/phenos=ALL/dropAF_noSyn
+01_make_model_inputs.py: 92.252815233 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Isoniazid/tiers=1/phenos=ALL/dropAF_withSyn
+01_make_model_inputs.py: 82.48146874 GB
+02_regression_with_bootstrap.py: 64.699832834 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1/phenos=ALL/dropAF_withSyn
+01_make_model_inputs.py: 76.074629178 GB
+02_regression_with_bootstrap.py: 76.401399588 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Isoniazid/tiers=1/phenos=ALL/encodeAF_noSyn
+01_make_model_inputs.py: 82.48146899 GB
+02_regression_with_bootstrap.py: 57.539974168 GB
+02_regression_with_bootstrap.py: 76.361065575 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Rifampicin/tiers=1+2/phenos=ALL/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 92.252815384 GB
+02_regression_with_bootstrap.py: 65.060621718 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1/phenos=ALL/encodeAF_noSyn
+01_make_model_inputs.py: 76.074629246 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Isoniazid/tiers=1+2/phenos=ALL/dropAF_noSyn
+01_make_model_inputs.py: 121.964011544 GB
+02_regression_with_bootstrap.py: 64.815536583 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1+2/phenos=ALL/dropAF_noSyn
+01_make_model_inputs.py: 76.074629339 GB
+02_regression_with_bootstrap.py: 57.605168279 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Rifampicin/tiers=1+2/phenos=ALL/dropAF_withSyn
+01_make_model_inputs.py: 143.857835286 GB
+02_regression_with_bootstrap.py: 71.862322321 GB
+02_regression_with_bootstrap.py: 59.671204167 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Isoniazid/tiers=1+2/phenos=ALL/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 124.209130026 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1+2/phenos=ALL/dropAF_noSyn_unpooled
+01_make_model_inputs.py: 78.729937709 GB
+02_regression_with_bootstrap.py: 59.728830351 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1+2/phenos=ALL/dropAF_withSyn
+01_make_model_inputs.py: 117.43002635 GB
+02_regression_with_bootstrap.py: 58.212072373 GB
+02_regression_with_bootstrap.py: 69.57010895 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Rifampicin/tiers=1+2/phenos=ALL/encodeAF_noSyn
+01_make_model_inputs.py: 92.252815132 GB
