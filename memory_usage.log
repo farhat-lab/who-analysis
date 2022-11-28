@@ -957,3 +957,7 @@
 
 /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Rifampicin/tiers=1+2/phenos=ALL/encodeAF_noSyn
 01_make_model_inputs.py: 92.252815132 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Isoniazid/tiers=1+2/phenos=ALL/dropAF_withSyn
+01_make_model_inputs.py: 122.472119945 GB
+02_regression_with_bootstrap.py: 60.09622523 GB
