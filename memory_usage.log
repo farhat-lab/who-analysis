@@ -961,3 +961,15 @@
 /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Isoniazid/tiers=1+2/phenos=ALL/dropAF_withSyn
 01_make_model_inputs.py: 122.472119945 GB
 02_regression_with_bootstrap.py: 60.09622523 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Ethambutol/tiers=1+2/phenos=ALL/encodeAF_noSyn
+01_make_model_inputs.py: 76.074629591 GB
+02_regression_with_bootstrap.py: 57.842661761 GB
+02_regression_with_bootstrap.py: 59.864875789 GB
+02_regression_with_bootstrap.py: 72.136619057 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Isoniazid/tiers=1+2/phenos=ALL/encodeAF_noSyn
+01_make_model_inputs.py: 121.964011424 GB
+02_regression_with_bootstrap.py: 72.051692767 GB
+02_compute_univariate_stats.py: 192.064136819 GB
+02_compute_univariate_stats.py: 226.893384566 GB

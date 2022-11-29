@@ -131,9 +131,6 @@ def run_all(drug, analysis_dir, alpha=0.05):
 
     # final_analysis file with all significant variants for a drug
     res_df = pd.read_csv(os.path.join(analysis_dir, drug, "final_analysis.csv"))
-    insig_df = pd.read_csv(os.path.join(analysis_dir, drug, "all_insignificant_features.csv"))
-    res_df = pd.concat([res_df, insig_df], axis=0)
-    del insig_df
     
     df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv"))
     df_genos = pd.read_csv(os.path.join(analysis_dir, drug, "genos.csv.gz"), compression="gzip")
@@ -177,9 +174,6 @@ def run_all(drug, analysis_dir, alpha=0.05):
     # get dataframe of the univariate stats add them to the results dataframe
     full_predict_values = compute_univariate_stats(combined, variant_coef_dict)
     res_df = res_df.merge(full_predict_values, on="variant", how="outer").drop_duplicates("variant", keep="first")
-    
-    # save the analysis dataframe with the univariate stats. Do this in case an error occurs during the 
-    res_df.to_csv(os.path.join(analysis_dir, drug, "final_analysis_with_univariate.csv"), index=False)
     
     # add confidence intervals for all stats except the likelihood ratios
     for var in ["PPV", "NPV", "Sens", "Spec"]:
