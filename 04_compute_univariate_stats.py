@@ -18,8 +18,6 @@ analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 def get_genos_phenos(analysis_dir, drug):
     '''
     This function gets the phenotype and genotype dataframes for a given drug. These are the same across models. 
-    
-        who_only: boolean of whether to include only WHO-approved phenotypes or not. 
     '''
         
     df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv"))
