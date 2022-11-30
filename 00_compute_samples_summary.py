@@ -1,12 +1,9 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, sys, sparse, itertools
+import glob, os, yaml, sparse, itertools
 from Bio import Seq, SeqIO
 import warnings
 warnings.filterwarnings("ignore")
-
-
-_, remake_minor_allele_df = sys.argv
 
 
 ############# GENERATE THE MINOR ALLELE COUNTS DATAFRAME AND THE TABLE OF NUMBERS OF PHENOTYPES AND GENOTYPES ACROSS TIERS AND DRUGS #############
@@ -29,69 +26,61 @@ print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
 
 lineages = pd.read_pickle("data/combined_lineage_sample_IDs.pkl")
 
-if remake_minor_allele_df.lower() == "true":
-    print("Creating matrix of minor allele counts")
+print("Creating matrix of minor allele counts")
+snp_files = [pd.read_csv(os.path.join(snp_dir, fName)) for fName in os.listdir(snp_dir)]
+print(len(snp_files))
 
-    snp_files = [pd.read_csv(os.path.join(snp_dir, fName)) for fName in os.listdir(snp_dir)]
-    print(len(snp_files))
+snp_combined = pd.concat(snp_files, axis=0)
+snp_combined.columns = ["sample_id", "position", "nucleotide", "dp"]
+snp_combined = snp_combined.drop_duplicates()
 
-    snp_combined = pd.concat(snp_files, axis=0)
-    snp_combined.columns = ["sample_id", "position", "nucleotide", "dp"]
-    snp_combined = snp_combined.drop_duplicates()
+# drop sites that are in drug resistance loci. This is a little strict because it removes entire genes, but works fine.
+drugs_loci = pd.read_csv("data/drugs_loci.csv")
 
-    # drop sites that are in drug resistance loci. This is a little strict because it removes entire genes, but works fine.
-    drugs_loci = pd.read_csv("data/drugs_loci.csv")
+# add 1 to the start because it's 0-indexed
+drugs_loci["Start"] += 1
+assert sum(drugs_loci["End"] <= drugs_loci["Start"]) == 0
 
-    # add 1 to the start because it's 0-indexed
-    drugs_loci["Start"] += 1
-    assert sum(drugs_loci["End"] <= drugs_loci["Start"]) == 0
+# get all positions in resistance loci
+remove_pos = [list(range(int(row["Start"]), int(row["End"])+1)) for _, row in drugs_loci.iterrows()]
+remove_pos = list(itertools.chain.from_iterable(remove_pos))
 
-    # get all positions in resistance loci
-    remove_pos = [list(range(int(row["Start"]), int(row["End"])+1)) for _, row in drugs_loci.iterrows()]
-    remove_pos = list(itertools.chain.from_iterable(remove_pos))
+num_pos = len(snp_combined.position.unique())
+snp_combined = snp_combined.query("position not in @remove_pos")
+print(f"Dropped {num_pos-len(snp_combined.position.unique())} positions in resistance-determining regions")
 
-    num_pos = len(snp_combined.position.unique())
-    snp_combined = snp_combined.query("position not in @remove_pos")
-    print(f"Dropped {num_pos-len(snp_combined.position.unique())} positions in resistance-determining regions")
+# pivot to matrix. There should not be any NaNs because the data is complete (i.e. reference alleles are included), then get the major allele at every site.
+print("Pivoting to a matrix")
+matrix = snp_combined.pivot(index="sample_id", columns="position", values="nucleotide")
+assert np.nan not in matrix.values
+major_alleles = matrix.mode(axis=0)
 
-    # pivot to matrix. There should not be any NaNs because the data is complete (i.e. reference alleles are included), then get the major allele at every site.
-    print("Pivoting to a matrix")
-    matrix = snp_combined.pivot(index="sample_id", columns="position", values="nucleotide")
-    assert np.nan not in matrix.values
-    major_alleles = matrix.mode(axis=0)
+# put into dataframe to compare with the SNP dataframe. Most efficient way is to make a dataframe of major alleles where every row is the same. 
+major_alleles_df = pd.concat([major_alleles]*len(matrix), ignore_index=True)
+major_alleles_df.index = matrix.index.values
 
-    # put into dataframe to compare with the SNP dataframe. Most efficient way is to make a dataframe of major alleles where every row is the same. 
-    major_alleles_df = pd.concat([major_alleles]*len(matrix), ignore_index=True)
-    major_alleles_df.index = matrix.index.values
+assert matrix.shape == major_alleles_df.shape
+minor_allele_counts = (matrix != major_alleles_df).astype(int)
 
-    assert matrix.shape == major_alleles_df.shape
-    minor_allele_counts = (matrix != major_alleles_df).astype(int)
+# drop any columns that are 0 (major allele everywhere). Easiest to do this with dropna -- convert 0s to NaNs, drop, then back to 0s.
+minor_allele_counts = minor_allele_counts.replace(0, np.nan).dropna(how='all', axis=1).fillna(0).astype(int)
 
-    # drop any columns that are 0 (major allele everywhere). Easiest to do this with dropna -- convert 0s to NaNs, drop, then back to 0s.
-    minor_allele_counts = minor_allele_counts.replace(0, np.nan).dropna(how='all', axis=1).fillna(0).astype(int)
+# to save in sparse format, need to put the column names and indices into the dataframe, everything must be numerical
+print("Saving minor allele counts dataframe")
+save_matrix = minor_allele_counts.copy()
+save_matrix.loc[0, :] = save_matrix.columns
 
-    # to save in sparse format, need to put the column names and indices into the dataframe, everything must be numerical
-    print("Saving minor allele counts dataframe")
-    save_matrix = minor_allele_counts.copy()
-    save_matrix.loc[0, :] = save_matrix.columns
+# sort -- the first value is 0, which is a placeholder for the sample_id
+save_matrix = save_matrix.sort_values("sample_id", ascending=True)
 
-    # sort -- the first value is 0, which is a placeholder for the sample_id
-    save_matrix = save_matrix.sort_values("sample_id", ascending=True)
+# put the sample_ids into the main body of the matrix and convert everything to integers
+save_matrix = save_matrix.reset_index().astype(int)
 
-    # put the sample_ids into the main body of the matrix and convert everything to integers
-    save_matrix = save_matrix.reset_index().astype(int)
-
-    # check that numbers of columns and rows have each increased by 1 and save
-    assert sum(np.array(save_matrix.shape) - np.array(minor_allele_counts.shape) == np.ones(2)) == 2
-    sparse.save_npz("data/minor_allele_counts", sparse.COO(save_matrix.values))
-    del save_matrix
-    minor_allele_counts_samples = minor_allele_counts.index.values
-
-else:
-    minor_allele_counts = sparse.load_npz("data/minor_allele_counts.npz").todense()
-    minor_allele_counts_samples = minor_allele_counts[1:, 0]
-
-print(len(minor_allele_counts_samples))
+# check that numbers of columns and rows have each increased by 1 and save
+assert sum(np.array(save_matrix.shape) - np.array(minor_allele_counts.shape) == np.ones(2)) == 2
+sparse.save_npz("data/minor_allele_counts", sparse.COO(save_matrix.values))
+del save_matrix
+minor_allele_counts_samples = minor_allele_counts.index.values
 del minor_allele_counts
     
     
@@ -135,6 +124,7 @@ def compute_num_mutations(drug, tiers_lst):
 summary_df = pd.DataFrame(columns=["Drug", "Genos", "Binary_Phenos", "SNP_Matrix", "MICs", "Lineages", "Tier1_LOF", "Tier1_Inframe", "Tier2_LOF", "Tier2_Inframe"])
 i = 0
 
+print("Counting data for each drug")
 for drug in drugs_for_analysis:
     
     # get all CSV files containing binary phenotypes
