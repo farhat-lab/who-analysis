@@ -21,14 +21,13 @@ kwargs = yaml.safe_load(open(config_file))
 tiers_lst = kwargs["tiers_lst"]
 binary = kwargs["binary"]
 
-if binary:
-    pheno_category_lst = kwargs["pheno_category_lst"]
-    # make sure that both phenotypes are included just in case
-    if "ALL" in pheno_category_lst:
-        phenos_name = "ALL"
-        pheno_category_lst = ["ALL", "WHO"]
-    else:
-        phenos_name = "WHO"
+pheno_category_lst = kwargs["pheno_category_lst"]
+# make sure that both phenotypes are included just in case
+if "ALL" in pheno_category_lst:
+    phenos_name = "ALL"
+    pheno_category_lst = ["ALL", "WHO"]
+else:
+    phenos_name = "WHO"
 
 missing_isolate_thresh = kwargs["missing_isolate_thresh"]
 missing_feature_thresh = kwargs["missing_feature_thresh"]
@@ -163,7 +162,7 @@ else:
 # get only isolates with the desired phenotypic category for the binary model
 if binary:
     df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
-
+    
     
 
 ############# STEP 2: GET ALL AVAILABLE GENOTYPES #############

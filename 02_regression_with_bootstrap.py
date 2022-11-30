@@ -23,13 +23,12 @@ kwargs = yaml.safe_load(open(config_file))
 tiers_lst = kwargs["tiers_lst"]
 binary = kwargs["binary"]
 
-if binary:
-    pheno_category_lst = kwargs["pheno_category_lst"]
-    if "ALL" in pheno_category_lst:
-        phenos_name = "ALL"
-        pheno_category_lst = ["ALL", "WHO"]
-    else:
-        phenos_name = "WHO"
+pheno_category_lst = kwargs["pheno_category_lst"]
+if "ALL" in pheno_category_lst:
+    phenos_name = "ALL"
+    pheno_category_lst = ["ALL", "WHO"]
+else:
+    phenos_name = "WHO"
         
 model_prefix = kwargs["model_prefix"]
 num_PCs = kwargs["num_PCs"]
