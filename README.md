@@ -139,7 +139,7 @@ Intermediate = allele fractions in the range [0.25, 0.75]. Below this range, all
     <li>Binarize them using an AF threshold</li>
 </ul>
 
-Currently, we are using the top 2 modes. They are referred to as <b>dropHET</b> and <b>encodeAF</b>, respectively. 
+Currently, we are using the top 2 modes. In the code, they are referred to as <b>dropAF</b> and <b>encodeAF</b>, respectively. 
 
 ### Missing Data
 
