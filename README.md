@@ -62,7 +62,7 @@ If <code>fast-lineage-caller</code> does not install properly from the environme
 
 ## Running the Analysis
         
-### Core Model Features:
+### Primary Model Features:
     
 <ul>
     <li>Tier 1 genes</li>
@@ -80,6 +80,7 @@ Run the numbered scripts in order, with the `config.yaml` file, the full drug na
 1. <code>01_make_model_inputs.py</code>: create input matrices to fit a regression model.
 2. <code>02_regression_with_bootstrap.py</code> performs a Ridge (L2-penalized) regression. 
 3. <code>03_model_analysis.py</code> gets p-values (including false discovery rate-corrected p-values) and confidence intervals for the coefficients/odds ratios. It creates a summary file called `model_analysis.csv` in every output directory, which contains all variants with non-zero coefficients and nominally significant p-values (p-value before FDR is less than 0.05).
+4. <code>04_compute_univariate_stats.py</code>: computes univariate statistics, confidence intervals, and adds some other annotations for the mutations in all models (<b>TODO: Make this more efficient by eliminating redundant computations</b>). 
     
 Parameters in the yaml file are as follows:
     
@@ -121,11 +122,6 @@ Parameters in the yaml file are as follows:
 
 ### Analysis Scripts:
 
-AFTER running the 3 scripts in the home directory for a given drug, run the 3 numbered scripts in the `analysis` directory in order. Each script requires only the drug name as an argument. The analysis scripts must be run AFTER running all models with all parameter combinations. The analysis scripts combine the results from multiple models and output a single final dataframe. 
-  
-1. <code>analysis/01_combine_model_analyses.py</code> combines the `model_analysis.csv` files from different models for the same drug and generates a summary dataframe of variants and in which type of model they were detected. The core model has <b> tier 1 genes only, WHO phenotypes only, no synonymous mutations, and pooling LOF mutations</b>. This dataframe will contain additional boolean columns indicating in which model a variant was detected. 
-2. <code>analysis/02_compute_univariate_stats.py</code> computes univariate statistics and confidence intervals.
-<!-- 3. <code>analysis/03_model_metrics.py</code> fits a new regression model using only the significant features (coefficient confidence interval does not include 0) and performs nonparametric bootstrapping to get confidence intervals for model statistics.  -->
  
 ### Pooling LOF Mutations
     
