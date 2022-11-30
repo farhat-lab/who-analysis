@@ -24,7 +24,7 @@ who_variants_combined = who_variants.merge(variant_mapping[["V1", "mutation"]], 
 del who_variants_combined["variant"]
 
 assert len(set(who_variants_combined["V1"]).symmetric_difference(set(who_variants["variant"]))) == 0
-who_variants_combined = who_variants_combined.drop_duplicates(subset="mutation")
+who_variants_combined = who_variants_combined.drop_duplicates()
 del who_variants_combined["V1"]
 del who_variants
 
@@ -235,7 +235,7 @@ def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_g
     res_df.rename(columns={"variant": "mutation"}, inplace=True)
     res_df = res_df.merge(who_variants_single_drug, on="mutation", how="left")
     
-    # add significance
+    # add significance. encodeAF not included in this one because only the HET == DROP models should be passed in here
     secondary_analysis_criteria = ["+2", "ALL", "unpooled", "withSyn"]
     significance_thresh = 0.05
     
