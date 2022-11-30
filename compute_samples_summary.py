@@ -121,17 +121,11 @@ def compute_num_mutations(drug, tiers_lst):
                            (df_model["variant_binary_status"] == 1)
                           ]
 
-#         # (sample, gene) pairs with multiple mutations that cause LOF 
-#         lof_pooled = pd.DataFrame(lof.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect > 1")
-    
         # get all mutations that are positive for inframe mutations. Ignore ambiguous variants in this count
         inframe = df_model.loc[(df_model["predicted_effect"].str.contains("inframe")) & 
                                (df_model["variant_binary_status"] == 1)
                               ]
 
-        # # (sample, gene) pairs with multiple inframe mutations
-        # multi_inframe = pd.DataFrame(inframe.groupby(["sample_id", "resolved_symbol"])["predicted_effect"].count()).query("predicted_effect > 1")
-        
         return len(lof["sample_id"].unique()), len(inframe["sample_id"].unique())
     
     else:
