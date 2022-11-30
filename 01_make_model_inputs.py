@@ -20,8 +20,15 @@ kwargs = yaml.safe_load(open(config_file))
 
 tiers_lst = kwargs["tiers_lst"]
 binary = kwargs["binary"]
-pheno_category_lst = kwargs["pheno_category_lst"]
-# mics_category = kwargs["mics_category"]
+
+if binary:
+    pheno_category_lst = kwargs["pheno_category_lst"]
+    # make sure that both phenotypes are included just in case
+    if "ALL" in pheno_category_lst:
+        phenos_name = "ALL"
+        pheno_category_lst = ["ALL", "WHO"]
+    else:
+        phenos_name = "WHO"
 
 missing_isolate_thresh = kwargs["missing_isolate_thresh"]
 missing_feature_thresh = kwargs["missing_feature_thresh"]
@@ -30,13 +37,6 @@ AF_thresh = kwargs["AF_thresh"]
 impute = kwargs["impute"]
 synonymous = kwargs["synonymous"]
 unpooled = kwargs["unpooled"]
-
-# make sure that both phenotypes are included in this case
-if "ALL" in pheno_category_lst:
-    phenos_name = "ALL"
-    pheno_category_lst = ["ALL", "WHO"]
-else:
-    phenos_name = "WHO"
 
 if amb_mode == "DROP":
     model_prefix = "dropAF"
@@ -61,7 +61,11 @@ kwargs["model_prefix"] = model_prefix
 with open(config_file, "w") as file:
     yaml.dump(kwargs, file, default_flow_style=False, sort_keys=False)
   
-out_dir = os.path.join(analysis_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
+if binary:
+    out_dir = os.path.join(analysis_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
+# no phenotype categories for the MIC model
+else:
+    out_dir = os.path.join(analysis_dir, drug, "MIC", f"tiers={'+'.join(tiers_lst)}", model_prefix)
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
@@ -103,11 +107,27 @@ def get_mic_midpoints(mic_df, pheno_col):
     # exclude isolates with unknown lower concentrations, indicated by square bracket in the lower bound
     mic_sep = mic_sep.query("Lower_bracket != '['")
     
-    return mic_sep
+    # some mislabeling, where the upper bracket is a parentheses. Can't be possible because the upper bound had to have been tested
+    mic_sep.loc[(mic_sep["MIC_lower"] == 0), "Upper_bracket"] = "]"
+    
+    # upper bracket parentheses should be [max_MIC, NaN), so check this
+    assert len(mic_sep.loc[(mic_sep["Upper_bracket"] == ")") &
+                           (~pd.isnull(mic_sep["MIC_upper"]))
+                          ]) == 0
+    
+    # if the upper bound is NaN, then the MIC (midpoint) should be the lower bound, which is the maximum concentration tested
+    mic_sep.loc[pd.isnull(mic_sep["MIC_upper"]), pheno_col] = mic_sep.loc[pd.isnull(mic_sep["MIC_upper"])]["MIC_lower"]
+    
+    # otherwise, take the average
+    mic_sep.loc[~pd.isnull(mic_sep["MIC_upper"]), pheno_col] = np.mean([mic_sep.loc[~pd.isnull(mic_sep["MIC_upper"])]["MIC_lower"], mic_sep.loc[~pd.isnull(mic_sep["MIC_upper"])]["MIC_upper"]], axis=0)
+    
+    # check that there are no NaNs in the MIC column
+    assert sum(mic_sep[pheno_col].isna()) == 0
+    return mic_sep.drop_duplicates()
 
     
 if not os.path.isfile(phenos_file):
-    
+        
     # read them all in, concatenate, and get the number of samples
     df_phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, fName)) for fName in os.listdir(phenos_dir) if "run" in fName], axis=0)
     
@@ -115,9 +135,7 @@ if not os.path.isfile(phenos_file):
     if binary:
         df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
         print(f"Phenotypic categoryies: {df_phenos.phenotypic_category.unique()}")
-    else:
-        df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
-    
+
     # Drop samples with multiple recorded phenotypes
     drop_samples = df_phenos.groupby(["sample_id"]).nunique().query(f"{pheno_col} > 1").index.values
         
@@ -134,7 +152,7 @@ if not os.path.isfile(phenos_file):
         assert sum(np.unique(df_phenos["phenotype"]) != np.array(['R', 'S'])) == 0
         df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
     else:
-        df_phenos = get_mic_midpoints(mic_df, pheno_col)
+        df_phenos = get_mic_midpoints(df_phenos, pheno_col)
         
     # this is the phenotypes file for all models for the drug. 
     df_phenos.to_csv(phenos_file, index=False)
@@ -145,9 +163,8 @@ else:
 # get only isolates with the desired phenotypic category for the binary model
 if binary:
     df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
-# else:
-#     df_phenos = df_phenos.query("")
 
+    
 
 ############# STEP 2: GET ALL AVAILABLE GENOTYPES #############
           

@@ -29,7 +29,7 @@ del who_variants_combined["V1"]
 del who_variants
 
 
-def get_genos_phenos(analysis_dir, drug, who_only):
+def get_genos_phenos(analysis_dir, drug):
     '''
     This function gets the phenotype and genotype dataframes for a given drug. These are the same across models. 
     
@@ -38,10 +38,6 @@ def get_genos_phenos(analysis_dir, drug, who_only):
         
     df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv"))
     df_genos = pd.read_csv(os.path.join(analysis_dir, drug, "genos.csv.gz"), compression="gzip")
-
-    if who_only:
-        df_phenos = df_phenos.query("phenotypic_category=='WHO'")
-        df_genos = df_genos.query("sample_id in @df_phenos.sample_id")
 
     # get pooled variants
     df_genos["variant"] = df_genos["resolved_symbol"] + "_" + df_genos["variant_category"]
@@ -291,21 +287,20 @@ continuous_analysis_paths = ["tiers=1/phenos=WHO/encodeAF_noSyn",
 ]
 
 # get dataframes of variants for WHO isolates only
-df_phenos_who, df_genos_who, annotated_genos_who = get_genos_phenos(analysis_dir, drug, who_only=True)
+df_phenos, df_genos, annotated_genos = get_genos_phenos(analysis_dir, drug)
 
-for path in who_analysis_paths:
-    compute_statistics_single_model(os.path.join(analysis_dir, drug, path), df_phenos_who, df_genos_who, annotated_genos_who, who_variants_single_drug, alpha=0.05)
-
-del df_phenos_who
-del df_genos_who
-del annotated_genos_who
-
-# get dataframes of variants for all isolates
-df_phenos, df_genos, annotated_genos = get_genos_phenos(analysis_dir, drug, who_only=False)
-
+print("Computing univariate stats for the ALL analyses...")
 for path in all_analysis_paths:  
     compute_statistics_single_model(os.path.join(analysis_dir, drug, path), df_phenos, df_genos, annotated_genos, who_variants_single_drug, alpha=0.05)
+    
+# reduce dataframe size for the WHO only analyses
+df_phenos = df_phenos.query("phenotypic_category=='WHO'")
+df_genos = df_genos.query("sample_id in @df_phenos.sample_id")
 
+print("Computing univariate stats for the WHO analyses...")
+for path in who_analysis_paths:
+    compute_statistics_single_model(os.path.join(analysis_dir, drug, path), df_phenos, df_genos, annotated_genos, who_variants_single_drug, alpha=0.05)
+    
 del df_phenos
 del df_genos
 

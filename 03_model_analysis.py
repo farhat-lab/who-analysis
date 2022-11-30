@@ -65,12 +65,14 @@ def BH_FDR_correction(coef_df):
 def run_all(out_dir, drug, drug_abbr, **kwargs):
     
     tiers_lst = kwargs["tiers_lst"]
-    pheno_category_lst = kwargs["pheno_category_lst"]
-    model_prefix = kwargs["model_prefix"]
-    synonymous = kwargs["synonymous"]
-
-    alpha = kwargs["alpha"]
     binary = kwargs["binary"]
+    
+    if binary:
+        pheno_category_lst = kwargs["pheno_category_lst"]
+    model_prefix = kwargs["model_prefix"]
+    
+    synonymous = kwargs["synonymous"]
+    alpha = kwargs["alpha"]
     
     # coefficients from L2 regularized regression ("baseline" regression)
     coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
@@ -119,11 +121,11 @@ if "ALL" in pheno_category_lst:
 else:
     phenos_name = "WHO"
 
-out_dir = os.path.join(analysis_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
-
-if not os.path.isdir(out_dir):
-    print("No model for this analysis")
-    exit()
+if binary:
+    out_dir = os.path.join(analysis_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
+# no phenotype categories for the MIC model
+else:
+    out_dir = os.path.join(analysis_dir, drug, "MIC", f"tiers={'+'.join(tiers_lst)}", model_prefix)
 
 # run analysis
 model_analysis = run_all(out_dir, drug, drug_WHO_abbr, **kwargs)
