@@ -973,3 +973,12 @@
 02_regression_with_bootstrap.py: 72.051692767 GB
 02_compute_univariate_stats.py: 192.064136819 GB
 02_compute_univariate_stats.py: 226.893384566 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 2.121907483 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1+2/phenos=WHO/dropAF_noSyn
+01_make_model_inputs.py: 2.121907641 GB
+
+/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/tiers=1/phenos=WHO/encodeAF_noSyn
+01_make_model_inputs.py: 2.121907475 GB

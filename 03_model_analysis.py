@@ -26,17 +26,8 @@ def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
     lower, upper = np.percentile(bootstrap_df, axis=0, q=(diff, 100-diff))
     coef_df["coef_LB"] = lower
     coef_df["coef_UB"] = upper
-    
-#     # insignificant features with no standard error (every bootstrapped sample also had a coefficient of 0)
-#     coef_df_zero = coef_df.query("coef == 0 & coef_LB == 0 & coef_UB == 0")
-#     coef_df_zero[["variant"]].to_csv(os.path.join(out_dir, "insignificant_features.csv"), index=False)
-    
-#     # keep only significant features going forward
-#     coef_df = coef_df.query("~(coef == 0 & coef_LB == 0 & coef_UB == 0)")
-#     del coef_df_zero
             
     # degrees of freedom: N - k - 1, where N = number of samples, k = number of features
-    # exclude the insignificant features because they can sometimes lead to k > N (i.e. Delamanid), then dof < 1, which is impossible.
     dof = num_samples - len(coef_df) - 1
     
     for i, row in coef_df.iterrows():

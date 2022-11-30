@@ -285,7 +285,4 @@ for drug in drugs_lst:
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
 tracemalloc.stop()
-
-# write peak memory usage in GB
-with open("memory_usage.log", "a+") as file:
-    file.write(f"{os.path.basename(__file__)}: {script_memory} GB\n")
+print(f"{script_memory} GB\n")

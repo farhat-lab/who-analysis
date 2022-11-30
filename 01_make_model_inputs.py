@@ -115,6 +115,8 @@ if not os.path.isfile(phenos_file):
     if binary:
         df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
         print(f"Phenotypic categoryies: {df_phenos.phenotypic_category.unique()}")
+    else:
+        df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
     
     # Drop samples with multiple recorded phenotypes
     drop_samples = df_phenos.groupby(["sample_id"]).nunique().query(f"{pheno_col} > 1").index.values
@@ -346,8 +348,8 @@ else:
 # there should not be any more NaNs
 assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
 
-# remove features that are 0 everywhere (there is no signal essentially)
-filtered_matrix = filtered_matrix[filtered_matrix.columns[~(filtered_matrix == 0).all()]]
+# remove mutations that are 0 for all isolates (there is no signal, and the variant will have a coefficient of 0)
+filtered_matrix = filtered_matrix[filtered_matrix.columns[~((filtered_matrix == 0).all())]]
 
 print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} genetic variants")
 filtered_matrix.to_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
@@ -355,8 +357,4 @@ filtered_matrix.to_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
 tracemalloc.stop()
-
-# write peak memory usage in GB
-with open("memory_usage.log", "a+") as file:
-    file.write(f"\n{out_dir}\n")
-    file.write(f"{os.path.basename(__file__)}: {script_memory} GB\n")
+print(f"{script_memory} GB\n")
