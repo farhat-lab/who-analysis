@@ -139,7 +139,7 @@ Intermediate = allele fractions in the range [0.25, 0.75]. Below this range, all
     <li>Binarize them using an AF threshold</li>
 </ul>
 
-Currently, we are using the top 2 modes. We are seeing if encoding variants as continuous variables reveals new significant associations. 
+Currently, we are using the top 2 modes. They are referred to as <b>dropHET</b> and <b>encodeAF</b>, respectively. 
 
 ### Missing Data
 
