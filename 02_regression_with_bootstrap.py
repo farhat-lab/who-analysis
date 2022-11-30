@@ -133,9 +133,6 @@ if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
         # set index so that later only the values can be extracted and save it. This is the actual matrix used for model fitting, after all filtering steps
         model_inputs = model_inputs.set_index("sample_id")
         model_inputs.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
-        
-    # to save space, delete this file. Don't need it anymore
-    os.remove(os.path.join(out_dir, "filt_matrix.pkl"))
     
 else:
     model_inputs = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
@@ -155,7 +152,11 @@ else:
     assert sum(model_inputs.index != df_phenos["sample_id"]) == 0
     X = model_inputs.values
     
-        
+ 
+# to save space, delete this file. Don't need it anymore
+if os.path.isfile(os.path.join(out_dir, "filt_matrix.pkl")):
+    os.remove(os.path.join(out_dir, "filt_matrix.pkl"))
+
 # scale inputs
 X = scaler.fit_transform(X)
 
@@ -169,7 +170,7 @@ else:
 
 if len(y) != X.shape[0]:
     raise ValueError(f"Shapes of model inputs {X.shape} and outputs {len(y)} are incompatible")
-print(f"    {X.shape[0]} samples and {X.shape[1]} variables in the model")
+print(f"{X.shape[0]} samples and {X.shape[1]} variables in the model")
 
 
 ############# STEP 5: FIT L2-PENALIZED REGRESSION #############
@@ -192,12 +193,12 @@ else:
 model.fit(X, y)
 
 if binary:
-    print(f"    Regularization parameter: {model.C_[0]}")
+    print(f"Regularization parameter: {model.C_[0]}")
 else:
-    print(f"    Regularization parameter: {model.alpha_}")
+    print(f"Regularization parameter: {model.alpha_}")
 
 # save coefficients
-res_df = pd.DataFrame({"variant": np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]]), 'coef': np.squeeze(model.coef_)})
+res_df = pd.DataFrame({"mutation": np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]]), 'coef': np.squeeze(model.coef_)})
 res_df.to_csv(os.path.join(out_dir, "regression_coef.csv"), index=False)
 
 

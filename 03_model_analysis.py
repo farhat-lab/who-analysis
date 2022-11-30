@@ -9,7 +9,8 @@ import glob, os, yaml
 import warnings
 warnings.filterwarnings("ignore")
 analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
-who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resistance_variants_all.csv")
+who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
+
 
 
 def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
@@ -17,12 +18,12 @@ def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
     Compute p-values using the Student's t-distribution. 
     '''
         
-    # first compute confidence intervals for the coefficients for all variants, regardless of tier
+    # first compute confidence intervals for the coefficients for all mutation, regardless of tier
     ci = (1-alpha)*100
     diff = (100-ci)/2
         
     # check ordering, then compute upper and lower bounds for the coefficients
-    assert sum(coef_df["variant"].values != bootstrap_df.columns) == 0
+    assert sum(coef_df["mutation"].values != bootstrap_df.columns) == 0
     lower, upper = np.percentile(bootstrap_df, axis=0, q=(diff, 100-diff))
     coef_df["coef_LB"] = lower
     coef_df["coef_UB"] = upper
@@ -32,7 +33,7 @@ def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
     
     for i, row in coef_df.iterrows():
         
-        # all these variants were removed above
+        # sanity check
         assert bootstrap_df[row[col]].std() > 0  
 
         # t-statistic is the true coefficient divided by the standard deviation of the bootstrapped coefficients
@@ -62,17 +63,29 @@ def BH_FDR_correction(coef_df):
     return coef_df
 
 
-def run_all(out_dir, drug, drug_abbr, **kwargs):
+def run_all(drug, drug_abbr, who_variants_combined, **kwargs):
     
     tiers_lst = kwargs["tiers_lst"]
     binary = kwargs["binary"]
-    
-    if binary:
-        pheno_category_lst = kwargs["pheno_category_lst"]
-    model_prefix = kwargs["model_prefix"]
-    
     synonymous = kwargs["synonymous"]
     alpha = kwargs["alpha"]
+    model_prefix = kwargs["model_prefix"]
+    pheno_category_lst = kwargs["pheno_category_lst"]
+    
+    if "ALL" in pheno_category_lst:
+        phenos_name = "ALL"
+    else:
+        phenos_name = "WHO"
+
+    if binary:
+        out_dir = os.path.join(analysis_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
+    else:
+        out_dir = os.path.join(analysis_dir, drug, "MIC", f"tiers={'+'.join(tiers_lst)}", model_prefix)
+
+    # get dataframe of 2021 WHO confidence gradings
+    who_variants_single_drug = who_variants_combined.query("drug==@drug_abbr")
+    del who_variants_single_drug["drug"]
+    del who_variants_combined
     
     # coefficients from L2 regularized regression ("baseline" regression)
     coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
@@ -84,7 +97,7 @@ def run_all(out_dir, drug, drug_abbr, **kwargs):
     model_eigenvecs = pd.read_pickle(os.path.join(out_dir, "model_eigenvecs.pkl"))
 
     # add confidence intervals and p-values (both based on the bootstrapped models) to the results dataframe    
-    coef_df = get_pvalues_add_ci(coef_df, bs_df, "variant", len(model_eigenvecs), alpha=alpha)
+    coef_df = get_pvalues_add_ci(coef_df, bs_df, "mutation", len(model_eigenvecs), alpha=alpha)
     del model_eigenvecs
     
     # Benjamini-Hochberg correction
@@ -102,33 +115,18 @@ def run_all(out_dir, drug, drug_abbr, **kwargs):
         coef_df["Odds_Ratio"] = np.exp(coef_df["coef"])
         coef_df["OR_LB"] = np.exp(coef_df["coef_LB"])
         coef_df["OR_UB"] = np.exp(coef_df["coef_UB"])
+        
+    # add in the WHO 2021 catalog confidence levels, using the dataframe with 2021 to 2022 mapping
+    final_df = coef_df.merge(who_variants_single_drug, on="mutation", how="left")
+    assert len(final_df) == len(coef_df)
     
-    #return coef_df.drop_duplicates("variant", keep='first').sort_values("coef", ascending=False).reset_index(drop=True)
-    return coef_df.sort_values("coef", ascending=False).reset_index(drop=True)
+    # save
+    final_df.sort_values("coef", ascending=False).to_csv(os.path.join(out_dir, "model_analysis.csv"), index=False)
     
 
 _, config_file, drug, drug_WHO_abbr = sys.argv
 
 kwargs = yaml.safe_load(open(config_file))
 
-tiers_lst = kwargs["tiers_lst"]
-pheno_category_lst = kwargs["pheno_category_lst"]
-model_prefix = kwargs["model_prefix"]
-synonymous = kwargs["synonymous"]
-
-if "ALL" in pheno_category_lst:
-    phenos_name = "ALL"
-else:
-    phenos_name = "WHO"
-
-if binary:
-    out_dir = os.path.join(analysis_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
-# no phenotype categories for the MIC model
-else:
-    out_dir = os.path.join(analysis_dir, drug, "MIC", f"tiers={'+'.join(tiers_lst)}", model_prefix)
-
 # run analysis
-model_analysis = run_all(out_dir, drug, drug_WHO_abbr, **kwargs)
-
-# save
-model_analysis.to_csv(os.path.join(out_dir, "model_analysis.csv"), index=False)
+run_all(drug, drug_WHO_abbr, who_variants_combined, **kwargs)
