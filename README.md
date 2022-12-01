@@ -75,7 +75,7 @@ If <code>fast-lineage-caller</code> does not install properly from the environme
     
 ### Model Scripts
 
-Before running any models, the <code>00_samples_summary_minor_allele_counts.py</code> script must be run. It generates the dataframe of minor allele counts (<code>minor_allele_counts.npz</code>) from the SNP data directory, which is needed to compute the genetic relatedness matrix for population structure correction. This script also generates the <code>samples_summary.csv</code> file.
+Before running any models, the <code>00_samples_summary_minor_allele_counts.py</code> script must be run. It generates the dataframe of minor allele counts (<code>data/minor_allele_counts.npz</code>) from the SNP data directory, which is needed to compute the genetic relatedness matrix for population structure correction. This script also generates the <code>data/samples_summary.csv</code> file.
 
 For every drug, run the following numbered scripts in order, with the `config.yaml` file, the full drug name, and the 3-letter abbreviation used in the 2021 WHO catalog. For example, for isoniazid, the arguments after the script name would be `config.yaml Isoniazid INH`. 
   
