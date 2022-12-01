@@ -12,6 +12,22 @@ analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
 
 
+############# CODE TO MAKE THE COMBINE WHO 2021 VARIANTS + CONFIDENCES FILE #############
+# who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resistance_variants_all.csv")
+# variant_mapping = pd.read_csv("data/v1_to_v2_variants_mapping.csv", usecols=["gene_name", "variant", "raw_variant_mapping_data.variant_category"])
+# variant_mapping.columns = ["gene", "V1", "V2"]
+# variant_mapping["mutation"] = variant_mapping["gene"] + "_" + variant_mapping["V2"]
+
+# # combine with the new names to get a dataframe with the confidence leve,s and variant mappings between 2021 and 2022
+# who_variants_combined = who_variants.merge(variant_mapping[["V1", "mutation"]], left_on="variant", right_on="V1", how="inner")
+# del who_variants_combined["variant"]
+# assert len(set(who_variants_combined["V1"]).symmetric_difference(set(who_variants["variant"]))) == 0
+
+# who_variants_combined = who_variants_combined.drop_duplicates()
+# who_variants_combined = who_variants_combined.dropna(subset=["drug", "genome_index", "confidence", "gene", "V1", "mutation"])
+# who_variants_combined[["drug", "confidence", "mutation"]].to_csv("analysis/who_confidence_2021.csv", index=False)
+
+
 
 def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
     '''
