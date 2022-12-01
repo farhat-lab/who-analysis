@@ -75,8 +75,10 @@ If <code>fast-lineage-caller</code> does not install properly from the environme
     
 ### Model Scripts
 
-Run the numbered scripts in order, with the `config.yaml` file, the full drug name, and the 3-letter abbreviation used in the 2021 WHO catalog. For example, for isoniazid, the arguments after the script name would be `config.yaml Isoniazid INH`. 
-   
+Before running any models, the <code>00_samples_summary_minor_allele_counts.py</code> script must be run. It generates the dataframe of minor allele counts (<code>minor_allele_counts.npz</code>) from the SNP data directory, which is needed to compute the genetic relatedness matrix for population structure correction. This script also generates the <code>samples_summary.csv</code> file.
+
+For every drug, run the following numbered scripts in order, with the `config.yaml` file, the full drug name, and the 3-letter abbreviation used in the 2021 WHO catalog. For example, for isoniazid, the arguments after the script name would be `config.yaml Isoniazid INH`. 
+  
 1. <code>01_make_model_inputs.py</code>: create input matrices to fit a regression model.
 2. <code>02_regression_with_bootstrap.py</code> performs a Ridge (L2-penalized) regression. 
 3. <code>03_model_analysis.py</code> gets p-values (including false discovery rate-corrected p-values) and confidence intervals for the coefficients/odds ratios. It creates a summary file called `model_analysis.csv` in every output directory, which contains all variants with non-zero coefficients and nominally significant p-values (p-value before FDR is less than 0.05).
