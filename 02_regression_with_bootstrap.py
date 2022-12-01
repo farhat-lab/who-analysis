@@ -80,9 +80,6 @@ if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
             # make sample ids the index again
             minor_allele_counts = minor_allele_counts.set_index("sample_id")
 
-            mean_maf = pd.DataFrame(minor_allele_counts.mean(axis=0))
-            print(f"Min MAF: {round(mean_maf[0].min(), 2)}, Max MAF: {round(mean_maf[0].max(), 2)}")
-
             # compute GRM using the mino allele counts of only the samples in the model
             minor_allele_counts = minor_allele_counts.query("sample_id in @model_inputs.sample_id.values")
             grm = np.cov(minor_allele_counts.values)
@@ -111,12 +108,9 @@ if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
 
     ############# STEP 4: PREPARE INPUTS TO THE MODEL #############
 
-
-        # drop any samples from the phenotypes and genotypes dataframes that are not in the eigenvector dataframe (some samples may not have genotypes)
+        # drop any samples from the genotypes dataframe that are not in the eigenvector dataframe (some samples may not have genotypes)
         model_inputs = model_inputs.query("sample_id in @eigenvec_df.sample_id.values").sort_values("sample_id", ascending=True).reset_index(drop=True)
         eigenvec_df = eigenvec_df.sort_values("sample_id", ascending=True).reset_index(drop=True)
-
-        assert len(df_phenos) == len(eigenvec_df) == len(model_inputs)
 
         # set index for these 2 dataframes so that later only the values can be extracted
         model_inputs = model_inputs.set_index("sample_id")
@@ -142,6 +136,7 @@ else:
     
 
 if num_PCs > 0:
+    # get only phenotypes for isolates that are in the model_inputs and eigenvector dataframes
     df_phenos = df_phenos.query("sample_id in @eigenvec_df.index.values").sort_values("sample_id", ascending=True).reset_index(drop=True)
     assert sum(model_inputs.merge(eigenvec_df, left_index=True, right_index=True).index != df_phenos["sample_id"]) == 0
     

@@ -264,7 +264,6 @@ continuous_analysis_paths = ["tiers=1/phenos=WHO/encodeAF_noSyn",
 # get dataframes of mutations for WHO isolates only
 df_phenos, df_genos, annotated_genos = get_genos_phenos(analysis_dir, drug)
 
-print("Computing univariate stats for the ALL analyses...")
 for path in all_analysis_paths:  
     compute_statistics_single_model(os.path.join(analysis_dir, drug, path), df_phenos, df_genos, annotated_genos, alpha=0.05)
     
@@ -272,7 +271,6 @@ for path in all_analysis_paths:
 df_phenos = df_phenos.query("phenotypic_category=='WHO'")
 df_genos = df_genos.query("sample_id in @df_phenos.sample_id")
 
-print("Computing univariate stats for the WHO analyses...")
 for path in who_analysis_paths:
     compute_statistics_single_model(os.path.join(analysis_dir, drug, path), df_phenos, df_genos, annotated_genos, alpha=0.05)
     
