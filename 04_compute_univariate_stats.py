@@ -239,27 +239,29 @@ def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_g
 
 _, drug = sys.argv
 
-who_analysis_paths = ["tiers=1/phenos=WHO/dropAF_noSyn",
-                  "tiers=1/phenos=WHO/dropAF_noSyn_unpooled",
-                  "tiers=1/phenos=WHO/dropAF_withSyn",
-                  "tiers=1+2/phenos=WHO/dropAF_noSyn",
-                  "tiers=1+2/phenos=WHO/dropAF_noSyn_unpooled",
-                  "tiers=1+2/phenos=WHO/dropAF_withSyn",
-]
+# who_analysis_paths = ["tiers=1/phenos=WHO/dropAF_noSyn",
+#                   "tiers=1/phenos=WHO/dropAF_noSyn_unpooled",
+#                   "tiers=1/phenos=WHO/dropAF_withSyn",
+#                   "tiers=1+2/phenos=WHO/dropAF_noSyn",
+#                   "tiers=1+2/phenos=WHO/dropAF_noSyn_unpooled",
+#                   "tiers=1+2/phenos=WHO/dropAF_withSyn",
+# ]
 
-all_analysis_paths = ["tiers=1/phenos=ALL/dropAF_noSyn",
-                  "tiers=1/phenos=ALL/dropAF_noSyn_unpooled",
-                  "tiers=1/phenos=ALL/dropAF_withSyn",
-                  "tiers=1+2/phenos=ALL/dropAF_noSyn",
-                  "tiers=1+2/phenos=ALL/dropAF_noSyn_unpooled",
-                  "tiers=1+2/phenos=ALL/dropAF_withSyn",
-]
+# all_analysis_paths = ["tiers=1/phenos=ALL/dropAF_noSyn",
+#                   "tiers=1/phenos=ALL/dropAF_noSyn_unpooled",
+#                   "tiers=1/phenos=ALL/dropAF_withSyn",
+#                   "tiers=1+2/phenos=ALL/dropAF_noSyn",
+#                   "tiers=1+2/phenos=ALL/dropAF_noSyn_unpooled",
+#                   "tiers=1+2/phenos=ALL/dropAF_withSyn",
+# ]
 
-continuous_analysis_paths = ["tiers=1/phenos=WHO/encodeAF_noSyn",
-                  "tiers=1+2/phenos=WHO/encodeAF_noSyn",
-                  "tiers=1/phenos=ALL/encodeAF_noSyn",
-                  "tiers=1+2/phenos=ALL/encodeAF_noSyn",
-]
+# continuous_analysis_paths = ["tiers=1/phenos=WHO/encodeAF_noSyn",
+#                   "tiers=1+2/phenos=WHO/encodeAF_noSyn",
+#                   "tiers=1/phenos=ALL/encodeAF_noSyn",
+#                   "tiers=1+2/phenos=ALL/encodeAF_noSyn",
+# ]
+
+analysis_paths = os.listdir(analysis_path, )
 
 # get dataframes of mutations for WHO isolates only
 df_phenos, df_genos, annotated_genos = get_genos_phenos(analysis_dir, drug)

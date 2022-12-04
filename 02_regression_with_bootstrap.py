@@ -161,7 +161,6 @@ if binary:
     assert len(np.unique(y)) == 2
 else:
     y = np.log(df_phenos["mic_value"].values)
-    print(f"Min MIC: {np.min(df_phenos['mic_value'].values)}, Max MIC: {np.max(df_phenos['mic_value'].values)}")
 
 if len(y) != X.shape[0]:
     raise ValueError(f"Shapes of model inputs {X.shape} and outputs {len(y)} are incompatible")

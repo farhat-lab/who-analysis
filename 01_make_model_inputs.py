@@ -130,6 +130,9 @@ if not os.path.isfile(phenos_file):
     # read them all in, concatenate, and get the number of samples
     df_phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, fName)) for fName in os.listdir(phenos_dir) if "run" in fName], axis=0)
     
+    # sometimes the data has duplicates
+    df_phenos = df_phenos.drop_duplicates(keep="first").reset_index(drop=True)
+    
     # when phenotypic_category == CC or CC-ATU, the phenotype is for a binarized MIC, so exclude those from the binary model. 
     if binary:
         df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
@@ -139,11 +142,8 @@ if not os.path.isfile(phenos_file):
     drop_samples = df_phenos.groupby(["sample_id"]).nunique().query(f"{pheno_col} > 1").index.values
         
     if len(drop_samples) > 0:
-        print(f"    Dropping {len(drop_samples)} isolates with multiple recorded phenotypes")
+        print(f"    Dropping {len(drop_samples)} of {len(df_phenos['sample_id'].unique())} isolates with multiple recorded phenotypes")
         df_phenos = df_phenos.query("sample_id not in @drop_samples")
-    
-    # then drop any duplicated rows. There can be duplicates just because of a minor bug, so protect against that. 
-    df_phenos = df_phenos.drop_duplicates(keep="first").reset_index(drop=True)
 
     # check that there is resistance data for all samples
     assert sum(pd.isnull(df_phenos[pheno_col])) == 0
@@ -152,6 +152,7 @@ if not os.path.isfile(phenos_file):
         df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
     else:
         df_phenos = get_mic_midpoints(df_phenos, pheno_col)
+        print(f"Min MIC: {np.min(df_phenos[pheno_col].values)}, Max MIC: {np.max(df_phenos[pheno_col].values)}")
         
     # this is the phenotypes file for all models for the drug. 
     df_phenos.to_csv(phenos_file, index=False)
