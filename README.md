@@ -121,9 +121,6 @@ Parameters in the yaml file are as follows:
 14. <b>Tier 1+2</b>, WHO, no synonymous, <b>Hets as AF</b>
 15. Tier 1, <b>ALL</b>, no synonymous, <b>Hets as AF</b>
 16. <b>Tier 1+2, ALL</b>, no synonymous, <b>Hets as AF</b>
-
-### Analysis Scripts:
-
  
 ### Pooling LOF Mutations
     
