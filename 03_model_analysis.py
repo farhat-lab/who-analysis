@@ -87,6 +87,8 @@ def run_all(drug, drug_abbr, who_variants_combined, **kwargs):
     alpha = kwargs["alpha"]
     model_prefix = kwargs["model_prefix"]
     pheno_category_lst = kwargs["pheno_category_lst"]
+    atu_analysis = kwargs["atu_analysis"]
+    atu_analysis_type = kwargs["atu_analysis_type"]
     
     if "ALL" in pheno_category_lst:
         phenos_name = "ALL"
@@ -94,7 +96,10 @@ def run_all(drug, drug_abbr, who_variants_combined, **kwargs):
         phenos_name = "WHO"
 
     if binary:
-        out_dir = os.path.join(analysis_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
+        if atu_analysis:
+            out_dir = os.path.join(analysis_dir, drug, "ATU", f"tiers={'+'.join(tiers_lst)}", model_prefix)
+        else:
+            out_dir = os.path.join(analysis_dir, drug, "BINARY", f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
     else:
         out_dir = os.path.join(analysis_dir, drug, "MIC", f"tiers={'+'.join(tiers_lst)}", model_prefix)
 
@@ -103,11 +108,16 @@ def run_all(drug, drug_abbr, who_variants_combined, **kwargs):
     del who_variants_single_drug["drug"]
     del who_variants_combined
     
+    if atu_analysis:
+        model_suffix = f"_{atu_analysis_type.replace('-', '_')}"
+    else:
+        model_suffix = ""
+    
     # coefficients from L2 regularized regression ("baseline" regression)
-    coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
+    coef_df = pd.read_csv(os.path.join(out_dir, f"regression_coef{model_suffix}.csv"))
 
     # coefficients from bootstrap replicates
-    bs_df = pd.read_csv(os.path.join(out_dir, "coef_bootstrap.csv"))
+    bs_df = pd.read_csv(os.path.join(out_dir, f"coef_bootstrap{model_suffix}.csv"))
     
     # to get the number of samples, read in the model eigenvectors file
     model_eigenvecs = pd.read_pickle(os.path.join(out_dir, "model_eigenvecs.pkl"))
@@ -137,7 +147,7 @@ def run_all(drug, drug_abbr, who_variants_combined, **kwargs):
     assert len(final_df) == len(coef_df)
     
     # save
-    final_df.sort_values("coef", ascending=False).to_csv(os.path.join(out_dir, "model_analysis.csv"), index=False)
+    final_df.sort_values("coef", ascending=False).to_csv(os.path.join(out_dir, f"model_analysis{model_suffix}.csv"), index=False)
     
 
 _, config_file, drug, drug_WHO_abbr = sys.argv

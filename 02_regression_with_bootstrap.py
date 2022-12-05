@@ -22,6 +22,11 @@ kwargs = yaml.safe_load(open(config_file))
 
 tiers_lst = kwargs["tiers_lst"]
 binary = kwargs["binary"]
+atu_analysis = kwargs["atu_analysis"]
+
+# double check. If running CC vs. CC-ATU analysis, they are binary phenotypes
+if atu_analysis:
+    binary = True
 
 pheno_category_lst = kwargs["pheno_category_lst"]
 if "ALL" in pheno_category_lst:
@@ -35,8 +40,14 @@ num_PCs = kwargs["num_PCs"]
 num_bootstrap = kwargs["num_bootstrap"]
 
 if binary:
-    out_dir = os.path.join(analysis_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
-# no phenotype categories for the MIC model
+    if atu_analysis:
+        out_dir = os.path.join(analysis_dir, drug, "ATU", f"tiers={'+'.join(tiers_lst)}", model_prefix)
+        
+        # the CC and CC-ATU models are in the same folder, but the output files (i.e. regression_coef.csv should have different suffixes to distinguish)
+        model_suffix = kwargs["atu_analysis_type"]
+        assert model_suffix == "CC" or model_suffix == "CC-ATU"
+    else:
+        out_dir = os.path.join(analysis_dir, drug, "BINARY", f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
 else:
     out_dir = os.path.join(analysis_dir, drug, "MIC", f"tiers={'+'.join(tiers_lst)}", model_prefix)
 
@@ -47,12 +58,19 @@ scaler = StandardScaler()
 
 
 if binary:
-    phenos_file = os.path.join(analysis_dir, drug, "phenos_binary.csv")
+    if atu_analysis:
+        phenos_file = os.path.join(analysis_dir, drug, "phenos_atu.csv")
+    else:
+        phenos_file = os.path.join(analysis_dir, drug, "phenos_binary.csv")
 else:
     phenos_file = os.path.join(analysis_dir, drug, "phenos_mic.csv")
 
 df_phenos = pd.read_csv(phenos_file)
 
+if atu_analysis:
+    df_phenos = df_phenos.query("phenotypic_category == @model_suffix")
+    print(f"Running model on {model_suffix} phenotypes")
+    
 
 ############# STEP 2: COMPUTE THE GENETIC RELATEDNESS MATRIX, REMOVING RESISTANCE LOCI #############
 
@@ -193,7 +211,11 @@ else:
 
 # save coefficients
 res_df = pd.DataFrame({"mutation": np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]]), 'coef': np.squeeze(model.coef_)})
-res_df.to_csv(os.path.join(out_dir, "regression_coef.csv"), index=False)
+
+if atu_analysis:
+    res_df.to_csv(os.path.join(out_dir, f"regression_coef_{model_suffix.replace('-', '_')}.csv"), index=False)
+else:
+    res_df.to_csv(os.path.join(out_dir, "regression_coef.csv"), index=False)
 
 
 ############# STEP 6: BOOTSTRAP COEFFICIENTS #############
@@ -223,7 +245,11 @@ def bootstrap_coef():
 # save bootstrapped coefficients and principal components
 coef_df = bootstrap_coef()
 coef_df.columns = np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]])
-coef_df.to_csv(os.path.join(out_dir, "coef_bootstrap.csv"), index=False)
+
+if atu_analysis:
+    coef_df.to_csv(os.path.join(out_dir, f"coef_bootstrap_{model_suffix.replace('-', '_')}.csv"), index=False)
+else:
+    coef_df.to_csv(os.path.join(out_dir, "coef_bootstrap.csv"), index=False)
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

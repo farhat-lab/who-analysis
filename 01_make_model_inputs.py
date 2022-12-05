@@ -20,7 +20,12 @@ kwargs = yaml.safe_load(open(config_file))
 
 tiers_lst = kwargs["tiers_lst"]
 binary = kwargs["binary"]
+atu_analysis = kwargs["atu_analysis"]
 
+# double check. If running CC vs. CC-ATU analysis, they are binary phenotypes
+if atu_analysis:
+    binary = True
+    
 pheno_category_lst = kwargs["pheno_category_lst"]
 # make sure that both phenotypes are included just in case
 if "ALL" in pheno_category_lst:
@@ -61,8 +66,10 @@ with open(config_file, "w") as file:
     yaml.dump(kwargs, file, default_flow_style=False, sort_keys=False)
   
 if binary:
-    out_dir = os.path.join(analysis_dir, drug, f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
-# no phenotype categories for the MIC model
+    if atu_analysis:
+        out_dir = os.path.join(analysis_dir, drug, "ATU", f"tiers={'+'.join(tiers_lst)}", model_prefix)
+    else:
+        out_dir = os.path.join(analysis_dir, drug, "BINARY", f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
 else:
     out_dir = os.path.join(analysis_dir, drug, "MIC", f"tiers={'+'.join(tiers_lst)}", model_prefix)
 
@@ -72,8 +79,11 @@ print(f"\nSaving model results to {out_dir}")
 
 if binary:
     phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
-    phenos_file = os.path.join(analysis_dir, drug, "phenos_binary.csv")
     pheno_col = "phenotype"
+    if atu_analysis:
+        phenos_file = os.path.join(analysis_dir, drug, "phenos_atu.csv")
+    else:
+        phenos_file = os.path.join(analysis_dir, drug, "phenos_binary.csv")
 else:
     phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/mic'
     phenos_file = os.path.join(analysis_dir, drug, "phenos_mic.csv")
@@ -82,6 +92,7 @@ else:
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 genos_file = os.path.join(analysis_dir, drug, "genos.csv.gz")
+
 
 ############# STEP 1: GET ALL AVAILABLE PHENOTYPES, PROCESS THEM, AND SAVE TO A GENERAL PHENOTYPES FILE FOR EACH MODEL TYPE #############
 
@@ -133,17 +144,30 @@ if not os.path.isfile(phenos_file):
     # sometimes the data has duplicates
     df_phenos = df_phenos.drop_duplicates(keep="first").reset_index(drop=True)
     
-    # when phenotypic_category == CC or CC-ATU, the phenotype is for a binarized MIC, so exclude those from the binary model. 
     if binary:
-        df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
+        if atu_analysis:
+            df_phenos = df_phenos.loc[df_phenos["phenotypic_category"].str.contains("CC")]
+        else:
+            df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
         print(f"Phenotypic categoryies: {df_phenos.phenotypic_category.unique()}")
 
     # Drop samples with multiple recorded phenotypes
     drop_samples = df_phenos.groupby(["sample_id"]).nunique().query(f"{pheno_col} > 1").index.values
-        
-    if len(drop_samples) > 0:
-        print(f"    Dropping {len(drop_samples)} of {len(df_phenos['sample_id'].unique())} isolates with multiple recorded phenotypes")
-        df_phenos = df_phenos.query("sample_id not in @drop_samples")
+     
+    # the ATU dataframe has duplicates -- each sample has a phenotype for CC and one for CC-ATU
+    if not atu_analysis:
+        if len(drop_samples) > 0:
+            print(f"    Dropping {len(drop_samples)} of {len(df_phenos['sample_id'].unique())} isolates with multiple recorded phenotypes")
+            df_phenos = df_phenos.query("sample_id not in @drop_samples")
+    else:
+        if len(drop_samples) == 0:
+            print("Phenotypes for all samples are the same for CC and CC-ATU designations. Quitting this model!")
+            exit()
+        else:
+            print(f"    {len(drop_samples)} of {len(df_phenos['sample_id'].unique())} isolates have different phenotypes using different CCs")
+            
+        # check that all samples are present twice in the ATU analysis dataframe
+        assert sum(df_phenos.groupby(["sample_id"]).count()[pheno_col].unique() != np.array([2])) == 0
 
     # check that there is resistance data for all samples
     assert sum(pd.isnull(df_phenos[pheno_col])) == 0
@@ -154,6 +178,10 @@ if not os.path.isfile(phenos_file):
         df_phenos = get_mic_midpoints(df_phenos, pheno_col)
         print(f"Min MIC: {np.min(df_phenos[pheno_col].values)}, Max MIC: {np.max(df_phenos[pheno_col].values)}")
         
+    # column not needed, so remove to save space
+    if "box" in df_phenos.columns:
+        del df_phenos["box"]
+    
     # this is the phenotypes file for all models for the drug. 
     df_phenos.to_csv(phenos_file, index=False)
 else:
@@ -161,7 +189,7 @@ else:
 
 
 # get only isolates with the desired phenotypic category for the binary model
-if binary:
+if binary and not atu_analysis:
     df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
     
     
