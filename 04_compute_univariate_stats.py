@@ -59,7 +59,6 @@ def compute_univariate_stats(combined_df, variant_coef_dict, return_stats=[]):
     
     Positive LR = sens / (1 – spec)
     Negative LR = (1 – sens) / spec
-
     '''
     # make a copy to keep sample_id in one dataframe
     melted = combined_df.melt(id_vars=["sample_id", "phenotype"])
