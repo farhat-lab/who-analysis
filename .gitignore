@@ -5,7 +5,6 @@ __pycache__/
 sandbox.ipynb
 
 # extra config and bash files made during testing
-config_*.yaml
 config_files/config_*.yaml
 
 # confidential information
