@@ -4,9 +4,6 @@ __pycache__/
 # scratch notebook
 sandbox.ipynb
 
-# extra config and bash files made during testing
-config_files/config_*.yaml
-
 # confidential information
 data/sample_ids_mapping.csv
 data/lineages.csv
