@@ -82,7 +82,6 @@ For every drug, run the following numbered scripts in order, with the `config.ya
 1. <code>01_make_model_inputs.py</code>: create input matrices to fit a regression model.
 2. <code>02_regression_with_bootstrap.py</code> performs a Ridge (L2-penalized) regression. 
 3. <code>03_model_analysis.py</code> gets p-values (including false discovery rate-corrected p-values) and confidence intervals for the coefficients/odds ratios. It creates a summary file called `model_analysis.csv` in every output directory, which contains all variants with non-zero coefficients and nominally significant p-values (p-value before FDR is less than 0.05).
-4. <code>04_compute_univariate_stats.py</code>: computes univariate statistics, confidence intervals, and adds some other annotations for the mutations in all models (<b>TODO: Make this more efficient by eliminating redundant computations</b>). 
     
 Parameters in the yaml file are as follows:
     
@@ -124,7 +123,9 @@ Parameters in the yaml file are as follows:
 
 ### Final Analysis
 
-Run the top cells in the Jupyter notebook `analysis/analysis.ipynb` to write all model analyses to individual Excel files (one for each drug) and generate a summary Excel file for all drugs.
+After all 16 models above have been run, run <code>04_compute_univariate_stats.py</code> to compute univariate statistics, 95% binomial confidence intervals, and add some other annotations for the mutations in all models (<b>TODO: Make this more efficient by eliminating redundant computations</b>). 
+
+Finally, run the top cells in the Jupyter notebook `analysis/analysis.ipynb` to write all model analyses to individual Excel files (one for each drug) and generate a summary Excel file for all drugs.
  
 ### Pooling LOF Mutations
     
