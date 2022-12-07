@@ -94,6 +94,12 @@ genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
 genos_file = os.path.join(analysis_dir, drug, "genos.csv.gz")
 
 
+# this is mainly for the CC vs. CC-ATU analysis, which use the same genotype dataframes. Only the phenotypes are different
+if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+    print("Model matrix already exists. Proceeding with modeling")
+    exit()
+    
+
 ############# STEP 1: GET ALL AVAILABLE PHENOTYPES, PROCESS THEM, AND SAVE TO A GENERAL PHENOTYPES FILE FOR EACH MODEL TYPE #############
 
 
