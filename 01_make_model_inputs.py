@@ -150,6 +150,8 @@ if not os.path.isfile(phenos_file):
         else:
             df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
         print(f"Phenotypic categoryies: {df_phenos.phenotypic_category.unique()}")
+    else:
+        df_phenos["medium"] = df_phenos["medium"].replace("Middlebrook7H10", "7H10")
 
     # Drop samples with multiple recorded phenotypes
     drop_samples = df_phenos.groupby(["sample_id"]).nunique().query(f"{pheno_col} > 1").index.values
@@ -222,7 +224,7 @@ def read_in_all_genos(drug):
         df = pd.read_csv(fName, low_memory=False)            
         dfs_lst.append(df)
 
-    # fail-safe if there are duplicate rows
+    # remove any duplicate rows
     return pd.concat(dfs_lst).drop_duplicates().reset_index(drop=True)
 
 

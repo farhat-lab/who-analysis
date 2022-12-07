@@ -878,7 +878,6 @@ INH,3) Uncertain significance,Rv1258c_c.-52G>A
 INH,3) Uncertain significance,katG_c.-473T>G
 INH,3) Uncertain significance,katG_c.-259T>G
 INH,3) Uncertain significance,inhA_c.-809G>A
-INH,3) Uncertain significance,inhA_c.-796delC
 INH,3) Uncertain significance,inhA_c.-229G>C
 INH,3) Uncertain significance,inhA_c.-727A>G
 INH,3) Uncertain significance,inhA_c.-205C>T
@@ -1170,9 +1169,7 @@ INH,3) Uncertain significance,mshA_c.-268A>G
 INH,3) Uncertain significance,mshA_c.-643C>T
 INH,3) Uncertain significance,mshA_c.-354G>C
 INH,3) Uncertain significance,mshA_c.-474G>C
-INH,3) Uncertain significance,Rv1258c_c.-64_-56delTGCGGCAGC
 PZA,3) Uncertain significance,Rv1258c_c.-64_-56delTGCGGCAGC
-STM,3) Uncertain significance,Rv1258c_c.-64_-56delTGCGGCAGC
 INH,3) Uncertain significance,katG_c.-497delA
 INH,3) Uncertain significance,katG_c.-156A>C
 INH,3) Uncertain significance,katG_c.-443G>A
@@ -1803,7 +1800,6 @@ AMI,3) Uncertain significance,eis_p.Leu191fs
 KAN,3) Uncertain significance,eis_p.Leu191fs
 AMI,3) Uncertain significance,eis_p.Gly210fs
 KAN,3) Uncertain significance,eis_p.Gly210fs
-AMI,3) Uncertain significance,eis_p.Thr269fs
 AMI,3) Uncertain significance,eis_p.Ser318fs
 KAN,3) Uncertain significance,eis_p.Ser318fs
 AMI,3) Uncertain significance,eis_p.Ala151Pro
@@ -1997,9 +1993,7 @@ CAP,3) Uncertain significance,rrs_n.-74delG
 LZD,3) Uncertain significance,rrs_n.-74delG
 AMI,3) Uncertain significance,rrs_n.84_85delCGinsT
 KAN,3) Uncertain significance,rrs_n.84_85delCGinsT
-AMI,3) Uncertain significance,rrs_n.-74delG
 KAN,3) Uncertain significance,rrs_n.-74delG
-LZD,3) Uncertain significance,rrs_n.-74delG
 AMI,3) Uncertain significance,rrs_n.93dupT
 KAN,3) Uncertain significance,rrs_n.93dupT
 AMI,3) Uncertain significance,rrs_n.908_909insT
@@ -2580,9 +2574,7 @@ AMI,3) Uncertain significance,whiB6_p.Leu52fs
 STM,3) Uncertain significance,whiB6_p.Leu52fs
 AMI,3) Uncertain significance,whiB6_p.Cys53fs
 CAP,3) Uncertain significance,whiB6_p.Cys53fs
-AMI,3) Uncertain significance,whiB6_p.Leu52fs
 CAP,3) Uncertain significance,whiB6_p.Leu52fs
-AMI,3) Uncertain significance,whiB6_p.Cys53fs
 AMI,3) Uncertain significance,whiB6_p.Cys56fs
 CAP,3) Uncertain significance,whiB6_p.Cys56fs
 STM,3) Uncertain significance,whiB6_p.Cys56fs
@@ -2609,10 +2601,6 @@ AMI,3) Uncertain significance,whiB6_p.Glu73fs
 CAP,3) Uncertain significance,whiB6_p.Glu73fs
 AMI,3) Uncertain significance,whiB6_p.Leu75fs
 CAP,3) Uncertain significance,whiB6_p.Leu75fs
-AMI,3) Uncertain significance,whiB6_p.Leu75fs
-CAP,3) Uncertain significance,whiB6_p.Leu75fs
-AMI,3) Uncertain significance,whiB6_p.Leu75fs
-AMI,3) Uncertain significance,whiB6_p.Val79fs
 AMI,3) Uncertain significance,whiB6_p.Val79fs
 AMI,3) Uncertain significance,whiB6_p.Glu8fs
 AMI,3) Uncertain significance,whiB6_p.Gly85fs
@@ -2626,16 +2614,12 @@ AMI,3) Uncertain significance,whiB6_p.Leu98fs
 CAP,3) Uncertain significance,whiB6_p.Leu98fs
 AMI,3) Uncertain significance,whiB6_p.Asn102fs
 CAP,3) Uncertain significance,whiB6_p.Asn102fs
-AMI,3) Uncertain significance,whiB6_p.Leu98fs
-CAP,3) Uncertain significance,whiB6_p.Leu98fs
 AMI,3) Uncertain significance,whiB6_p.Pro105fs
 AMI,3) Uncertain significance,whiB6_p.Val106fs
 CAP,3) Uncertain significance,whiB6_p.Val106fs
 STM,3) Uncertain significance,whiB6_p.Val106fs
 AMI,3) Uncertain significance,whiB6_p.Arg107fs
 CAP,3) Uncertain significance,whiB6_p.Arg107fs
-AMI,3) Uncertain significance,whiB6_p.Asp108fs
-CAP,3) Uncertain significance,whiB6_p.Asp108fs
 AMI,3) Uncertain significance,whiB6_p.His109fs
 AMI,3) Uncertain significance,whiB6_p.Ser112fs
 CAP,3) Uncertain significance,whiB6_p.Ser112fs
@@ -2661,8 +2645,6 @@ STM,3) Uncertain significance,whiB6_c.-77_-75delGAGinsAA
 AMI,3) Uncertain significance,whiB6_c.-78_-75delAGAGinsGGA
 CAP,3) Uncertain significance,whiB6_c.-78_-75delAGAGinsGGA
 STM,3) Uncertain significance,whiB6_c.-78_-75delAGAGinsGGA
-AMI,3) Uncertain significance,whiB6_c.-75delG
-CAP,3) Uncertain significance,whiB6_c.-75delG
 AMI,3) Uncertain significance,whiB6_p.Thr24fs
 CAP,3) Uncertain significance,whiB6_p.Thr24fs
 AMI,3) Uncertain significance,whiB6_p.Glu28fs
@@ -2897,8 +2879,6 @@ KAN,3) Uncertain significance,whiB7_c.-203_-202insC
 AMI,3) Uncertain significance,whiB7_c.-211_-210insG
 AMI,3) Uncertain significance,whiB7_c.-221delA
 KAN,3) Uncertain significance,whiB7_c.-221delA
-AMI,3) Uncertain significance,whiB7_p.Gly84_Arg87del
-STM,3) Uncertain significance,whiB7_p.Gly84_Arg87del
 AMI,3) Uncertain significance,whiB7_c.-318_-317delGG
 AMI,3) Uncertain significance,whiB7_c.-340delC
 KAN,3) Uncertain significance,whiB7_c.-340delC
@@ -3127,10 +3107,6 @@ CAP,3) Uncertain significance,rrs_n.1077dupT
 KAN,3) Uncertain significance,rrs_n.1077dupT
 STM,3) Uncertain significance,rrs_n.1077dupT
 AMI,3) Uncertain significance,rrs_n.1148_1149dupGA
-AMI,3) Uncertain significance,rrs_n.-117delT
-CAP,3) Uncertain significance,rrs_n.-117delT
-KAN,3) Uncertain significance,rrs_n.-117delT
-LZD,3) Uncertain significance,rrs_n.-117delT
 AMI,3) Uncertain significance,rrs_n.160dupT
 CAP,3) Uncertain significance,rrs_n.160dupT
 KAN,3) Uncertain significance,rrs_n.160dupT
@@ -3249,8 +3225,6 @@ KAN,3) Uncertain significance,rrs_n.847T>C
 STM,3) Uncertain significance,rrs_n.847T>C
 AMI,3) Uncertain significance,whiB6_p.Asp39fs
 CAP,3) Uncertain significance,whiB6_p.Asp39fs
-AMI,3) Uncertain significance,whiB6_p.Val67fs
-CAP,3) Uncertain significance,whiB6_p.Val67fs
 AMI,3) Uncertain significance,whiB6_p.Met1fs
 CAP,3) Uncertain significance,whiB6_p.Met1fs
 STM,3) Uncertain significance,whiB6_p.Met1fs
@@ -3259,15 +3233,6 @@ CAP,3) Uncertain significance,whiB6_p.Ala72fs
 STM,3) Uncertain significance,whiB6_p.Ala72fs
 AMI,3) Uncertain significance,whiB6_p.Ala77fs
 CAP,3) Uncertain significance,whiB6_p.Ala77fs
-AMI,3) Uncertain significance,whiB6_p.Val79fs
-AMI,3) Uncertain significance,whiB6_p.Ala77fs
-CAP,3) Uncertain significance,whiB6_p.Ala77fs
-AMI,3) Uncertain significance,whiB6_p.Leu98fs
-AMI,3) Uncertain significance,whiB6_p.Pro105fs
-AMI,3) Uncertain significance,whiB6_c.-77_-75delGAGinsAA
-CAP,3) Uncertain significance,whiB6_c.-77_-75delGAGinsAA
-STM,3) Uncertain significance,whiB6_c.-77_-75delGAGinsAA
-AMI,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCC
 CAP,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCC
 STM,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCC
 AMI,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCA
@@ -3284,10 +3249,6 @@ STM,3) Uncertain significance,whiB6_c.-76delA
 AMI,3) Uncertain significance,whiB6_c.-81_-78delACTAinsTCC
 CAP,3) Uncertain significance,whiB6_c.-81_-78delACTAinsTCC
 STM,3) Uncertain significance,whiB6_c.-81_-78delACTAinsTCC
-AMI,3) Uncertain significance,whiB6_p.Glu28fs
-CAP,3) Uncertain significance,whiB6_p.Glu28fs
-AMI,3) Uncertain significance,whiB6_p.Glu28fs
-CAP,3) Uncertain significance,whiB6_p.Glu28fs
 AMI,3) Uncertain significance,whiB6_p.Leu31fs
 CAP,3) Uncertain significance,whiB6_p.Leu31fs
 AMI,3) Uncertain significance,whiB6_c.-114A>G
@@ -3350,10 +3311,7 @@ AMI,3) Uncertain significance,whiB6_p.Trp60Arg
 CAP,3) Uncertain significance,whiB6_p.Trp60Arg
 AMI,3) Uncertain significance,whiB6_p.Trp60Ser
 AMI,3) Uncertain significance,whiB6_p.Trp76*
-AMI,3) Uncertain significance,whiB6_p.Trp76*
 CAP,3) Uncertain significance,whiB6_p.Trp76*
-CAP,3) Uncertain significance,whiB6_p.Trp76*
-STM,3) Uncertain significance,whiB6_p.Trp76*
 STM,3) Uncertain significance,whiB6_p.Trp76*
 AMI,3) Uncertain significance,whiB7_c.-317_-316insG
 KAN,3) Uncertain significance,whiB7_c.-317_-316insG
@@ -3458,9 +3416,6 @@ AMI,3) Uncertain significance,eis_p.Asp344fs
 KAN,3) Uncertain significance,eis_p.Asp344fs
 AMI,3) Uncertain significance,eis_p.Met16fs
 KAN,3) Uncertain significance,eis_p.Met16fs
-AMI,3) Uncertain significance,eis_p.Thr269fs
-KAN,3) Uncertain significance,eis_p.Thr269fs
-AMI,3) Uncertain significance,eis_p.Thr269fs
 KAN,3) Uncertain significance,eis_p.Thr269fs
 AMI,3) Uncertain significance,eis_p.Ala86Val
 KAN,3) Uncertain significance,eis_p.Ala86Val
@@ -3476,11 +3431,8 @@ AMI,3) Uncertain significance,eis_p.Thr231Ile
 KAN,3) Uncertain significance,eis_p.Thr231Ile
 AMI,3) Uncertain significance,eis_p.Val301Ile
 KAN,3) Uncertain significance,eis_p.Val301Ile
-AMI,3) Uncertain significance,rrs_n.-101_-100insG
-CAP,3) Uncertain significance,rrs_n.-101_-100insG
 KAN,3) Uncertain significance,rrs_n.-101_-100insG
 LZD,3) Uncertain significance,rrs_n.-101_-100insG
-STM,3) Uncertain significance,rrs_n.-101_-100insG
 AMI,3) Uncertain significance,rrs_n.-40_-39insA
 CAP,3) Uncertain significance,rrs_n.-40_-39insA
 KAN,3) Uncertain significance,rrs_n.-40_-39insA
@@ -3526,13 +3478,6 @@ CAP,3) Uncertain significance,rrs_n.-32T>G
 STM,3) Uncertain significance,rrs_n.-32T>G
 AMI,3) Uncertain significance,whiB6_p.Trp41fs
 CAP,3) Uncertain significance,whiB6_p.Trp41fs
-AMI,3) Uncertain significance,whiB6_c.-76delA
-CAP,3) Uncertain significance,whiB6_c.-76delA
-AMI,3) Uncertain significance,whiB6_c.-78_-75delAGAGinsGGA
-CAP,3) Uncertain significance,whiB6_c.-78_-75delAGAGinsGGA
-STM,3) Uncertain significance,whiB6_c.-78_-75delAGAGinsGGA
-AMI,3) Uncertain significance,whiB6_c.-75delG
-CAP,3) Uncertain significance,whiB6_c.-75delG
 STM,3) Uncertain significance,whiB6_c.-75delG
 AMI,3) Uncertain significance,whiB6_c.-77_-75delGAGinsCA
 CAP,3) Uncertain significance,whiB6_c.-77_-75delGAGinsCA
@@ -3609,7 +3554,6 @@ CAP,3) Uncertain significance,aftB_p.Met465Val
 AMI,3) Uncertain significance,aftB_p.Val128Leu
 AMI,3) Uncertain significance,ccsA_p.Ala132Pro
 AMI,3) Uncertain significance,ccsA_p.Ile123Val
-AMI,3) Uncertain significance,ccsA_p.Ile123Val
 AMI,3) Uncertain significance,ccsA_p.Val274Ile
 AMI,3) Uncertain significance,eis_p.Leu386Ile
 KAN,3) Uncertain significance,eis_p.Leu386Ile
@@ -3638,8 +3582,6 @@ CAP,3) Uncertain significance,rrs_n.-92T>G
 KAN,3) Uncertain significance,rrs_n.-92T>G
 LZD,3) Uncertain significance,rrs_n.-92T>G
 STM,3) Uncertain significance,rrs_n.-92T>G
-AMI,3) Uncertain significance,whiB6_p.Leu52fs
-CAP,3) Uncertain significance,whiB6_p.Leu52fs
 AMI,3) Uncertain significance,whiB6_c.-75_-72delGCTCinsCTT
 CAP,3) Uncertain significance,whiB6_c.-75_-72delGCTCinsCTT
 AMI,3) Uncertain significance,whiB6_c.-75_-72delGCTCinsCTG
@@ -3687,8 +3629,6 @@ AMI,3) Uncertain significance,whiB6_p.Trp16Cys
 CAP,3) Uncertain significance,whiB6_p.Trp16Cys
 STM,3) Uncertain significance,whiB6_p.Trp16Cys
 AMI,3) Uncertain significance,whiB6_p.Trp60*
-AMI,3) Uncertain significance,whiB6_p.Trp60*
-CAP,3) Uncertain significance,whiB6_p.Trp60*
 CAP,3) Uncertain significance,whiB6_p.Trp60*
 AMI,3) Uncertain significance,whiB7_c.-166delG
 KAN,3) Uncertain significance,whiB7_c.-166delG
@@ -3728,8 +3668,6 @@ AMI,3) Uncertain significance,rrs_n.891G>A
 CAP,3) Uncertain significance,rrs_n.891G>A
 KAN,3) Uncertain significance,rrs_n.891G>A
 STM,3) Uncertain significance,rrs_n.891G>A
-AMI,3) Uncertain significance,whiB6_p.Arg64fs
-CAP,3) Uncertain significance,whiB6_p.Arg64fs
 AMI,3) Uncertain significance,whiB6_p.Leu26fs
 CAP,3) Uncertain significance,whiB6_p.Leu26fs
 STM,3) Uncertain significance,whiB6_p.Leu26fs
@@ -3783,19 +3721,7 @@ CAP,3) Uncertain significance,rrs_n.1176G>A
 KAN,3) Uncertain significance,rrs_n.1176G>A
 STM,3) Uncertain significance,rrs_n.1176G>A
 AMI,3) Uncertain significance,whiB6_c.-76_-75delAGinsT
-AMI,3) Uncertain significance,whiB6_c.-76_-75delAGinsC
-CAP,3) Uncertain significance,whiB6_c.-76_-75delAGinsC
-AMI,3) Uncertain significance,whiB6_c.-77_-75delGAGinsCA
-CAP,3) Uncertain significance,whiB6_c.-77_-75delGAGinsCA
-AMI,3) Uncertain significance,whiB6_c.-75delG
-CAP,3) Uncertain significance,whiB6_c.-75delG
-STM,3) Uncertain significance,whiB6_c.-75delG
-AMI,3) Uncertain significance,whiB6_c.-78_-75delAGAGinsCGA
-CAP,3) Uncertain significance,whiB6_c.-78_-75delAGAGinsCGA
 STM,3) Uncertain significance,whiB6_c.-78_-75delAGAGinsCGA
-AMI,3) Uncertain significance,whiB6_c.-75delG
-CAP,3) Uncertain significance,whiB6_c.-75delG
-STM,3) Uncertain significance,whiB6_c.-75delG
 AMI,3) Uncertain significance,whiB6_c.-125A>G
 CAP,3) Uncertain significance,whiB6_c.-125A>G
 STM,3) Uncertain significance,whiB6_c.-125A>G
@@ -3853,8 +3779,6 @@ AMI,3) Uncertain significance,rrs_n.1379G>A
 CAP,3) Uncertain significance,rrs_n.1379G>A
 KAN,3) Uncertain significance,rrs_n.1379G>A
 STM,3) Uncertain significance,rrs_n.1379G>A
-AMI,3) Uncertain significance,whiB6_p.Glu28fs
-CAP,3) Uncertain significance,whiB6_p.Glu28fs
 STM,3) Uncertain significance,whiB6_p.Glu28fs
 AMI,3) Uncertain significance,whiB6_c.-14C>T
 CAP,3) Uncertain significance,whiB6_c.-14C>T
@@ -3881,10 +3805,7 @@ AMI,3) Uncertain significance,whiB6_p.Val79Gly
 CAP,3) Uncertain significance,whiB6_p.Val79Gly
 STM,3) Uncertain significance,whiB6_p.Val79Gly
 AMI,3) Uncertain significance,whiB6_p.Trp41*
-AMI,3) Uncertain significance,whiB6_p.Trp41*
 CAP,3) Uncertain significance,whiB6_p.Trp41*
-CAP,3) Uncertain significance,whiB6_p.Trp41*
-STM,3) Uncertain significance,whiB6_p.Trp41*
 STM,3) Uncertain significance,whiB6_p.Trp41*
 AMI,3) Uncertain significance,whiB7_c.-89A>G
 KAN,3) Uncertain significance,whiB7_c.-89A>G
@@ -3892,21 +3813,12 @@ AMI,3) Uncertain significance,rrs_n.5G>T
 CAP,3) Uncertain significance,rrs_n.5G>T
 KAN,3) Uncertain significance,rrs_n.5G>T
 STM,3) Uncertain significance,rrs_n.5G>T
-AMI,3) Uncertain significance,whiB6_p.Arg2_Tyr3insPheProProArgGlnProGlyProThrArgArgLeuMetArg
-CAP,3) Uncertain significance,whiB6_p.Arg2_Tyr3insPheProProArgGlnProGlyProThrArgArgLeuMetArg
-STM,3) Uncertain significance,whiB6_p.Arg2_Tyr3insPheProProArgGlnProGlyProThrArgArgLeuMetArg
 AMI,3) Uncertain significance,whiB6_p.Arg88Trp
 CAP,3) Uncertain significance,whiB6_p.Arg88Trp
 STM,3) Uncertain significance,whiB6_p.Arg88Trp
 AMI,3) Uncertain significance,whiB6_p.Val79Ala
 CAP,3) Uncertain significance,whiB6_p.Val79Ala
 STM,3) Uncertain significance,whiB6_p.Val79Ala
-AMI,3) Uncertain significance,whiB7_c.-215delC
-KAN,3) Uncertain significance,whiB7_c.-215delC
-STM,3) Uncertain significance,whiB7_c.-215delC
-AMI,3) Uncertain significance,whiB6_p.Glu100fs
-CAP,3) Uncertain significance,whiB6_p.Glu100fs
-STM,3) Uncertain significance,whiB6_p.Glu100fs
 AMI,3) Uncertain significance,whiB6_c.-109C>A
 CAP,3) Uncertain significance,whiB6_c.-109C>A
 STM,3) Uncertain significance,whiB6_c.-109C>A
@@ -3948,21 +3860,12 @@ AMI,3) Uncertain significance,rrs_n.643dupT
 CAP,3) Uncertain significance,rrs_n.643dupT
 KAN,3) Uncertain significance,rrs_n.643dupT
 STM,3) Uncertain significance,rrs_n.643dupT
-AMI,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCG
-CAP,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCG
-STM,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCG
 AMI,3) Uncertain significance,whiB6_c.-16T>C
 CAP,3) Uncertain significance,whiB6_c.-16T>C
 STM,3) Uncertain significance,whiB6_c.-16T>C
 AMI,3) Uncertain significance,whiB7_c.-350A>G
 KAN,3) Uncertain significance,whiB7_c.-350A>G
 STM,3) Uncertain significance,whiB7_c.-350A>G
-AMI,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCG
-CAP,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCG
-STM,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCG
-AMI,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCC
-CAP,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCC
-STM,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCC
 AMI,3) Uncertain significance,whiB6_p.Leu52Gln
 CAP,3) Uncertain significance,whiB6_p.Leu52Gln
 STM,3) Uncertain significance,whiB6_p.Leu52Gln
@@ -3973,14 +3876,8 @@ AMI,3) Uncertain significance,rrs_n.908A>C
 CAP,3) Uncertain significance,rrs_n.908A>C
 KAN,3) Uncertain significance,rrs_n.908A>C
 STM,3) Uncertain significance,rrs_n.908A>C
-AMI,3) Uncertain significance,whiB6_p.Val79fs
 CAP,3) Uncertain significance,whiB6_p.Val79fs
 STM,3) Uncertain significance,whiB6_p.Val79fs
-AMI,3) Uncertain significance,whiB6_p.Leu98fs
-CAP,3) Uncertain significance,whiB6_p.Leu98fs
-AMI,3) Uncertain significance,whiB6_c.-75delG
-CAP,3) Uncertain significance,whiB6_c.-75delG
-STM,3) Uncertain significance,whiB6_c.-75delG
 AMI,3) Uncertain significance,aftB_p.Ile327Val
 CAP,3) Uncertain significance,aftB_p.Ile327Val
 AMI,3) Uncertain significance,whiB6_p.Tyr27*
@@ -3995,9 +3892,6 @@ AMI,3) Uncertain significance,aftB_p.Ser469Leu
 CAP,3) Uncertain significance,aftB_p.Ser469Leu
 AMI,3) Uncertain significance,eis_c.-15C>G
 KAN,3) Uncertain significance,eis_c.-15C>G
-AMI,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCA
-CAP,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCA
-STM,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCA
 AMI,3) Uncertain significance,whiB6_p.Ala66Thr
 CAP,3) Uncertain significance,whiB6_p.Ala66Thr
 STM,3) Uncertain significance,whiB6_p.Ala66Thr
@@ -4009,9 +3903,6 @@ CAP,3) Uncertain significance,whiB6_p.Ser97Pro
 AMI,3) Uncertain significance,whiB7_c.-116A>G
 KAN,3) Uncertain significance,whiB7_c.-116A>G
 STM,3) Uncertain significance,whiB7_c.-116A>G
-AMI,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCC
-CAP,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCC
-STM,3) Uncertain significance,whiB6_c.-75_-73delGCTinsCC
 AMI,3) Uncertain significance,whiB6_c.-54A>G
 CAP,3) Uncertain significance,whiB6_c.-54A>G
 STM,3) Uncertain significance,whiB6_c.-54A>G
@@ -4052,23 +3943,14 @@ AMI,5) Not assoc w R,ccsA_p.Ile245Met
 CAP,5) Not assoc w R,ccsA_p.Ile245Met
 AMI,5) Not assoc w R,whiB6_c.-75delG
 CAP,5) Not assoc w R,whiB6_c.-75delG
-STM,3) Uncertain significance,whiB6_c.-75delG
-AMI,5) Not assoc w R,whiB6_c.-75delG
-CAP,5) Not assoc w R,whiB6_c.-75delG
 STM,5) Not assoc w R,whiB6_c.-75delG
 AMI,5) Not assoc w R,rrs_n.514A>C
 CAP,5) Not assoc w R,rrs_n.514A>C
 KAN,5) Not assoc w R,rrs_n.514A>C
 STM,1) Assoc w R,rrs_n.514A>C
-AMI,5) Not assoc w R,whiB6_c.-75delG
-CAP,5) Not assoc w R,whiB6_c.-75delG
-STM,3) Uncertain significance,whiB6_c.-75delG
 AMI,5) Not assoc w R,whiB6_p.Thr51Pro
 CAP,5) Not assoc w R,whiB6_p.Thr51Pro
 STM,3) Uncertain significance,whiB6_p.Thr51Pro
-AMI,5) Not assoc w R,whiB6_c.-75delG
-CAP,5) Not assoc w R,whiB6_c.-75delG
-STM,5) Not assoc w R,whiB6_c.-75delG
 AMI,5) Not assoc w R,whiB6_c.-82C>T
 CAP,5) Not assoc w R,whiB6_c.-82C>T
 STM,3) Uncertain significance,whiB6_c.-82C>T
@@ -4090,7 +3972,6 @@ CAP,5) Not assoc w R,rrs_n.492C>T
 KAN,5) Not assoc w R,rrs_n.492C>T
 STM,5) Not assoc w R,rrs_n.492C>T
 AMI,5) Not assoc w R,eis_p.Thr269fs
-KAN,3) Uncertain significance,eis_p.Thr269fs
 AMI,5) Not assoc w R,whiB7_p.Gly64fs
 KAN,3) Uncertain significance,whiB7_p.Gly64fs
 STM,5) Not assoc w R,whiB7_p.Gly64fs
@@ -4914,8 +4795,6 @@ BDQ,3) Uncertain significance,mmpL5_p.Ser894*
 CFZ,3) Uncertain significance,mmpL5_p.Ser894*
 BDQ,3) Uncertain significance,pepQ_p.Arg7Gln
 CFZ,3) Uncertain significance,pepQ_p.Arg7Gln
-BDQ,3) Uncertain significance,Rv0678_p.Ile67fs
-CFZ,3) Uncertain significance,Rv0678_p.Ile67fs
 BDQ,3) Uncertain significance,Rv1979c_p.Leu174Phe
 CFZ,3) Uncertain significance,Rv1979c_p.Leu174Phe
 BDQ,3) Uncertain significance,mmpL5_p.Glu512Gln
@@ -4928,8 +4807,6 @@ BDQ,3) Uncertain significance,mmpS5_c.-36A>G
 CFZ,3) Uncertain significance,mmpS5_c.-36A>G
 BDQ,3) Uncertain significance,Rv0678_p.Asn98Asp
 CFZ,3) Uncertain significance,Rv0678_p.Asn98Asp
-BDQ,3) Uncertain significance,Rv1979c_p.Val108fs
-CFZ,3) Uncertain significance,Rv1979c_p.Val108fs
 BDQ,3) Uncertain significance,Rv1979c_p.Glu38Lys
 CFZ,3) Uncertain significance,Rv1979c_p.Glu38Lys
 BDQ,3) Uncertain significance,Rv1979c_p.Glu403Gly
@@ -4952,7 +4829,6 @@ BDQ,3) Uncertain significance,Rv1979c_c.-70G>A
 CFZ,3) Uncertain significance,Rv1979c_c.-70G>A
 BDQ,3) Uncertain significance,Rv1979c_p.Val52Gly
 CFZ,3) Uncertain significance,Rv1979c_p.Val52Gly
-BDQ,3) Uncertain significance,Rv0678_p.Asp47fs
 CFZ,3) Uncertain significance,Rv0678_p.Asp47fs
 BDQ,3) Uncertain significance,Rv1979c_c.-154A>G
 CFZ,3) Uncertain significance,Rv1979c_c.-154A>G
@@ -4977,8 +4853,6 @@ CFZ,3) Uncertain significance,mmpL5_p.Ala147Thr
 BDQ,3) Uncertain significance,pepQ_p.Val45Leu
 CFZ,3) Uncertain significance,pepQ_p.Val45Leu
 BDQ,3) Uncertain significance,pepQ_p.Phe46Leu
-BDQ,3) Uncertain significance,pepQ_p.Phe46Leu
-CFZ,3) Uncertain significance,pepQ_p.Phe46Leu
 CFZ,3) Uncertain significance,pepQ_p.Phe46Leu
 BDQ,3) Uncertain significance,Rv1979c_p.Arg7Ser
 CFZ,3) Uncertain significance,Rv1979c_p.Arg7Ser
@@ -5028,15 +4902,11 @@ CAP,2) Assoc w R - Interim,tlyA_p.Arg133fs
 CAP,2) Assoc w R - Interim,tlyA_p.Thr134fs
 CAP,2) Assoc w R - Interim,tlyA_p.Ser92fs
 CAP,2) Assoc w R - Interim,tlyA_p.Ala105fs
-CAP,2) Assoc w R - Interim,tlyA_p.Arg133fs
 CAP,2) Assoc w R - Interim,tlyA_p.Val46fs
 CAP,2) Assoc w R - Interim,tlyA_p.Ala76fs
 CAP,2) Assoc w R - Interim,tlyA_p.Ala106fs
 CAP,2) Assoc w R - Interim,tlyA_p.Leu131fs
-CAP,2) Assoc w R - Interim,tlyA_p.Arg133fs
-CAP,2) Assoc w R - Interim,tlyA_p.Thr134fs
 CAP,2) Assoc w R - Interim,tlyA_p.Ile144fs
-CAP,2) Assoc w R - Interim,tlyA_p.Val198fs
 CAP,2) Assoc w R - Interim,tlyA_p.Arg213fs
 CAP,2) Assoc w R - Interim,tlyA_p.Pro233fs
 CAP,2) Assoc w R - Interim,tlyA_p.Ile34fs
@@ -5044,9 +4914,7 @@ CAP,2) Assoc w R - Interim,tlyA_p.Gly66*
 CAP,2) Assoc w R - Interim,tlyA_p.Gln22*
 CAP,2) Assoc w R - Interim,tlyA_p.Arg18*
 CAP,2) Assoc w R - Interim,tlyA_p.His68fs
-CAP,2) Assoc w R - Interim,tlyA_p.Ser92fs
 CAP,2) Assoc w R - Interim,tlyA_p.Ala110fs
-CAP,2) Assoc w R - Interim,tlyA_p.Arg133fs
 CAP,2) Assoc w R - Interim,tlyA_p.Gln191fs
 CAP,2) Assoc w R - Interim,tlyA_p.Val197fs
 CAP,2) Assoc w R - Interim,tlyA_p.Ala215fs
@@ -5088,8 +4956,6 @@ CAP,3) Uncertain significance,ccsA_p.Pro144Leu
 CAP,3) Uncertain significance,ccsA_p.Arg217Leu
 CAP,3) Uncertain significance,ccsA_p.Val76Ile
 CAP,3) Uncertain significance,rrs_n.-20_-19insTCCAAAGGGA
-KAN,3) Uncertain significance,rrs_n.-20_-19insTCCAAAGGGA
-STM,3) Uncertain significance,rrs_n.-20_-19insTCCAAAGGGA
 CAP,3) Uncertain significance,rrs_n.299A>G
 KAN,3) Uncertain significance,rrs_n.299A>G
 CAP,3) Uncertain significance,rrs_n.554A>T
@@ -5170,10 +5036,8 @@ CAP,3) Uncertain significance,tlyA_p.Val99Ile
 CAP,3) Uncertain significance,whiB6_c.-118delT
 CAP,3) Uncertain significance,whiB6_p.Pro105fs
 STM,3) Uncertain significance,whiB6_p.Pro105fs
-CAP,3) Uncertain significance,whiB6_p.Thr24fs
 CAP,3) Uncertain significance,whiB6_c.-81_-72delACTAGAGCTC
 STM,3) Uncertain significance,whiB6_c.-81_-72delACTAGAGCTC
-CAP,3) Uncertain significance,whiB6_p.Thr24fs
 CAP,3) Uncertain significance,whiB6_c.-76_-75delAGinsT
 CAP,3) Uncertain significance,whiB6_c.-79_-75delTAGAGinsCCGA
 STM,3) Uncertain significance,whiB6_c.-79_-75delTAGAGinsCCGA
@@ -5271,7 +5135,6 @@ CFZ,3) Uncertain significance,Rv0678_p.Ser64dup
 CFZ,3) Uncertain significance,Rv0678_p.Met10fs
 CFZ,3) Uncertain significance,Rv0678_p.Arg109fs
 CFZ,3) Uncertain significance,Rv0678_p.Met111fs
-CFZ,3) Uncertain significance,Rv0678_p.Arg156fs
 CFZ,3) Uncertain significance,Rv0678_p.Ala124Pro
 CFZ,3) Uncertain significance,Rv0678_p.Ala84Val
 CFZ,3) Uncertain significance,Rv0678_p.Glu54Lys
@@ -5345,7 +5208,6 @@ DLM,2) Assoc w R - Interim,ddn_p.Leu49Pro
 DLM,3) Uncertain significance,fgd1_p.Lys270Met
 DLM,3) Uncertain significance,ddn_p.Tyr122_Met129del
 DLM,3) Uncertain significance,ddn_p.Arg31fs
-DLM,3) Uncertain significance,ddn_p.Trp20*
 DLM,3) Uncertain significance,ddn_p.Trp20*
 DLM,3) Uncertain significance,ddn_p.Trp88*
 DLM,3) Uncertain significance,fbiA_p.Arg321Ser
@@ -5771,7 +5633,6 @@ EMB,3) Uncertain significance,embB_p.Phe330Ser
 EMB,3) Uncertain significance,embB_p.Thr642Ala
 EMB,3) Uncertain significance,embA_c.-43G>T
 EMB,3) Uncertain significance,embB_p.Ser347Ile
-EMB,3) Uncertain significance,embA_c.-31delC
 EMB,3) Uncertain significance,embC_p.Gln725Arg
 EMB,3) Uncertain significance,embB_p.Asp328His
 EMB,3) Uncertain significance,embA_c.-8C>G
@@ -5793,7 +5654,6 @@ EMB,3) Uncertain significance,embA_p.Trp306Arg
 EMB,3) Uncertain significance,embB_p.Gly246Arg
 EMB,3) Uncertain significance,embA_c.-76G>C
 EMB,3) Uncertain significance,embA_c.-34delC
-EMB,3) Uncertain significance,embA_c.-29_-28delCT
 EMB,3) Uncertain significance,embA_c.-41_-40delAT
 EMB,3) Uncertain significance,embA_p.Ala734Val
 EMB,3) Uncertain significance,embA_p.Asp120Asn
@@ -5802,7 +5662,6 @@ EMB,3) Uncertain significance,embB_p.Ala1007Thr
 EMB,3) Uncertain significance,embB_p.Ala601Gly
 EMB,3) Uncertain significance,embB_p.Asp328Phe
 EMB,3) Uncertain significance,embB_p.Asp328Val
-EMB,3) Uncertain significance,embB_p.Glu504Gly
 EMB,3) Uncertain significance,embB_p.Glu504Gly
 EMB,3) Uncertain significance,embB_p.Phe398Cys
 EMB,3) Uncertain significance,embB_p.Ile303Leu
@@ -5850,14 +5709,10 @@ EMB,3) Uncertain significance,embA_c.-15_-14insTACCATCGAG
 EMB,3) Uncertain significance,embA_c.-16delC
 EMB,3) Uncertain significance,embA_c.-23_-22delCG
 EMB,3) Uncertain significance,embA_c.-25_-23delACC
-EMB,3) Uncertain significance,embA_c.-26delA
 EMB,3) Uncertain significance,embA_c.-25_-24delAC
-EMB,3) Uncertain significance,embA_c.-32delG
 EMB,3) Uncertain significance,embA_c.-32_-31delGCinsT
 EMB,3) Uncertain significance,embA_c.-38_-37delCT
 EMB,3) Uncertain significance,embA_c.-40_-38delTCC
-EMB,3) Uncertain significance,embA_c.-43delG
-EMB,3) Uncertain significance,embA_c.-41_-40delAT
 EMB,3) Uncertain significance,embA_c.-44_-43delCG
 EMB,3) Uncertain significance,embA_p.Ala23Glu
 EMB,3) Uncertain significance,embA_p.Ala249Thr
@@ -5942,7 +5797,6 @@ EMB,3) Uncertain significance,embC_p.Thr827Pro
 EMB,3) Uncertain significance,embC_p.Val627Ile
 EMB,3) Uncertain significance,embC_p.Val974Ala
 EMB,3) Uncertain significance,embA_c.-1delC
-EMB,3) Uncertain significance,embA_c.-28delT
 EMB,3) Uncertain significance,embA_c.-43delGinsCC
 EMB,3) Uncertain significance,embA_p.Leu344Pro
 EMB,3) Uncertain significance,embA_p.Leu62Met
@@ -5967,7 +5821,6 @@ EMB,3) Uncertain significance,embC_p.Ala92Gly
 EMB,3) Uncertain significance,embC_p.Cys355Phe
 EMB,3) Uncertain significance,embC_p.Asn618His
 EMB,3) Uncertain significance,embC_p.Val469Met
-EMB,3) Uncertain significance,embA_c.-26delA
 EMB,3) Uncertain significance,embA_p.Ala103Ser
 EMB,3) Uncertain significance,embA_p.Leu208Phe
 EMB,3) Uncertain significance,embA_p.Met697Val
@@ -6004,12 +5857,9 @@ EMB,3) Uncertain significance,embB_p.Ser203Leu
 EMB,3) Uncertain significance,embA_p.Phe519fs
 EMB,3) Uncertain significance,embA_p.Arg600_Arg601insLeuGlyLeuHisSerArg
 EMB,3) Uncertain significance,embA_p.Arg683_Ala686del
-EMB,3) Uncertain significance,embA_c.-23_-22delCG
 EMB,3) Uncertain significance,embA_p.Ala850del
 EMB,3) Uncertain significance,embA_p.Gly909dup
-EMB,3) Uncertain significance,embA_c.-32delG
 EMB,3) Uncertain significance,embA_c.-39_-31delCCTCACCGC
-EMB,3) Uncertain significance,embA_c.-41delA
 EMB,3) Uncertain significance,embA_c.-42delC
 EMB,3) Uncertain significance,embA_p.Leu212del
 EMB,3) Uncertain significance,embA_p.Ala1000Thr
@@ -6693,7 +6543,6 @@ EMB,3) Uncertain significance,embB_p.Tyr848His
 EMB,3) Uncertain significance,embB_p.Tyr863His
 EMB,3) Uncertain significance,embB_p.Tyr977His
 EMB,3) Uncertain significance,embC_p.Leu675del
-EMB,3) Uncertain significance,embC_p.Leu675del
 EMB,3) Uncertain significance,embC_p.Asn874_Gln876del
 EMB,3) Uncertain significance,embC_c.-85delA
 EMB,3) Uncertain significance,embC_p.Arg30_Val32del
@@ -7071,7 +6920,6 @@ EMB,3) Uncertain significance,embR_p.Leu303Arg
 EMB,3) Uncertain significance,embR_p.Leu320Pro
 EMB,3) Uncertain significance,embR_p.Leu83Phe
 EMB,3) Uncertain significance,embR_p.Leu94Met
-EMB,3) Uncertain significance,embR_p.Met1=
 EMB,3) Uncertain significance,embR_p.Met1=
 EMB,3) Uncertain significance,embR_p.Met1?
 EMB,3) Uncertain significance,embR_p.Met282Thr
@@ -7483,7 +7331,6 @@ EMB,3) Uncertain significance,embA_p.Leu215Pro
 EMB,3) Uncertain significance,embA_p.Leu459Arg
 EMB,3) Uncertain significance,embA_p.Met735Ile
 EMB,3) Uncertain significance,embA_p.Ser49Arg
-EMB,3) Uncertain significance,embA_p.Ser49Arg
 EMB,3) Uncertain significance,embA_p.Ser77Pro
 EMB,3) Uncertain significance,embA_p.Thr718Ile
 EMB,3) Uncertain significance,embA_p.Thr899Ala
@@ -7767,11 +7614,8 @@ EMB,5) Not assoc w R,ubiA_p.Glu149Asp
 EMB,5) Not assoc w R,embC_p.Val981Leu
 EMB,5) Not assoc w R,embR_p.Cys110Tyr
 EMB,5) Not assoc w R,embB_p.Glu378Ala
-EMB,5) Not assoc w R,embB_p.Glu378Ala
-EMB,5) Not assoc w R,embC_p.Thr270Ile
 EMB,5) Not assoc w R,embC_p.Thr270Ile
 EMB,5) Not assoc w R,embA_p.Pro913Ser
-EMB,5) Not assoc w R,embC_p.Asn394Asp
 EMB,5) Not assoc w R,embC_p.Asn394Asp
 EMB,5) Not assoc w R,ubiA_p.Val49Ile
 EMB,5) Not assoc w R,embA_p.Val206Met
@@ -7811,29 +7655,22 @@ ETH,2) Assoc w R - Interim,ethA_p.Ala352fs
 ETH,2) Assoc w R - Interim,ethA_p.Tyr147*
 ETH,2) Assoc w R - Interim,ethA_p.Asp464fs
 ETH,2) Assoc w R - Interim,ethA_p.Ser57Tyr
-ETH,2) Assoc w R - Interim,ethA_p.Trp256fs
 ETH,2) Assoc w R - Interim,ethA_p.Tyr235fs
 ETH,2) Assoc w R - Interim,ethA_p.Tyr32Asp
-ETH,2) Assoc w R - Interim,ethA_p.Trp391*
 ETH,2) Assoc w R - Interim,ethA_p.Trp391*
 ETH,2) Assoc w R - Interim,ethA_p.Ser122fs
 ETH,2) Assoc w R - Interim,ethA_p.Leu295fs
 ETH,2) Assoc w R - Interim,ethA_p.Trp256*
-ETH,2) Assoc w R - Interim,ethA_p.Trp256*
 ETH,2) Assoc w R - Interim,ethA_p.Thr88Ile
 ETH,2) Assoc w R - Interim,ethA_p.Gln359*
 ETH,2) Assoc w R - Interim,ethA_p.Gly11Val
-ETH,2) Assoc w R - Interim,ethA_p.Trp256fs
 ETH,2) Assoc w R - Interim,ethA_p.Ser148fs
-ETH,2) Assoc w R - Interim,ethA_p.Asp464fs
 ETH,2) Assoc w R - Interim,ethA_p.Val398dup
 ETH,2) Assoc w R - Interim,ethA_p.Asp290fs
 ETH,2) Assoc w R - Interim,ethA_p.Asn287fs
 ETH,2) Assoc w R - Interim,ethA_p.Cys253fs
 ETH,2) Assoc w R - Interim,ethA_p.Lys448fs
 ETH,2) Assoc w R - Interim,ethA_p.Trp289*
-ETH,2) Assoc w R - Interim,ethA_p.Trp289*
-ETH,2) Assoc w R - Interim,ethA_p.Asp464fs
 ETH,2) Assoc w R - Interim,ethA_p.His22fs
 ETH,2) Assoc w R - Interim,ethA_p.Glu132*
 ETH,2) Assoc w R - Interim,ethA_p.Gln121*
@@ -7846,15 +7683,12 @@ ETH,2) Assoc w R - Interim,ethA_p.Asp415fs
 ETH,2) Assoc w R - Interim,ethA_p.Arg466fs
 ETH,2) Assoc w R - Interim,ethA_p.Met59fs
 ETH,2) Assoc w R - Interim,ethA_p.Gly184del
-ETH,2) Assoc w R - Interim,ethA_p.Tyr235fs
 ETH,2) Assoc w R - Interim,ethA_p.His281fs
 ETH,2) Assoc w R - Interim,ethA_p.Gln246*
 ETH,2) Assoc w R - Interim,ethA_p.Gln269*
 ETH,2) Assoc w R - Interim,ethA_p.Trp109*
-ETH,2) Assoc w R - Interim,ethA_p.Trp109*
 ETH,2) Assoc w R - Interim,ethA_p.Leu478fs
 ETH,2) Assoc w R - Interim,ethA_p.Gln165*
-ETH,2) Assoc w R - Interim,ethA_p.Cys253fs
 ETH,2) Assoc w R - Interim,ethA_p.Cys253*
 ETH,2) Assoc w R - Interim,ethA_p.Ile337fs
 ETH,2) Assoc w R - Interim,ethA_p.Ser214fs
@@ -7868,7 +7702,6 @@ ETH,2) Assoc w R - Interim,ethA_p.Phe64fs
 ETH,2) Assoc w R - Interim,ethA_p.Ala90fs
 ETH,2) Assoc w R - Interim,ethA_p.Ile9fs
 ETH,2) Assoc w R - Interim,ethA_p.Leu190fs
-ETH,2) Assoc w R - Interim,ethA_p.Leu190fs
 ETH,2) Assoc w R - Interim,ethA_p.Asp219fs
 ETH,2) Assoc w R - Interim,ethA_p.Leu225fs
 ETH,2) Assoc w R - Interim,ethA_p.Lys241fs
@@ -7878,10 +7711,8 @@ ETH,2) Assoc w R - Interim,ethA_p.Gln271fs
 ETH,2) Assoc w R - Interim,ethA_p.Glu332*
 ETH,2) Assoc w R - Interim,ethA_p.Trp21*
 ETH,2) Assoc w R - Interim,ethA_p.Trp45*
-ETH,2) Assoc w R - Interim,ethA_p.Trp45*
 ETH,2) Assoc w R - Interim,ethA_p.Tyr386*
 ETH,2) Assoc w R - Interim,ethA_p.Leu344fs
-ETH,2) Assoc w R - Interim,ethA_p.Gly350fs
 ETH,2) Assoc w R - Interim,ethA_p.Val238fs
 ETH,2) Assoc w R - Interim,ethA_p.Gln271*
 ETH,2) Assoc w R - Interim,ethA_p.Gly437fs
@@ -7896,7 +7727,6 @@ ETH,2) Assoc w R - Interim,ethA_p.Thr353fs
 ETH,2) Assoc w R - Interim,ethA_p.Ala354fs
 ETH,2) Assoc w R - Interim,ethA_p.Thr355fs
 ETH,2) Assoc w R - Interim,ethA_p.Asp357del
-ETH,2) Assoc w R - Interim,ethA_p.Lys37fs
 ETH,2) Assoc w R - Interim,ethA_p.Tyr369fs
 ETH,2) Assoc w R - Interim,ethA_p.Tyr32fs
 ETH,2) Assoc w R - Interim,ethA_p.Tyr32dup
@@ -7910,19 +7740,11 @@ ETH,2) Assoc w R - Interim,ethA_p.Leu405fs
 ETH,2) Assoc w R - Interim,ethA_p.Asp410fs
 ETH,2) Assoc w R - Interim,ethA_p.Gly42fs
 ETH,2) Assoc w R - Interim,ethA_p.Pro422fs
-ETH,2) Assoc w R - Interim,ethA_p.Gly42fs
-ETH,2) Assoc w R - Interim,ethA_p.Gly42fs
 ETH,2) Assoc w R - Interim,ethA_p.Gly43fs
 ETH,2) Assoc w R - Interim,ethA_p.Thr44fs
 ETH,2) Assoc w R - Interim,ethA_p.Leu440fs
-ETH,2) Assoc w R - Interim,ethA_p.Lys448fs
-ETH,2) Assoc w R - Interim,ethA_p.Lys448fs
-ETH,2) Assoc w R - Interim,ethA_p.Ser451fs
 ETH,2) Assoc w R - Interim,ethA_p.Ser451fs
 ETH,2) Assoc w R - Interim,ethA_p.Asn458fs
-ETH,2) Assoc w R - Interim,ethA_p.Asp464fs
-ETH,2) Assoc w R - Interim,ethA_p.Asp464fs
-ETH,2) Assoc w R - Interim,ethA_p.Asp464fs
 ETH,2) Assoc w R - Interim,ethA_p.Asp46fs
 ETH,2) Assoc w R - Interim,ethA_p.Arg479fs
 ETH,2) Assoc w R - Interim,ethA_p.Thr61fs
@@ -7932,7 +7754,6 @@ ETH,2) Assoc w R - Interim,ethA_p.Leu82fs
 ETH,2) Assoc w R - Interim,ethA_p.Val85del
 ETH,2) Assoc w R - Interim,ethA_p.Glu83fs
 ETH,2) Assoc w R - Interim,ethA_p.Ile94fs
-ETH,2) Assoc w R - Interim,ethA_p.Ile94fs
 ETH,2) Assoc w R - Interim,ethA_p.Ser106fs
 ETH,2) Assoc w R - Interim,ethA_p.Gly11fs
 ETH,2) Assoc w R - Interim,ethA_p.Gln121fs
@@ -7941,14 +7762,10 @@ ETH,2) Assoc w R - Interim,ethA_p.Leu126fs
 ETH,2) Assoc w R - Interim,ethA_p.Leu129fs
 ETH,2) Assoc w R - Interim,ethA_p.Thr130fs
 ETH,2) Assoc w R - Interim,ethA_p.Cys131fs
-ETH,2) Assoc w R - Interim,ethA_p.Cys131fs
 ETH,2) Assoc w R - Interim,ethA_p.Tyr147fs
 ETH,2) Assoc w R - Interim,ethA_p.Arg150fs
 ETH,2) Assoc w R - Interim,ethA_p.Pro160fs
-ETH,2) Assoc w R - Interim,ethA_p.Pro160fs
-ETH,2) Assoc w R - Interim,ethA_p.Pro160fs
 ETH,2) Assoc w R - Interim,ethA_p.Pro160del
-ETH,2) Assoc w R - Interim,ethA_p.Ile9fs
 ETH,2) Assoc w R - Interim,ethA_p.Trp167fs
 ETH,2) Assoc w R - Interim,ethA_p.Ile181fs
 ETH,2) Assoc w R - Interim,ethA_p.Thr186fs
@@ -7957,35 +7774,20 @@ ETH,2) Assoc w R - Interim,ethA_p.Ser18fs
 ETH,2) Assoc w R - Interim,ethA_p.Leu194fs
 ETH,2) Assoc w R - Interim,ethA_p.Asp196fs
 ETH,2) Assoc w R - Interim,ethA_p.Thr210fs
-ETH,2) Assoc w R - Interim,ethA_p.Thr210fs
-ETH,2) Assoc w R - Interim,ethA_p.Asp219fs
 ETH,2) Assoc w R - Interim,ethA_p.Glu223fs
-ETH,2) Assoc w R - Interim,ethA_p.Leu225fs
 ETH,2) Assoc w R - Interim,ethA_p.Trp228fs
 ETH,2) Assoc w R - Interim,ethA_p.Pro230fs
-ETH,2) Assoc w R - Interim,ethA_p.Tyr235fs
 ETH,2) Assoc w R - Interim,ethA_p.Met233_Thr236delinsIle
 ETH,2) Assoc w R - Interim,ethA_p.Ala237dup
-ETH,2) Assoc w R - Interim,ethA_p.Lys241fs
 ETH,2) Assoc w R - Interim,ethA_p.Gln246fs
 ETH,2) Assoc w R - Interim,ethA_p.Ala247fs
 ETH,2) Assoc w R - Interim,ethA_p.Ala252fs
-ETH,2) Assoc w R - Interim,ethA_p.Cys253fs
 ETH,2) Assoc w R - Interim,ethA_p.Pro257fs
 ETH,2) Assoc w R - Interim,ethA_p.Arg258fs
-ETH,2) Assoc w R - Interim,ethA_p.Pro257fs
 ETH,2) Assoc w R - Interim,ethA_p.Arg259fs
 ETH,2) Assoc w R - Interim,ethA_p.Gln269fs
-ETH,2) Assoc w R - Interim,ethA_p.Tyr276fs
 ETH,2) Assoc w R - Interim,ethA_p.Lys280fs
-ETH,2) Assoc w R - Interim,ethA_p.His281fs
 ETH,2) Assoc w R - Interim,ethA_p.Phe282fs
-ETH,2) Assoc w R - Interim,ethA_p.Gly283fs
-ETH,2) Assoc w R - Interim,ethA_p.Asn287fs
-ETH,2) Assoc w R - Interim,ethA_p.Trp289fs
-ETH,2) Assoc w R - Interim,ethA_p.Trp289fs
-ETH,2) Assoc w R - Interim,ethA_p.Leu295fs
-ETH,2) Assoc w R - Interim,ethA_p.Leu295fs
 ETH,2) Assoc w R - Interim,ethA_p.Lys309fs
 ETH,2) Assoc w R - Interim,ethA_p.Val313fs
 ETH,2) Assoc w R - Interim,ethA_p.Thr314fs
@@ -8003,17 +7805,13 @@ ETH,2) Assoc w R - Interim,ethA_p.Trp228*
 ETH,2) Assoc w R - Interim,ethA_p.Tyr211*
 ETH,2) Assoc w R - Interim,ethA_p.Tyr276*
 ETH,2) Assoc w R - Interim,ethA_p.Tyr60*
-ETH,2) Assoc w R - Interim,ethA_p.Tyr32fs
 ETH,2) Assoc w R - Interim,ethA_p.Ser31fs
-ETH,2) Assoc w R - Interim,ethA_p.Asp415fs
 ETH,2) Assoc w R - Interim,ethA_p.Pro436fs
 ETH,2) Assoc w R - Interim,ethA_p.Val489fs
 ETH,2) Assoc w R - Interim,ethA_p.Trp69fs
 ETH,2) Assoc w R - Interim,ethA_p.Phe100fs
 ETH,2) Assoc w R - Interim,ethA_p.Ala128fs
-ETH,2) Assoc w R - Interim,ethA_p.Pro160fs
 ETH,2) Assoc w R - Interim,ethA_p.Thr232fs
-ETH,2) Assoc w R - Interim,ethA_p.Ala247fs
 ETH,2) Assoc w R - Interim,ethA_p.Ala248fs
 ETH,2) Assoc w R - Interim,ethA_p.Lys30fs
 ETH,2) Assoc w R - Interim,ethA_p.Cys131*
@@ -8025,57 +7823,30 @@ ETH,2) Assoc w R - Interim,ethA_p.Tyr438*
 ETH,2) Assoc w R - Interim,ethA_p.Tyr461*
 ETH,2) Assoc w R - Interim,ethA_p.Tyr84*
 ETH,2) Assoc w R - Interim,ethA_p.Asp170fs
-ETH,2) Assoc w R - Interim,ethA_p.Leu225fs
 ETH,2) Assoc w R - Interim,ethA_p.Trp240*
-ETH,2) Assoc w R - Interim,ethA_p.Trp240*
-ETH,2) Assoc w R - Interim,ethA_p.Leu295fs
 ETH,2) Assoc w R - Interim,ethA_p.Glu3fs
-ETH,2) Assoc w R - Interim,ethA_p.Leu344fs
 ETH,2) Assoc w R - Interim,ethA_p.Leu344del
-ETH,2) Assoc w R - Interim,ethA_p.Thr353fs
 ETH,2) Assoc w R - Interim,ethA_p.Ser375fs
-ETH,2) Assoc w R - Interim,ethA_p.Ser375fs
-ETH,2) Assoc w R - Interim,ethA_p.Tyr32fs
 ETH,2) Assoc w R - Interim,ethA_p.Asn379fs
-ETH,2) Assoc w R - Interim,ethA_p.Gly385fs
 ETH,2) Assoc w R - Interim,ethA_p.Tyr386fs
 ETH,2) Assoc w R - Interim,ethA_p.Ser442fs
-ETH,2) Assoc w R - Interim,ethA_p.Leu47fs
-ETH,2) Assoc w R - Interim,ethA_p.Leu478fs
-ETH,2) Assoc w R - Interim,ethA_p.Val489fs
 ETH,2) Assoc w R - Interim,ethA_p.Trp45fs
 ETH,2) Assoc w R - Interim,ethA_p.Pro68fs
 ETH,2) Assoc w R - Interim,ethA_p.Asp77fs
-ETH,2) Assoc w R - Interim,ethA_p.Ile94fs
-ETH,2) Assoc w R - Interim,ethA_p.Asn114fs
-ETH,2) Assoc w R - Interim,ethA_p.Ser122fs
 ETH,2) Assoc w R - Interim,ethA_p.Val118fs
-ETH,2) Assoc w R - Interim,ethA_p.Ala128fs
-ETH,2) Assoc w R - Interim,ethA_p.Ser148fs
 ETH,2) Assoc w R - Interim,ethA_p.Ile178fs
 ETH,2) Assoc w R - Interim,ethA_p.Val179fs
 ETH,2) Assoc w R - Interim,ethA_p.Leu194_Ala195delinsPro
 ETH,2) Assoc w R - Interim,ethA_p.Arg207fs
 ETH,2) Assoc w R - Interim,ethA_p.Ser208fs
-ETH,2) Assoc w R - Interim,ethA_p.Ser208fs
 ETH,2) Assoc w R - Interim,ethA_p.Tyr211_Ile212insSerProThrTyr
 ETH,2) Assoc w R - Interim,ethA_p.Tyr211_Ile212insProThrTyr
-ETH,2) Assoc w R - Interim,ethA_p.Pro230fs
-ETH,2) Assoc w R - Interim,ethA_p.Thr232fs
-ETH,2) Assoc w R - Interim,ethA_p.Tyr235fs
 ETH,2) Assoc w R - Interim,ethA_p.Ala237fs
 ETH,2) Assoc w R - Interim,ethA_p.Arg245fs
-ETH,2) Assoc w R - Interim,ethA_p.Arg259fs
-ETH,2) Assoc w R - Interim,ethA_p.Tyr276fs
-ETH,2) Assoc w R - Interim,ethA_p.Pro28fs
 ETH,2) Assoc w R - Interim,ethA_p.Pro284fs
-ETH,2) Assoc w R - Interim,ethA_p.Lys30fs
 ETH,2) Assoc w R - Interim,ethA_p.Cys294fs
 ETH,2) Assoc w R - Interim,ethA_p.Val296fs
 ETH,2) Assoc w R - Interim,ethA_p.Gly299fs
-ETH,2) Assoc w R - Interim,ethA_p.Lys30fs
-ETH,2) Assoc w R - Interim,ethA_p.Thr314fs
-ETH,2) Assoc w R - Interim,ethA_p.Asp315fs
 ETH,2) Assoc w R - Interim,ethA_p.Glu476*
 ETH,2) Assoc w R - Interim,ethA_p.Leu293*
 ETH,2) Assoc w R - Interim,ethA_p.Gln360*
@@ -8084,23 +7855,15 @@ ETH,2) Assoc w R - Interim,ethA_p.Trp116*
 ETH,2) Assoc w R - Interim,ethA_p.Trp455*
 ETH,2) Assoc w R - Interim,ethA_p.Tyr143*
 ETH,2) Assoc w R - Interim,ethA_p.Tyr92*
-ETH,2) Assoc w R - Interim,ethA_p.Leu344fs
 ETH,2) Assoc w R - Interim,ethA_p.Gly371fs
 ETH,2) Assoc w R - Interim,ethA_p.Glu445fs
-ETH,2) Assoc w R - Interim,ethA_p.Arg466fs
 ETH,2) Assoc w R - Interim,ethA_p.Gly477fs
 ETH,2) Assoc w R - Interim,ethA_p.Thr88fs
 ETH,2) Assoc w R - Interim,ethA_p.Gln165fs
-ETH,2) Assoc w R - Interim,ethA_p.Arg207fs
 ETH,2) Assoc w R - Interim,ethA_p.Glu223_Lys224del
-ETH,2) Assoc w R - Interim,ethA_p.Tyr276fs
 ETH,2) Assoc w R - Interim,ethA_p.His285fs
 ETH,2) Assoc w R - Interim,ethA_p.Trp69*
-ETH,2) Assoc w R - Interim,ethA_p.Trp69*
-ETH,2) Assoc w R - Interim,ethA_p.Leu194fs
 ETH,2) Assoc w R - Interim,ethA_p.Thr236fs
-ETH,2) Assoc w R - Interim,ethA_p.Gly437fs
-ETH,2) Assoc w R - Interim,ethA_p.Tyr147fs
 ETH,2) Assoc w R - Interim,ethA_p.Thr323dup
 ETH,3) Uncertain significance,mshA_p.Ala187Val
 INH,5) Not assoc w R,mshA_p.Ala187Val
@@ -8108,15 +7871,12 @@ ETH,3) Uncertain significance,Rv3083_p.Asp71His
 ETH,3) Uncertain significance,mshA_p.Asn111Ser
 INH,5) Not assoc w R,mshA_p.Asn111Ser
 ETH,3) Uncertain significance,ethA_p.Ser266Arg
-ETH,3) Uncertain significance,ethA_p.Ser266Arg
 ETH,3) Uncertain significance,ethA_p.His281Pro
 ETH,3) Uncertain significance,ethA_p.Asn345Lys
 ETH,3) Uncertain significance,ethA_p.Ala381Pro
 ETH,3) Uncertain significance,ndh_p.Val18Ala
 INH,5) Not assoc w R,ndh_p.Val18Ala
 ETH,3) Uncertain significance,inhA_p.Ile21Thr
-ETH,3) Uncertain significance,inhA_p.Ile21Thr
-INH,3) Uncertain significance,inhA_p.Ile21Thr
 INH,3) Uncertain significance,inhA_p.Ile21Thr
 ETH,3) Uncertain significance,inhA_p.Ile194Thr
 INH,3) Uncertain significance,inhA_p.Ile194Thr
@@ -8236,7 +7996,6 @@ ETH,3) Uncertain significance,ethA_p.Ala19Val
 ETH,3) Uncertain significance,ethA_p.Gly13Glu
 ETH,3) Uncertain significance,ethA_p.Pro192Leu
 ETH,3) Uncertain significance,ethA_p.Pro257Arg
-ETH,3) Uncertain significance,ethA_p.Ser138Arg
 ETH,3) Uncertain significance,ethA_p.Ser138Arg
 ETH,3) Uncertain significance,ethA_p.Trp167Arg
 ETH,3) Uncertain significance,ethA_p.Tyr211Cys
@@ -8387,7 +8146,6 @@ ETH,3) Uncertain significance,ethA_p.Met372Arg
 ETH,3) Uncertain significance,ethA_p.Pro164Leu
 ETH,3) Uncertain significance,ethA_p.Pro230Leu
 ETH,3) Uncertain significance,ethA_p.Ser183Arg
-ETH,3) Uncertain significance,ethA_p.Ser183Arg
 ETH,3) Uncertain significance,ethA_p.Ser251Arg
 ETH,3) Uncertain significance,ethA_p.Thr2Ala
 ETH,3) Uncertain significance,ethA_p.Thr355Pro
@@ -8404,7 +8162,6 @@ INH,3) Uncertain significance,inhA_p.Ile95Leu
 ETH,3) Uncertain significance,ethA_p.Ala335Asp
 ETH,3) Uncertain significance,ethA_p.Asp58Ala
 ETH,3) Uncertain significance,ethA_p.Phe282Val
-ETH,3) Uncertain significance,ethA_p.Phe431Leu
 ETH,3) Uncertain significance,ethA_p.Phe431Leu
 ETH,3) Uncertain significance,ethA_p.Gly139Ala
 ETH,3) Uncertain significance,ethA_p.Gly343Val
@@ -8488,7 +8245,6 @@ ETH,3) Uncertain significance,ethA_p.Gly477Asp
 ETH,3) Uncertain significance,ethA_c.-50G>A
 ETH,3) Uncertain significance,ethA_c.-19C>T
 ETH,3) Uncertain significance,ethA_p.Gly63Val
-ETH,3) Uncertain significance,ethA_c.-6G>A
 ETH,3) Uncertain significance,ethA_p.Gly78Asp
 ETH,3) Uncertain significance,ethA_p.Gly93Arg
 ETH,3) Uncertain significance,ethA_p.His22Asp
@@ -9019,7 +8775,6 @@ ETH,3) Uncertain significance,ethA_p.Leu134Pro
 ETH,3) Uncertain significance,ethA_p.Leu225His
 ETH,3) Uncertain significance,ethA_p.Leu229Pro
 ETH,3) Uncertain significance,ethA_p.Leu374His
-ETH,3) Uncertain significance,ethA_p.Met1=
 ETH,3) Uncertain significance,ethA_p.Met263Thr
 ETH,3) Uncertain significance,ethA_p.Met373Thr
 ETH,3) Uncertain significance,ethA_p.Met59Ile
@@ -9222,14 +8977,11 @@ ETH,3) Uncertain significance,ndh_p.Arg268His
 INH,4) Not assoc w R - Interim,ndh_p.Arg268His
 ETH,3) Uncertain significance,ethR_p.Ala95Thr
 INH,1) Assoc w R,katG_p.Ser315Thr
-INH,1) Assoc w R,katG_p.Ser315Thr
 INH,1) Assoc w R,katG_p.Ser315Asn
 INH,1) Assoc w R,katG_p.Trp328Leu
 INH,2) Assoc w R - Interim,katG_p.Gly124fs
 INH,2) Assoc w R - Interim,katG_p.Trp149*
-INH,2) Assoc w R - Interim,katG_p.Trp149*
 INH,2) Assoc w R - Interim,katG_p.Glu669fs
-INH,2) Assoc w R - Interim,katG_p.Gly124fs
 INH,2) Assoc w R - Interim,katG_p.Glu342fs
 INH,2) Assoc w R - Interim,katG_p.Leu382fs
 INH,2) Assoc w R - Interim,katG_p.Pro429fs
@@ -9237,21 +8989,15 @@ INH,2) Assoc w R - Interim,katG_p.Pro429del
 INH,2) Assoc w R - Interim,katG_p.Ala478fs
 INH,2) Assoc w R - Interim,katG_p.Trp351*
 INH,2) Assoc w R - Interim,katG_p.Trp412*
-INH,2) Assoc w R - Interim,katG_p.Trp412*
-INH,2) Assoc w R - Interim,katG_p.Trp438*
 INH,2) Assoc w R - Interim,katG_p.Trp438*
 INH,2) Assoc w R - Interim,katG_p.Trp477*
-INH,2) Assoc w R - Interim,katG_p.Trp477*
 INH,2) Assoc w R - Interim,katG_p.Trp505*
-INH,2) Assoc w R - Interim,katG_p.Trp505*
-INH,2) Assoc w R - Interim,katG_p.Trp668*
 INH,2) Assoc w R - Interim,katG_p.Trp668*
 INH,2) Assoc w R - Interim,katG_p.Ala480del
 INH,2) Assoc w R - Interim,katG_p.Ile335fs
 INH,2) Assoc w R - Interim,katG_p.Tyr339fs
 INH,2) Assoc w R - Interim,katG_p.Tyr353_Thr354insAsn
 INH,2) Assoc w R - Interim,katG_p.Val386fs
-INH,2) Assoc w R - Interim,katG_p.Ile393fs
 INH,2) Assoc w R - Interim,katG_p.Ile393fs
 INH,2) Assoc w R - Interim,katG_p.His400fs
 INH,2) Assoc w R - Interim,katG_p.Lys433fs
@@ -9262,7 +9008,6 @@ INH,2) Assoc w R - Interim,katG_p.His447_Val450del
 INH,2) Assoc w R - Interim,katG_p.Lys46fs
 INH,2) Assoc w R - Interim,katG_p.Ile455fs
 INH,2) Assoc w R - Interim,katG_p.Ala480_Ser481insLeuValSerThrAlaTrpAlaAlaAla
-INH,2) Assoc w R - Interim,katG_p.Ala480del
 INH,2) Assoc w R - Interim,katG_p.Gly494fs
 INH,2) Assoc w R - Interim,katG_p.Arg496fs
 INH,2) Assoc w R - Interim,katG_p.Gln50_Asn51insThr
@@ -9290,8 +9035,6 @@ INH,2) Assoc w R - Interim,katG_p.Glu67del
 INH,2) Assoc w R - Interim,katG_p.Asp695fs
 INH,2) Assoc w R - Interim,katG_p.Leu696fs
 INH,2) Assoc w R - Interim,katG_p.Asp729fs
-INH,2) Assoc w R - Interim,katG_p.Ile8fs
-INH,2) Assoc w R - Interim,katG_p.Ile8fs
 INH,2) Assoc w R - Interim,katG_p.Ile80fs
 INH,2) Assoc w R - Interim,katG_p.Tyr95fs
 INH,2) Assoc w R - Interim,katG_p.Gly121del
@@ -9302,7 +9045,6 @@ INH,2) Assoc w R - Interim,katG_p.Asp163fs
 INH,2) Assoc w R - Interim,katG_p.Leu173fs
 INH,2) Assoc w R - Interim,katG_p.Lys179fs
 INH,2) Assoc w R - Interim,katG_p.Asn18fs
-INH,2) Assoc w R - Interim,katG_p.Cys20fs
 INH,2) Assoc w R - Interim,katG_p.Cys20fs
 INH,2) Assoc w R - Interim,katG_p.Gly199fs
 INH,2) Assoc w R - Interim,katG_p.Ala202fs
@@ -9363,7 +9105,6 @@ INH,3) Uncertain significance,katG_p.Ile335Val
 INH,3) Uncertain significance,ahpC_c.-52C>A
 INH,3) Uncertain significance,ahpC_c.-47_-46insT
 INH,3) Uncertain significance,ahpC_c.-57C>T
-INH,3) Uncertain significance,ahpC_c.-47_-46insT
 INH,3) Uncertain significance,ahpC_c.-72C>T
 INH,3) Uncertain significance,ndh_p.Tyr108fs
 INH,3) Uncertain significance,ndh_p.Ala344Pro
@@ -9453,7 +9194,6 @@ INH,3) Uncertain significance,katG_p.Val697Leu
 INH,3) Uncertain significance,ahpC_c.-77T>A
 INH,3) Uncertain significance,katG_p.Pro232Ser
 INH,3) Uncertain significance,katG_p.Ser302Arg
-INH,3) Uncertain significance,katG_p.Ser302Arg
 INH,3) Uncertain significance,katG_p.Tyr337Cys
 INH,3) Uncertain significance,katG_p.Ala244Gly
 INH,3) Uncertain significance,katG_p.Asn138Asp
@@ -9474,7 +9214,6 @@ INH,3) Uncertain significance,katG_p.Asn596Ser
 INH,3) Uncertain significance,katG_p.Gln295Lys
 INH,3) Uncertain significance,katG_p.Thr271Ile
 INH,3) Uncertain significance,katG_p.Thr677Pro
-INH,3) Uncertain significance,katG_p.Val1?
 INH,3) Uncertain significance,katG_p.Tyr597His
 INH,3) Uncertain significance,katG_p.Ala109Val
 INH,3) Uncertain significance,katG_c.-10A>C
@@ -9499,7 +9238,6 @@ INH,3) Uncertain significance,katG_p.Arg104Gln
 INH,3) Uncertain significance,katG_p.Arg146Gly
 INH,3) Uncertain significance,katG_p.Arg425Gly
 INH,3) Uncertain significance,katG_p.Arg484His
-INH,3) Uncertain significance,katG_p.Ser315Arg
 INH,3) Uncertain significance,katG_p.Ser315Arg
 INH,3) Uncertain significance,katG_p.Thr271Pro
 INH,3) Uncertain significance,katG_p.Thr579Ala
@@ -9531,7 +9269,6 @@ INH,3) Uncertain significance,katG_p.Glu506Asp
 INH,3) Uncertain significance,katG_p.Glu588Gly
 INH,3) Uncertain significance,katG_p.Glu607Asp
 INH,3) Uncertain significance,katG_p.Glu709Asp
-INH,3) Uncertain significance,katG_p.Phe183Leu
 INH,3) Uncertain significance,katG_p.Phe183Leu
 INH,3) Uncertain significance,katG_p.Phe368Leu
 INH,3) Uncertain significance,katG_p.Gly177Ala
@@ -9837,7 +9574,6 @@ INH,3) Uncertain significance,katG_p.Thr435Ile
 INH,3) Uncertain significance,katG_p.Thr579Ser
 INH,3) Uncertain significance,katG_p.Thr625Pro
 INH,3) Uncertain significance,katG_p.Val196Gly
-INH,3) Uncertain significance,katG_p.Val1?
 INH,3) Uncertain significance,katG_p.Val1=
 INH,3) Uncertain significance,katG_p.Val230Ala
 INH,3) Uncertain significance,katG_p.Val267Gly
@@ -9884,11 +9620,9 @@ INH,3) Uncertain significance,katG_p.Asp729Gly
 INH,3) Uncertain significance,katG_p.Gly121Ala
 INH,3) Uncertain significance,katG_p.Gly121Asp
 INH,3) Uncertain significance,katG_p.Gly124Ala
-INH,3) Uncertain significance,katG_p.Gly124Ala
 INH,3) Uncertain significance,katG_p.Gly156Asp
 INH,3) Uncertain significance,katG_p.Gly466Arg
 INH,3) Uncertain significance,katG_p.Gly494Ala
-INH,3) Uncertain significance,katG_p.Gly593Ser
 INH,3) Uncertain significance,katG_p.Gly593Ser
 INH,3) Uncertain significance,katG_p.Gly712Val
 INH,3) Uncertain significance,katG_p.His116Tyr
@@ -10291,8 +10025,6 @@ PZA,3) Uncertain significance,Rv1258c_p.Ala78fs
 INH,3) Uncertain significance,Rv1258c_p.Gly88fs
 INH,3) Uncertain significance,Rv1258c_p.Leu91fs
 PZA,3) Uncertain significance,Rv1258c_p.Leu91fs
-INH,3) Uncertain significance,Rv1258c_p.Leu91fs
-PZA,3) Uncertain significance,Rv1258c_p.Leu91fs
 STM,3) Uncertain significance,Rv1258c_p.Leu91fs
 INH,3) Uncertain significance,Rv1258c_p.Asp125fs
 PZA,3) Uncertain significance,Rv1258c_p.Asp125fs
@@ -10552,16 +10284,12 @@ INH,3) Uncertain significance,Rv2752c_p.Pro7fs
 RIF,3) Uncertain significance,Rv2752c_p.Pro7fs
 INH,3) Uncertain significance,Rv2752c_p.Pro8fs
 RIF,3) Uncertain significance,Rv2752c_p.Pro8fs
-INH,3) Uncertain significance,Rv2752c_p.Pro8fs
-RIF,3) Uncertain significance,Rv2752c_p.Pro8fs
 INH,3) Uncertain significance,Rv2752c_p.Leu93fs
 RIF,3) Uncertain significance,Rv2752c_p.Leu93fs
 INH,3) Uncertain significance,Rv2752c_p.Leu96fs
 RIF,3) Uncertain significance,Rv2752c_p.Leu96fs
 INH,3) Uncertain significance,Rv2752c_p.Ile121fs
 RIF,3) Uncertain significance,Rv2752c_p.Ile121fs
-INH,3) Uncertain significance,Rv2752c_p.Gln132fs
-RIF,3) Uncertain significance,Rv2752c_p.Gln132fs
 INH,3) Uncertain significance,Rv2752c_p.Gln132fs
 RIF,3) Uncertain significance,Rv2752c_p.Gln132fs
 INH,3) Uncertain significance,Rv2752c_p.Phe139fs
@@ -10576,8 +10304,6 @@ INH,3) Uncertain significance,Rv2752c_p.Pro213fs
 RIF,3) Uncertain significance,Rv2752c_p.Pro213fs
 INH,3) Uncertain significance,Rv2752c_p.Gly228fs
 RIF,3) Uncertain significance,Rv2752c_p.Gly228fs
-INH,3) Uncertain significance,Rv2752c_c.-8delG
-RIF,3) Uncertain significance,Rv2752c_c.-8delG
 INH,3) Uncertain significance,Rv2752c_p.Gly263fs
 INH,3) Uncertain significance,Rv2752c_p.Arg29fs
 RIF,3) Uncertain significance,Rv2752c_p.Arg29fs
@@ -11092,8 +10818,6 @@ INH,3) Uncertain significance,ndh_p.Thr258Ser
 INH,3) Uncertain significance,ndh_p.Thr418Ala
 INH,3) Uncertain significance,ndh_p.Val259Ile
 INH,3) Uncertain significance,ndh_p.Val75Ala
-INH,3) Uncertain significance,Rv1258c_p.Leu35fs
-PZA,3) Uncertain significance,Rv1258c_p.Leu35fs
 INH,3) Uncertain significance,Rv1258c_p.Ala148Thr
 PZA,3) Uncertain significance,Rv1258c_p.Ala148Thr
 STM,3) Uncertain significance,Rv1258c_p.Ala148Thr
@@ -11153,10 +10877,7 @@ INH,3) Uncertain significance,Rv1258c_p.Thr290Ile
 PZA,3) Uncertain significance,Rv1258c_p.Thr290Ile
 STM,3) Uncertain significance,Rv1258c_p.Thr290Ile
 INH,3) Uncertain significance,Rv1258c_p.Trp220*
-INH,3) Uncertain significance,Rv1258c_p.Trp220*
 PZA,3) Uncertain significance,Rv1258c_p.Trp220*
-PZA,3) Uncertain significance,Rv1258c_p.Trp220*
-STM,3) Uncertain significance,Rv1258c_p.Trp220*
 STM,3) Uncertain significance,Rv1258c_p.Trp220*
 INH,3) Uncertain significance,Rv2752c_p.Thr544fs
 RIF,3) Uncertain significance,Rv2752c_p.Thr544fs
@@ -11265,8 +10986,6 @@ RIF,3) Uncertain significance,Rv2752c_p.Val272Ala
 INH,3) Uncertain significance,Rv2752c_p.Val537Phe
 RIF,3) Uncertain significance,Rv2752c_p.Val537Phe
 INH,3) Uncertain significance,Rv2752c_p.Trp400*
-INH,3) Uncertain significance,Rv2752c_p.Trp400*
-RIF,3) Uncertain significance,Rv2752c_p.Trp400*
 RIF,3) Uncertain significance,Rv2752c_p.Trp400*
 INH,3) Uncertain significance,ahpC_c.-87A>G
 INH,3) Uncertain significance,ahpC_p.Asp22Asn
@@ -11493,8 +11212,6 @@ INH,3) Uncertain significance,katG_p.Leu707Arg
 INH,3) Uncertain significance,Rv1258c_p.Pro369Thr
 PZA,3) Uncertain significance,Rv1258c_p.Pro369Thr
 STM,3) Uncertain significance,Rv1258c_p.Pro369Thr
-INH,3) Uncertain significance,Rv2752c_p.Val558fs
-RIF,3) Uncertain significance,Rv2752c_p.Val558fs
 INH,3) Uncertain significance,Rv2752c_p.Ala273Thr
 RIF,3) Uncertain significance,Rv2752c_p.Ala273Thr
 INH,3) Uncertain significance,Rv2752c_p.Ala376Gly
@@ -11531,10 +11248,8 @@ STM,3) Uncertain significance,Rv1258c_p.Val219Ala
 INH,3) Uncertain significance,Rv1258c_p.Ala374Pro
 PZA,3) Uncertain significance,Rv1258c_p.Ala374Pro
 STM,3) Uncertain significance,Rv1258c_p.Ala374Pro
-INH,3) Uncertain significance,Rv1258c_p.Gly88fs
 PZA,5) Not assoc w R,Rv1258c_p.Gly88fs
 STM,3) Uncertain significance,Rv1258c_p.Gly88fs
-INH,5) Not assoc w R,katG_p.Arg463Leu
 INH,5) Not assoc w R,katG_p.Arg463Leu
 INH,5) Not assoc w R,Rv1258c_p.Glu194fs
 PZA,5) Not assoc w R,Rv1258c_p.Glu194fs
@@ -11559,7 +11274,6 @@ RIF,5) Not assoc w R,Rv2752c_p.Ala273Val
 INH,5) Not assoc w R,Rv1258c_p.Pro414Ser
 PZA,5) Not assoc w R,Rv1258c_p.Pro414Ser
 STM,3) Uncertain significance,Rv1258c_p.Pro414Ser
-KAN,3) Uncertain significance,whiB7_p.Arg12fs
 STM,3) Uncertain significance,whiB7_p.Arg12fs
 KAN,3) Uncertain significance,whiB7_c.-68C>G
 KAN,3) Uncertain significance,eis_p.Ile298fs
@@ -12260,7 +11974,6 @@ LEV,3) Uncertain significance,gyrA_p.Tyr365His
 MXF,3) Uncertain significance,gyrA_p.Tyr365His
 LEV,3) Uncertain significance,gyrA_p.Tyr722Cys
 MXF,3) Uncertain significance,gyrA_p.Tyr722Cys
-LEV,3) Uncertain significance,gyrB_p.Ala644del
 LEV,3) Uncertain significance,gyrB_p.Asp669fs
 LEV,3) Uncertain significance,gyrB_c.-104A>C
 MXF,3) Uncertain significance,gyrB_c.-104A>C
@@ -12558,8 +12271,6 @@ MXF,3) Uncertain significance,gyrA_p.Pro17Leu
 LEV,3) Uncertain significance,gyrA_p.Gln290His
 MXF,3) Uncertain significance,gyrA_p.Gln290His
 LEV,3) Uncertain significance,gyrA_p.Arg195Gly
-LEV,3) Uncertain significance,gyrA_p.Arg195Gly
-MXF,3) Uncertain significance,gyrA_p.Arg195Gly
 MXF,3) Uncertain significance,gyrA_p.Arg195Gly
 LEV,3) Uncertain significance,gyrA_p.Arg380Gly
 MXF,3) Uncertain significance,gyrA_p.Arg380Gly
@@ -13148,7 +12859,6 @@ PZA,1) Assoc w R,pncA_p.Thr160Pro
 PZA,1) Assoc w R,pncA_p.Tyr34Asp
 PZA,1) Assoc w R,pncA_c.-5delG
 PZA,1) Assoc w R,pncA_p.Phe58Leu
-PZA,1) Assoc w R,pncA_p.Phe58Leu
 PZA,1) Assoc w R,pncA_p.Leu182Ser
 PZA,1) Assoc w R,pncA_p.Asp129fs
 PZA,1) Assoc w R,pncA_p.Gly97Arg
@@ -13167,7 +12877,6 @@ PZA,1) Assoc w R,pncA_p.Ala146Thr
 PZA,1) Assoc w R,pncA_p.Ile90Ser
 PZA,1) Assoc w R,pncA_p.Met175Val
 PZA,1) Assoc w R,pncA_p.Tyr103Cys
-PZA,1) Assoc w R,pncA_p.Glu173fs
 PZA,1) Assoc w R,pncA_p.Leu159Arg
 PZA,1) Assoc w R,pncA_p.Pro62Leu
 PZA,1) Assoc w R,pncA_p.Val180Gly
@@ -13178,10 +12887,8 @@ PZA,1) Assoc w R,pncA_p.His51Gln
 PZA,1) Assoc w R,pncA_p.Val155Gly
 PZA,1) Assoc w R,pncA_p.Asp63Ala
 PZA,1) Assoc w R,pncA_p.Phe94Leu
-PZA,1) Assoc w R,pncA_p.Phe94Leu
 PZA,1) Assoc w R,pncA_p.Val125Phe
 PZA,1) Assoc w R,pncA_p.Glu127_Asp129del
-PZA,1) Assoc w R,pncA_p.Val131fs
 PZA,1) Assoc w R,pncA_p.Val131fs
 PZA,1) Assoc w R,pncA_p.Asp129_Val131del
 PZA,1) Assoc w R,pncA_p.Ala143Gly
@@ -13209,7 +12916,6 @@ PZA,1) Assoc w R,pncA_p.Trp119Cys
 PZA,2) Assoc w R - Interim,pncA_p.Lys48Thr
 PZA,2) Assoc w R - Interim,pncA_p.Asp126_Val130del
 PZA,2) Assoc w R - Interim,pncA_p.Phe13Leu
-PZA,2) Assoc w R - Interim,pncA_p.Phe13Leu
 PZA,2) Assoc w R - Interim,pncA_p.Thr153fs
 PZA,2) Assoc w R - Interim,pncA_c.-11A>T
 PZA,2) Assoc w R - Interim,pncA_p.Cys72Arg
@@ -13226,11 +12932,9 @@ PZA,2) Assoc w R - Interim,pncA_p.Val131Phe
 PZA,2) Assoc w R - Interim,pncA_p.Val21Gly
 PZA,2) Assoc w R - Interim,pncA_p.Val9Gly
 PZA,2) Assoc w R - Interim,pncA_p.Trp119*
-PZA,2) Assoc w R - Interim,pncA_p.Trp119*
 PZA,2) Assoc w R - Interim,pncA_p.Trp68*
 PZA,2) Assoc w R - Interim,pncA_p.Asp12fs
 PZA,2) Assoc w R - Interim,pncA_p.Val131fs
-PZA,2) Assoc w R - Interim,pncA_p.Thr153fs
 PZA,2) Assoc w R - Interim,pncA_p.Ala3Glu
 PZA,2) Assoc w R - Interim,pncA_p.Phe13Ile
 PZA,2) Assoc w R - Interim,pncA_p.Gly97Val
@@ -13244,7 +12948,6 @@ PZA,2) Assoc w R - Interim,pncA_p.Trp119Arg
 PZA,2) Assoc w R - Interim,pncA_p.Ala46Val
 PZA,2) Assoc w R - Interim,pncA_p.Gly17Asp
 PZA,2) Assoc w R - Interim,pncA_p.Leu19Pro
-PZA,2) Assoc w R - Interim,pncA_p.Ser104Arg
 PZA,2) Assoc w R - Interim,pncA_p.Ser104Arg
 PZA,2) Assoc w R - Interim,pncA_p.Val155Met
 PZA,2) Assoc w R - Interim,pncA_p.Leu116Pro
@@ -13291,7 +12994,6 @@ PZA,2) Assoc w R - Interim,pncA_p.Tyr103Asp
 PZA,2) Assoc w R - Interim,pncA_p.Tyr103Ser
 PZA,2) Assoc w R - Interim,pncA_p.Tyr34*
 PZA,2) Assoc w R - Interim,pncA_p.Tyr99*
-PZA,2) Assoc w R - Interim,pncA_p.Asp126_Val130del
 PZA,2) Assoc w R - Interim,pncA_p.Asp8Glu
 PZA,2) Assoc w R - Interim,pncA_p.Gly108Arg
 PZA,2) Assoc w R - Interim,pncA_p.Lys48Glu
@@ -13304,25 +13006,19 @@ PZA,2) Assoc w R - Interim,pncA_p.Glu37fs
 PZA,2) Assoc w R - Interim,pncA_p.Ala39fs
 PZA,2) Assoc w R - Interim,pncA_p.Asp40fs
 PZA,2) Assoc w R - Interim,pncA_p.His42fs
-PZA,2) Assoc w R - Interim,pncA_p.Ala39fs
 PZA,2) Assoc w R - Interim,pncA_p.Val45fs
 PZA,2) Assoc w R - Interim,pncA_p.His51fs
 PZA,2) Assoc w R - Interim,pncA_p.Gly55fs
 PZA,2) Assoc w R - Interim,pncA_p.Gly55del
-PZA,2) Assoc w R - Interim,pncA_p.Asp56fs
 PZA,2) Assoc w R - Interim,pncA_p.Ala3_Ile5del
 PZA,2) Assoc w R - Interim,pncA_p.His57fs
-PZA,2) Assoc w R - Interim,pncA_p.Asp56fs
 PZA,2) Assoc w R - Interim,pncA_p.Pro54_Asp56del
 PZA,2) Assoc w R - Interim,pncA_p.Val7fs
 PZA,2) Assoc w R - Interim,pncA_p.Ser65_Ser66insAspTyrSer
 PZA,2) Assoc w R - Interim,pncA_p.Asp63fs
-PZA,2) Assoc w R - Interim,pncA_p.Thr61fs
-PZA,2) Assoc w R - Interim,pncA_p.Thr61fs
 PZA,2) Assoc w R - Interim,pncA_p.Ser65fs
 PZA,2) Assoc w R - Interim,pncA_p.Ser66del
 PZA,2) Assoc w R - Interim,pncA_p.Gly60_Thr61del
-PZA,2) Assoc w R - Interim,pncA_p.Val7fs
 PZA,2) Assoc w R - Interim,pncA_p.Val73fs
 PZA,2) Assoc w R - Interim,pncA_p.Ser74fs
 PZA,2) Assoc w R - Interim,pncA_p.Asp8fs
@@ -13330,20 +13026,13 @@ PZA,2) Assoc w R - Interim,pncA_p.Gly78fs
 PZA,2) Assoc w R - Interim,pncA_p.Ala79fs
 PZA,2) Assoc w R - Interim,pncA_p.Pro83fs
 PZA,2) Assoc w R - Interim,pncA_p.Ser84fs
-PZA,2) Assoc w R - Interim,pncA_p.Ser84fs
-PZA,2) Assoc w R - Interim,pncA_p.Ser84fs
 PZA,2) Assoc w R - Interim,pncA_p.Leu85fs
-PZA,2) Assoc w R - Interim,pncA_p.Thr87fs
 PZA,2) Assoc w R - Interim,pncA_p.Thr87fs
 PZA,2) Assoc w R - Interim,pncA_p.Ala89_Ala92dup
 PZA,2) Assoc w R - Interim,pncA_p.Lys96fs
-PZA,2) Assoc w R - Interim,pncA_p.Lys96fs
 PZA,2) Assoc w R - Interim,pncA_p.Gly97fs
-PZA,2) Assoc w R - Interim,pncA_p.Lys96fs
 PZA,2) Assoc w R - Interim,pncA_p.Ala102fs
 PZA,2) Assoc w R - Interim,pncA_p.Tyr103fs
-PZA,2) Assoc w R - Interim,pncA_p.Phe106fs
-PZA,2) Assoc w R - Interim,pncA_p.Ser104_Gly108delinsArg
 PZA,2) Assoc w R - Interim,pncA_p.Ser104_Gly108delinsArg
 PZA,2) Assoc w R - Interim,pncA_p.Asn112fs
 PZA,2) Assoc w R - Interim,pncA_p.Pro115fs
@@ -13352,41 +13041,21 @@ PZA,2) Assoc w R - Interim,pncA_p.Asp12_Phe13insAlaSerGluProProSerGlnLysSer
 PZA,2) Assoc w R - Interim,pncA_p.Phe13fs
 PZA,2) Assoc w R - Interim,pncA_p.Val128fs
 PZA,2) Assoc w R - Interim,pncA_p.Val125fs
-PZA,2) Assoc w R - Interim,pncA_p.Val131fs
-PZA,2) Assoc w R - Interim,pncA_p.Val131fs
-PZA,2) Assoc w R - Interim,pncA_p.Val130fs
 PZA,2) Assoc w R - Interim,pncA_p.Asp126fs
 PZA,2) Assoc w R - Interim,pncA_p.Asp129fs
-PZA,2) Assoc w R - Interim,pncA_p.Val128fs
 PZA,2) Assoc w R - Interim,pncA_p.Gly132fs
-PZA,2) Assoc w R - Interim,pncA_p.Gly132fs
-PZA,2) Assoc w R - Interim,pncA_p.Val130fs
 PZA,2) Assoc w R - Interim,pncA_p.Ile133fs
-PZA,2) Assoc w R - Interim,pncA_p.Asp136fs
-PZA,2) Assoc w R - Interim,pncA_p.Asp136fs
 PZA,2) Assoc w R - Interim,pncA_p.Gly132_Thr135del
 PZA,2) Assoc w R - Interim,pncA_p.His137fs
-PZA,2) Assoc w R - Interim,pncA_p.Asp136fs
 PZA,2) Assoc w R - Interim,pncA_p.Glu144fs
 PZA,2) Assoc w R - Interim,pncA_p.Glu15fs
 PZA,2) Assoc w R - Interim,pncA_p.Gly150fs
-PZA,2) Assoc w R - Interim,pncA_p.Asp12fs
-PZA,2) Assoc w R - Interim,pncA_p.Thr153fs
-PZA,2) Assoc w R - Interim,pncA_p.Thr153fs
-PZA,2) Assoc w R - Interim,pncA_p.Thr153fs
 PZA,2) Assoc w R - Interim,pncA_p.Arg154fs
-PZA,2) Assoc w R - Interim,pncA_p.Val155fs
-PZA,2) Assoc w R - Interim,pncA_p.Val155fs
-PZA,2) Assoc w R - Interim,pncA_p.Val155fs
 PZA,2) Assoc w R - Interim,pncA_p.Val155fs
 PZA,2) Assoc w R - Interim,pncA_p.Leu151fs
 PZA,2) Assoc w R - Interim,pncA_p.Val155dup
-PZA,2) Assoc w R - Interim,pncA_p.Arg154fs
-PZA,2) Assoc w R - Interim,pncA_p.Asp158fs
-PZA,2) Assoc w R - Interim,pncA_p.Asp158fs
 PZA,2) Assoc w R - Interim,pncA_p.Asp158fs
 PZA,2) Assoc w R - Interim,pncA_p.Leu159fs
-PZA,2) Assoc w R - Interim,pncA_p.Ala161fs
 PZA,2) Assoc w R - Interim,pncA_p.Ala161fs
 PZA,2) Assoc w R - Interim,pncA_p.Val163fs
 PZA,2) Assoc w R - Interim,pncA_p.Ser164fs
@@ -13395,8 +13064,6 @@ PZA,2) Assoc w R - Interim,pncA_p.Leu172fs
 PZA,2) Assoc w R - Interim,pncA_p.Met175fs
 PZA,2) Assoc w R - Interim,pncA_p.Thr177fs
 PZA,2) Assoc w R - Interim,pncA_p.Ala178fs
-PZA,2) Assoc w R - Interim,pncA_p.Leu172fs
-PZA,2) Assoc w R - Interim,pncA_p.Thr177fs
 PZA,2) Assoc w R - Interim,pncA_p.Ala178_Ser179del
 PZA,2) Assoc w R - Interim,pncA_p.Ser18fs
 PZA,2) Assoc w R - Interim,pncA_p.Ala20fs
@@ -13412,19 +13079,12 @@ PZA,2) Assoc w R - Interim,pncA_p.Tyr64*
 PZA,2) Assoc w R - Interim,pncA_p.Asp12Asn
 PZA,2) Assoc w R - Interim,pncA_p.Val125Gly
 PZA,2) Assoc w R - Interim,pncA_p.Asp49fs
-PZA,2) Assoc w R - Interim,pncA_p.Asp63fs
-PZA,2) Assoc w R - Interim,pncA_p.Ser65fs
 PZA,2) Assoc w R - Interim,pncA_p.Asp63_Ser67delinsGlu
-PZA,2) Assoc w R - Interim,pncA_p.Gly78fs
 PZA,2) Assoc w R - Interim,pncA_p.Ser74_Pro77del
 PZA,2) Assoc w R - Interim,pncA_p.Ala102_Gly105del
 PZA,2) Assoc w R - Interim,pncA_p.Gln141fs
-PZA,2) Assoc w R - Interim,pncA_p.Gly150fs
-PZA,2) Assoc w R - Interim,pncA_p.Leu159fs
 PZA,2) Assoc w R - Interim,pncA_p.Gly17fs
-PZA,2) Assoc w R - Interim,pncA_p.Ser18fs
 PZA,2) Assoc w R - Interim,pncA_p.Thr160_Ala171del
-PZA,2) Assoc w R - Interim,pncA_p.Val21fs
 PZA,2) Assoc w R - Interim,pncA_p.Gly23fs
 PZA,2) Assoc w R - Interim,pncA_p.Ala28fs
 PZA,2) Assoc w R - Interim,pncA_p.Tyr41*
@@ -13951,7 +13611,6 @@ PZA,3) Uncertain significance,PPE35_p.Phe734Cys
 PZA,3) Uncertain significance,PPE35_p.Gly884Trp
 PZA,3) Uncertain significance,PPE35_p.Ile676Val
 PZA,3) Uncertain significance,PPE35_p.Thr601Ala
-PZA,3) Uncertain significance,Rv3236c_p.Glu335fs
 PZA,3) Uncertain significance,Rv3236c_p.Ala117Pro
 PZA,3) Uncertain significance,Rv3236c_p.Leu140Arg
 PZA,3) Uncertain significance,Rv3236c_p.Thr252Ser
@@ -13961,7 +13620,6 @@ PZA,3) Uncertain significance,Rv3236c_p.Leu369Val
 PZA,3) Uncertain significance,Rv3236c_p.Ser235Leu
 PZA,3) Uncertain significance,PPE35_p.Ser941Ala
 PZA,3) Uncertain significance,Rv3236c_p.Ile340Val
-PZA,3) Uncertain significance,PPE35_p.Phe657Leu
 PZA,3) Uncertain significance,PPE35_p.Phe657Leu
 PZA,3) Uncertain significance,PPE35_p.Gly974Ser
 PZA,3) Uncertain significance,PPE35_p.Gln813Glu
@@ -14010,7 +13668,6 @@ PZA,5) Not assoc w R,clpC1_p.Pro796Leu
 PZA,5) Not assoc w R,PPE35_p.Pro670Leu
 PZA,5) Not assoc w R,PPE35_p.Thr712Pro
 RIF,1) Assoc w R,rpoB_p.Ser450Leu
-RIF,1) Assoc w R,rpoB_p.Ser450Leu
 RIF,1) Assoc w R,rpoB_p.Asp435Val
 RIF,1) Assoc w R,rpoB_p.His445Tyr
 RIF,1) Assoc w R,rpoB_p.His445Asp
@@ -14054,7 +13711,6 @@ RIF,2) Assoc w R - Interim,rpoB_p.Asp435Ala
 RIF,2) Assoc w R - Interim,rpoB_p.Asp435Glu
 RIF,2) Assoc w R - Interim,rpoB_p.His445Pro
 RIF,2) Assoc w R - Interim,rpoB_p.Ser428Arg
-RIF,2) Assoc w R - Interim,rpoB_p.Ser428Arg
 RIF,2) Assoc w R - Interim,rpoB_p.Ser450Met
 RIF,2) Assoc w R - Interim,rpoB_p.Ser431_Gln432insHis
 RIF,2) Assoc w R - Interim,rpoB_p.Thr427Ile
@@ -14067,11 +13723,9 @@ RIF,2) Assoc w R - Interim,rpoB_p.Asn437His
 RIF,2) Assoc w R - Interim,rpoB_p.Gln432His
 RIF,2) Assoc w R - Interim,rpoB_p.Ser428Thr
 RIF,2) Assoc w R - Interim,rpoB_p.Ser431Arg
-RIF,2) Assoc w R - Interim,rpoB_p.Ser431Arg
 RIF,2) Assoc w R - Interim,rpoB_p.Phe433_Gln436del
 RIF,2) Assoc w R - Interim,rpoB_p.Gln432del
 RIF,2) Assoc w R - Interim,rpoB_p.Gln436_Asn437del
-RIF,2) Assoc w R - Interim,rpoB_p.Ala451Gly
 RIF,2) Assoc w R - Interim,rpoB_p.Ala451Gly
 RIF,2) Assoc w R - Interim,rpoB_p.Asp435Leu
 RIF,2) Assoc w R - Interim,rpoB_p.Lys446Arg
@@ -14080,7 +13734,6 @@ RIF,2) Assoc w R - Interim,rpoB_p.Ser441Met
 RIF,2) Assoc w R - Interim,rpoB_p.Ser441Val
 RIF,2) Assoc w R - Interim,rpoB_p.Ser450Tyr
 RIF,2) Assoc w R - Interim,rpoB_p.Thr444Ile
-RIF,2) Assoc w R - Interim,rpoB_p.Asn438del
 RIF,2) Assoc w R - Interim,rpoB_p.Leu443Phe
 RIF,2) Assoc w R - Interim,rpoB_p.Asn437Ser
 RIF,2) Assoc w R - Interim,rpoB_p.Ser450Val
@@ -14089,24 +13742,15 @@ RIF,2) Assoc w R - Interim,rpoB_p.Thr427_Ser428del
 RIF,2) Assoc w R - Interim,rpoB_p.Thr427_Gln429del
 RIF,2) Assoc w R - Interim,rpoB_p.Thr427_Leu430del
 RIF,2) Assoc w R - Interim,rpoB_p.Thr427_Gln429delinsLys
-RIF,2) Assoc w R - Interim,rpoB_p.Phe433_Gln436del
 RIF,2) Assoc w R - Interim,rpoB_p.Ser431_Met434del
 RIF,2) Assoc w R - Interim,rpoB_p.Asp435_Pro439del
 RIF,2) Assoc w R - Interim,rpoB_p.Gln436del
-RIF,2) Assoc w R - Interim,rpoB_p.Gln432del
 RIF,2) Assoc w R - Interim,rpoB_p.Met434_Asp435del
 RIF,2) Assoc w R - Interim,rpoB_p.Ser431_Phe433del
 RIF,2) Assoc w R - Interim,rpoB_p.Phe433_Asp435del
 RIF,2) Assoc w R - Interim,rpoB_p.Gln432_Phe433del
-RIF,2) Assoc w R - Interim,rpoB_p.Gln432_Asp435delinsHis
-RIF,2) Assoc w R - Interim,rpoB_p.Gln432_Asp435delinsHis
-RIF,2) Assoc w R - Interim,rpoB_p.Phe433_Asp435del
-RIF,2) Assoc w R - Interim,rpoB_p.Met434_Asp435del
-RIF,2) Assoc w R - Interim,rpoB_p.Met434_Asp435del
 RIF,2) Assoc w R - Interim,rpoB_p.Met434_Asn437delinsIle
 RIF,2) Assoc w R - Interim,rpoB_p.Asp435del
-RIF,2) Assoc w R - Interim,rpoB_p.Gln436del
-RIF,2) Assoc w R - Interim,rpoB_p.Asn438del
 RIF,2) Assoc w R - Interim,rpoB_p.Thr444dup
 RIF,2) Assoc w R - Interim,rpoB_p.His445_Lys446del
 RIF,2) Assoc w R - Interim,rpoB_p.Ser450_Leu452del
@@ -14132,7 +13776,6 @@ RIF,2) Assoc w R - Interim,rpoB_p.Thr444Ser
 RIF,2) Assoc w R - Interim,rpoB_p.Asp435_Gln436delinsGlu
 RIF,2) Assoc w R - Interim,rpoB_p.Ser450Cys
 RIF,2) Assoc w R - Interim,rpoB_p.Gly426_Thr427del
-RIF,2) Assoc w R - Interim,rpoB_p.Asp435del
 RIF,2) Assoc w R - Interim,rpoB_p.Gln432_Met434del
 RIF,2) Assoc w R - Interim,rpoB_p.Gly426Ser
 RIF,2) Assoc w R - Interim,rpoB_p.Leu452Met
@@ -14182,7 +13825,6 @@ RIF,3) Uncertain significance,rpoB_p.Ile1106Thr
 RIF,3) Uncertain significance,rpoB_p.Lys891Glu
 RIF,3) Uncertain significance,rpoB_p.Val534Met
 RIF,3) Uncertain significance,rpoB_p.Phe971Leu
-RIF,3) Uncertain significance,rpoB_p.Phe971Leu
 RIF,3) Uncertain significance,rpoB_p.His723Asp
 RIF,3) Uncertain significance,rpoB_p.Val168Ala
 RIF,3) Uncertain significance,rpoB_p.Ile491Met
@@ -14206,7 +13848,6 @@ RIF,3) Uncertain significance,rpoB_p.Thr400Ser
 RIF,3) Uncertain significance,rpoB_p.Ala584Asp
 RIF,3) Uncertain significance,rpoB_p.Ala753Val
 RIF,3) Uncertain significance,rpoB_p.Asp571Ala
-RIF,3) Uncertain significance,rpoB_p.Phe424Leu
 RIF,3) Uncertain significance,rpoB_p.Phe424Leu
 RIF,3) Uncertain significance,rpoB_p.Ile491Thr
 RIF,3) Uncertain significance,rpoB_p.Met920Val
@@ -14461,7 +14102,6 @@ RIF,3) Uncertain significance,rpoB_p.His1028Arg
 RIF,3) Uncertain significance,rpoB_p.His674Gln
 RIF,3) Uncertain significance,rpoB_p.Pro454Ser
 RIF,3) Uncertain significance,rpoB_p.Pro700Leu
-RIF,3) Uncertain significance,rpoB_p.Ser195Arg
 RIF,3) Uncertain significance,rpoB_p.Ser195Arg
 RIF,3) Uncertain significance,rpoB_p.Thr676Pro
 RIF,3) Uncertain significance,rpoB_p.Thr9Ile
@@ -14946,11 +14586,8 @@ RIF,3) Uncertain significance,rpoC_p.Tyr612Ser
 RIF,3) Uncertain significance,rpoC_p.Tyr61Cys
 RIF,3) Uncertain significance,rpoC_p.Tyr704Cys
 RIF,3) Uncertain significance,rpoC_p.Tyr749His
-RIF,3) Uncertain significance,Rv2752c_p.Ser338fs
 RIF,3) Uncertain significance,Rv2752c_p.Met394fs
 RIF,3) Uncertain significance,Rv2752c_p.Ala405fs
-RIF,3) Uncertain significance,Rv2752c_p.Val533fs
-RIF,3) Uncertain significance,Rv2752c_p.Pro7fs
 RIF,3) Uncertain significance,Rv2752c_p.Val146fs
 RIF,3) Uncertain significance,Rv2752c_p.Cys201fs
 RIF,3) Uncertain significance,Rv2752c_p.Pro220fs
@@ -15061,8 +14698,6 @@ RIF,3) Uncertain significance,rpoC_p.Glu791Gln
 RIF,3) Uncertain significance,rpoC_p.Glu894Gly
 RIF,3) Uncertain significance,rpoC_p.Phe1061Leu
 RIF,3) Uncertain significance,rpoC_p.Phe1175Leu
-RIF,3) Uncertain significance,rpoC_p.Phe1175Leu
-RIF,3) Uncertain significance,rpoC_p.Phe831Leu
 RIF,3) Uncertain significance,rpoC_p.Phe831Leu
 RIF,3) Uncertain significance,rpoC_p.Gly1026Ala
 RIF,3) Uncertain significance,rpoC_p.Gly1197Arg
@@ -15098,7 +14733,6 @@ RIF,3) Uncertain significance,Rv2752c_p.Val393Leu
 RIF,3) Uncertain significance,rpoA_c.-6_-5insGAA
 RIF,3) Uncertain significance,rpoA_p.Gly273Ser
 RIF,3) Uncertain significance,rpoA_p.Gly305Ser
-RIF,3) Uncertain significance,rpoB_p.Pro15_Ser16insSerPro
 RIF,3) Uncertain significance,rpoB_c.-80_-79insTT
 RIF,3) Uncertain significance,rpoB_p.Ala1002Pro
 RIF,3) Uncertain significance,rpoB_c.-181C>T
@@ -15222,7 +14856,6 @@ RIF,3) Uncertain significance,rpoC_p.Met92Thr
 RIF,3) Uncertain significance,rpoB_c.-199C>T
 RIF,5) Not assoc w R,rpoC_p.Gly594Glu
 RIF,5) Not assoc w R,rpoC_p.Ala172Val
-RIF,5) Not assoc w R,rpoC_p.Ala172Val
 RIF,5) Not assoc w R,rpoC_p.Glu1092Asp
 RIF,5) Not assoc w R,rpoB_c.-61C>T
 RIF,5) Not assoc w R,rpoC_p.Pro601Leu
@@ -15242,7 +14875,6 @@ RIF,5) Not assoc w R,rpoC_p.Arg69Pro
 RIF,5) Not assoc w R,rpoC_p.Pro906Ala
 RIF,5) Not assoc w R,rpoC_p.Asp271Gly
 STM,1) Assoc w R,rpsL_p.Lys43Arg
-STM,1) Assoc w R,rpsL_p.Lys43Arg
 STM,1) Assoc w R,rpsL_p.Lys88Arg
 STM,1) Assoc w R,gid_p.Leu35fs
 STM,1) Assoc w R,gid_p.Arg118fs
@@ -15256,13 +14888,10 @@ STM,2) Assoc w R - Interim,gid_p.Arg39fs
 STM,2) Assoc w R - Interim,gid_p.Arg118fs
 STM,2) Assoc w R - Interim,gid_p.Gly73Ala
 STM,2) Assoc w R - Interim,gid_p.Leu35fs
-STM,2) Assoc w R - Interim,gid_p.Arg39fs
 STM,2) Assoc w R - Interim,gid_p.Arg102fs
 STM,2) Assoc w R - Interim,gid_p.Gly129fs
 STM,2) Assoc w R - Interim,rpsL_p.Lys88Gln
 STM,2) Assoc w R - Interim,gid_p.Trp45*
-STM,2) Assoc w R - Interim,gid_p.Trp45*
-STM,2) Assoc w R - Interim,gid_p.Arg118fs
 STM,2) Assoc w R - Interim,gid_p.Glu60fs
 STM,2) Assoc w R - Interim,gid_p.Leu74*
 STM,2) Assoc w R - Interim,gid_p.Glu170*
@@ -15273,12 +14902,10 @@ STM,2) Assoc w R - Interim,gid_p.Gly192fs
 STM,2) Assoc w R - Interim,gid_p.Val65fs
 STM,2) Assoc w R - Interim,gid_p.Gly76fs
 STM,2) Assoc w R - Interim,gid_p.Glu103*
-STM,2) Assoc w R - Interim,gid_p.Gly129fs
 STM,2) Assoc w R - Interim,gid_p.Glu92*
 STM,2) Assoc w R - Interim,gid_p.Gly30fs
 STM,2) Assoc w R - Interim,gid_p.Met104fs
 STM,2) Assoc w R - Interim,gid_p.Ala119fs
-STM,2) Assoc w R - Interim,gid_p.Val124fs
 STM,2) Assoc w R - Interim,gid_p.Val124fs
 STM,2) Assoc w R - Interim,gid_p.His174fs
 STM,2) Assoc w R - Interim,gid_p.Val188fs
@@ -15293,15 +14920,12 @@ STM,2) Assoc w R - Interim,gid_p.Arg206*
 STM,2) Assoc w R - Interim,gid_p.Tyr195*
 STM,2) Assoc w R - Interim,gid_p.Arg102*
 STM,2) Assoc w R - Interim,gid_p.Ala19fs
-STM,2) Assoc w R - Interim,gid_p.Arg118fs
 STM,2) Assoc w R - Interim,gid_p.Gly17fs
 STM,2) Assoc w R - Interim,gid_p.Gly37fs
 STM,2) Assoc w R - Interim,gid_p.Val41fs
-STM,2) Assoc w R - Interim,gid_p.Asp46fs
 STM,2) Assoc w R - Interim,gid_p.Leu44_Asp46delinsHis
 STM,2) Assoc w R - Interim,gid_p.Ile55dup
 STM,2) Assoc w R - Interim,gid_p.Asp63fs
-STM,2) Assoc w R - Interim,gid_p.Asp67_Gly71del
 STM,2) Assoc w R - Interim,gid_p.Asp67_Gly71del
 STM,2) Assoc w R - Interim,gid_p.Gly71fs
 STM,2) Assoc w R - Interim,gid_p.Arg83fs
@@ -15313,72 +14937,46 @@ STM,2) Assoc w R - Interim,gid_p.Leu95fs
 STM,2) Assoc w R - Interim,gid_p.Thr98fs
 STM,2) Assoc w R - Interim,gid_p.Arg96fs
 STM,2) Assoc w R - Interim,gid_p.Val89_Arg102delinsGly
-STM,2) Assoc w R - Interim,gid_p.Met104fs
 STM,2) Assoc w R - Interim,gid_p.Val105fs
 STM,2) Assoc w R - Interim,gid_p.Leu108fs
 STM,2) Assoc w R - Interim,gid_p.Glu113fs
 STM,2) Assoc w R - Interim,gid_p.Ile114fs
-STM,2) Assoc w R - Interim,gid_p.Arg118fs
-STM,2) Assoc w R - Interim,gid_p.Ile114fs
-STM,2) Assoc w R - Interim,gid_p.Gly129fs
 STM,2) Assoc w R - Interim,gid_p.Val135fs
-STM,2) Assoc w R - Interim,gid_p.Pro14fs
 STM,2) Assoc w R - Interim,gid_p.Arg15fs
 STM,2) Assoc w R - Interim,gid_p.Lys147fs
 STM,2) Assoc w R - Interim,gid_p.Trp148fs
 STM,2) Assoc w R - Interim,gid_p.Ser149fs
 STM,2) Assoc w R - Interim,gid_p.Met159fs
-STM,2) Assoc w R - Interim,gid_p.His174fs
 STM,2) Assoc w R - Interim,gid_p.Arg176fs
 STM,2) Assoc w R - Interim,gid_p.Val184fs
-STM,2) Assoc w R - Interim,gid_p.Val184fs
-STM,2) Assoc w R - Interim,gid_p.Gly192fs
 STM,2) Assoc w R - Interim,gid_p.Arg21fs
 STM,2) Assoc w R - Interim,gid_p.Val202fs
 STM,2) Assoc w R - Interim,gid_p.Ala205fs
-STM,2) Assoc w R - Interim,gid_p.Pro14fs
-STM,2) Assoc w R - Interim,gid_p.Gly17fs
 STM,2) Assoc w R - Interim,gid_p.Glu32fs
-STM,2) Assoc w R - Interim,gid_p.Glu32fs
-STM,2) Assoc w R - Interim,gid_p.Leu35fs
 STM,2) Assoc w R - Interim,gid_p.Glu99*
 STM,2) Assoc w R - Interim,gid_p.Lys144*
 STM,2) Assoc w R - Interim,gid_p.Lys163*
 STM,2) Assoc w R - Interim,gid_p.Arg213*
-STM,2) Assoc w R - Interim,gid_p.Arg118fs
 STM,2) Assoc w R - Interim,gid_p.Glu120fs
 STM,2) Assoc w R - Interim,gid_p.Ala119_Glu120insAspGluIleValArgGlyArgAla
 STM,2) Assoc w R - Interim,gid_p.Glu121fs
 STM,2) Assoc w R - Interim,gid_p.Ala134fs
 STM,2) Assoc w R - Interim,gid_p.Gly28*
 STM,2) Assoc w R - Interim,gid_p.Gly37*
-STM,2) Assoc w R - Interim,gid_p.Leu35fs
 STM,2) Assoc w R - Interim,gid_p.Tyr22*
-STM,2) Assoc w R - Interim,gid_p.Gly30fs
 STM,2) Assoc w R - Interim,gid_p.Glu173*
-STM,2) Assoc w R - Interim,gid_p.Leu35fs
-STM,2) Assoc w R - Interim,gid_p.Arg39fs
-STM,2) Assoc w R - Interim,gid_p.Arg39fs
-STM,2) Assoc w R - Interim,gid_p.Arg39fs
 STM,2) Assoc w R - Interim,gid_p.His48fs
 STM,2) Assoc w R - Interim,gid_p.Gly56dup
 STM,2) Assoc w R - Interim,gid_p.Val66fs
 STM,2) Assoc w R - Interim,gid_p.Ala82fs
-STM,2) Assoc w R - Interim,gid_p.Arg83fs
-STM,2) Assoc w R - Interim,gid_p.Gln87fs
 STM,2) Assoc w R - Interim,gid_p.Arg97fs
 STM,2) Assoc w R - Interim,gid_p.Phe100fs
 STM,2) Assoc w R - Interim,gid_p.Asp107fs
 STM,2) Assoc w R - Interim,gid_p.Gly109fs
-STM,2) Assoc w R - Interim,gid_p.Arg118fs
 STM,2) Assoc w R - Interim,gid_p.Val110fs
-STM,2) Assoc w R - Interim,gid_p.Val124fs
-STM,2) Assoc w R - Interim,gid_p.Val124fs
 STM,2) Assoc w R - Interim,gid_p.Ala140fs
-STM,2) Assoc w R - Interim,gid_p.Arg15fs
 STM,2) Assoc w R - Interim,gid_p.Arg158fs
 STM,2) Assoc w R - Interim,gid_p.His168fs
-STM,2) Assoc w R - Interim,gid_p.Gly17fs
 STM,2) Assoc w R - Interim,gid_p.Ala183fs
 STM,2) Assoc w R - Interim,gid_p.Asp185fs
 STM,2) Assoc w R - Interim,gid_p.Ala193fs
@@ -15386,17 +14984,13 @@ STM,2) Assoc w R - Interim,gid_p.Ala200fs
 STM,2) Assoc w R - Interim,gid_p.Arg206fs
 STM,2) Assoc w R - Interim,gid_p.Ser220fs
 STM,2) Assoc w R - Interim,gid_p.Leu26fs
-STM,2) Assoc w R - Interim,gid_p.Gly30fs
 STM,2) Assoc w R - Interim,gid_p.Val31fs
-STM,2) Assoc w R - Interim,gid_p.Glu32fs
 STM,2) Assoc w R - Interim,gid_p.Leu79*
 STM,2) Assoc w R - Interim,gid_p.Gln87*
-STM,2) Assoc w R - Interim,gid_p.Arg118fs
 STM,2) Assoc w R - Interim,gid_p.Ala138fs
 STM,2) Assoc w R - Interim,gid_p.Leu152fs
 STM,2) Assoc w R - Interim,gid_p.Gly164fs
 STM,2) Assoc w R - Interim,gid_p.Cys52*
-STM,2) Assoc w R - Interim,gid_p.Asp107fs
 STM,3) Uncertain significance,rpsL_c.-139C>A
 STM,3) Uncertain significance,gid_p.Leu79Ser
 STM,3) Uncertain significance,gid_p.Ala119Thr
@@ -15409,17 +15003,14 @@ STM,3) Uncertain significance,gid_p.Val77Gly
 STM,3) Uncertain significance,gid_p.Ala138Val
 STM,3) Uncertain significance,gid_p.Leu50Arg
 STM,3) Uncertain significance,gid_p.Ser149Arg
-STM,3) Uncertain significance,gid_p.Ser149Arg
 STM,3) Uncertain significance,gid_p.Leu79Trp
 STM,3) Uncertain significance,gid_p.Arg137Trp
-STM,3) Uncertain significance,gid_p.Ser70Arg
 STM,3) Uncertain significance,gid_p.Ser70Arg
 STM,3) Uncertain significance,gid_p.Pro75Ser
 STM,3) Uncertain significance,gid_p.His48Asn
 STM,3) Uncertain significance,gid_p.Val77Ala
 STM,3) Uncertain significance,gid_p.Gly117Arg
 STM,3) Uncertain significance,gid_p.Leu90Arg
-STM,3) Uncertain significance,gid_p.Glu92Gly
 STM,3) Uncertain significance,gid_p.Glu92Gly
 STM,3) Uncertain significance,gid_p.Pro93Leu
 STM,3) Uncertain significance,gid_p.Leu44Gln
@@ -15665,7 +15256,6 @@ STM,3) Uncertain significance,gid_p.Leu86Phe
 STM,3) Uncertain significance,gid_p.Ala161Gly
 STM,3) Uncertain significance,gid_p.Leu58Phe
 STM,3) Uncertain significance,gid_p.Asn51Lys
-STM,3) Uncertain significance,gid_c.-33delT
 STM,3) Uncertain significance,gid_p.Ala119Val
 STM,3) Uncertain significance,gid_p.Ala133Gly
 STM,3) Uncertain significance,gid_p.Ala140Val
@@ -15894,13 +15484,8 @@ STM,3) Uncertain significance,whiB6_p.Arg17fs
 STM,3) Uncertain significance,whiB6_p.Met1del
 STM,3) Uncertain significance,whiB6_c.-75_-72delGCTCinsCTT
 STM,3) Uncertain significance,whiB6_c.-75_-72delGCTCinsCTA
-STM,3) Uncertain significance,whiB6_c.-75_-74delGCinsT
-STM,3) Uncertain significance,whiB6_c.-77_-75delGAGinsAA
-STM,3) Uncertain significance,whiB6_c.-78_-75delAGAGinsCGA
 STM,3) Uncertain significance,whiB6_c.-78_-75delAGAGinsGAA
 STM,3) Uncertain significance,whiB6_c.-76_-75delAG
-STM,3) Uncertain significance,whiB6_p.Glu28fs
-STM,3) Uncertain significance,whiB6_p.Glu28fs
 STM,3) Uncertain significance,whiB6_c.-111A>G
 STM,3) Uncertain significance,whiB6_c.-125A>T
 STM,3) Uncertain significance,whiB6_c.-29A>G
@@ -15930,8 +15515,6 @@ STM,3) Uncertain significance,whiB6_p.Val80Ile
 STM,3) Uncertain significance,whiB6_p.Tyr3Ser
 STM,3) Uncertain significance,whiB7_p.Leu42fs
 STM,3) Uncertain significance,whiB7_p.Ala60fs
-STM,3) Uncertain significance,whiB7_p.Gly64fs
-STM,3) Uncertain significance,whiB7_p.Gly84_Arg87del
 STM,3) Uncertain significance,whiB7_c.-317_-316insG
 STM,3) Uncertain significance,whiB7_c.-362_-357delCCTCCA
 STM,3) Uncertain significance,whiB7_c.-126A>G
@@ -16012,8 +15595,6 @@ STM,3) Uncertain significance,rrs_n.-71G>A
 STM,3) Uncertain significance,rrs_n.1025T>C
 STM,3) Uncertain significance,rrs_n.1360T>C
 STM,3) Uncertain significance,rrs_n.-76T>G
-STM,3) Uncertain significance,whiB6_p.Met1del
-STM,3) Uncertain significance,whiB6_c.-75delG
 STM,3) Uncertain significance,whiB6_p.Glu28Lys
 STM,3) Uncertain significance,whiB6_c.-25G>C
 STM,3) Uncertain significance,whiB7_p.Pro11fs
@@ -16037,7 +15618,6 @@ STM,3) Uncertain significance,rrs_n.923C>T
 STM,3) Uncertain significance,rrs_n.-112G>T
 STM,3) Uncertain significance,rrs_n.822T>C
 STM,3) Uncertain significance,whiB6_p.Arg86fs
-STM,3) Uncertain significance,whiB6_c.-75delG
 STM,3) Uncertain significance,whiB7_p.Cys20Tyr
 STM,3) Uncertain significance,whiB7_c.-58C>T
 STM,3) Uncertain significance,whiB7_c.-354T>G

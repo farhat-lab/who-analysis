@@ -1,4 +1,6 @@
 binary: true
+atu_analysis: true
+atu_analysis_type: CC
 pheno_category_lst:
 - WHO
 - ALL
@@ -16,3 +18,4 @@ impute: false
 num_PCs: 5
 num_bootstrap: 1000
 alpha: 0.05
+model_prefix: dropAF_noSyn
