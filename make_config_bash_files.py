@@ -77,14 +77,15 @@ drug_names = list(drug_abbr_dict.keys())
     
 with open("bash_scripts/run_AMI.sh", "r+") as file:
     lines = file.readlines()
-    
-# make config files for multiple days and more RAM
+
+# copy the bash script from run_AMI.sh to all drugs
 for i, drug in enumerate(drug_names):
 
     with open(f"bash_scripts/run_{drug_abbr_dict[drug]}.sh", "w+") as new_file:
 
         for line in lines:
 
+            # update drug name and WHO abbreviation
             if "drug=" in line:
                 new_file.write(f'drug="{drug}"\n')
             elif "drug_abbr=" in line:
