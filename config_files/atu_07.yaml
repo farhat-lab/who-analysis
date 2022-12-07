@@ -1,10 +1,11 @@
 binary: true
 atu_analysis: true
-atu_analysis_type: CC
+atu_analysis_type: CC-ATU
 pheno_category_lst: WHO
 tiers_lst:
 - '1'
-unpooled: true
+- '2'
+unpooled: false
 synonymous: false
 amb_mode: DROP
 AF_thresh: 0.75

@@ -15,17 +15,16 @@ tracemalloc.start()
 analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
 
-def get_genos_phenos(analysis_dir, folder, drug):
+def get_genos_phenos(analysis_dir, drug):
     '''
     This function gets the phenotype and genotype dataframes for a given drug. These are the same across models. 
     '''
         
-    # folder variable should be in [BINARY, MIC, ATU], so user lower to get the phenotypes file name
-    df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, f"phenos_{folder.lower()}.csv"))
+    df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_atu.csv"))
     df_genos = pd.read_csv(os.path.join(analysis_dir, drug, "genos.csv.gz"), compression="gzip")
     
     if len(set(df_phenos.sample_id) - set(df_genos.sample_id)) > 0:
-        raise ValueError(f"Samples in the phenotypes dataframe are missing from the genotypes dataframe for {folder} and {drug}")
+        raise ValueError(f"Samples in the phenotypes dataframe are missing from the genotypes dataframe for {drug} CC vs CC-ATU analysis")
     
     # get only samples that are in the phenotypes file (this is greater than or equal to the number of phenotypes in the model because some get dropped)
     df_genos = df_genos.query("sample_id in @df_phenos.sample_id")
@@ -163,10 +162,10 @@ def compute_likelihood_ratio_confidence_intervals(alpha, res_df):
 
 
 
-def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, alpha=0.05):
+def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05):
 
     # final_analysis file with all significant variants for a drug
-    old_df = pd.read_csv(os.path.join(model_path, "model_analysis.csv"))
+    old_df = pd.read_csv(os.path.join(model_path, f"model_analysis_{model_suffix}.csv"))
     res_df = old_df.copy()
     
     # check that all variants are there
@@ -240,58 +239,54 @@ def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_g
        'Bonferroni_pval', 'Significant', 'Num_Isolates', 'Total_Isolates', 'TP', 'FP', 'TN', 'FN', 'PPV', 'NPV', 'Sens', 'Spec',
        'LR+', 'LR-', 'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB',
        'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
-       ]].to_csv(os.path.join(model_path, "model_analysis_with_stats.csv"), index=False)
+       ]].to_csv(os.path.join(model_path, f"model_analysis_with_stats_{model_suffix}.csv"), index=False)
     
 
-_, drug, folder = sys.argv
-
-assert folder in ["BINARY", "ATU", "MIC"]
+_, drug = sys.argv
 
 analysis_paths = []
 
-for tier in os.listdir(os.path.join(analysis_dir, drug, folder)):
-    tiers_path = os.path.join(analysis_dir, drug, folder, tier)
+for tier in os.listdir(os.path.join(analysis_dir, drug, "ATU")):
+    tiers_path = os.path.join(analysis_dir, drug, "ATU", tier)
     
     for level_1 in os.listdir(tiers_path):
-        level1_path = os.path.join(analysis_dir, drug, folder, tier, level_1)
+        level1_path = os.path.join(analysis_dir, drug, "ATU", tier, level_1)
         
         if os.path.isfile(os.path.join(level1_path, "model_matrix.pkl")):
             analysis_paths.append(level1_path)
         
         for level_2 in os.listdir(level1_path):
-            level2_path = os.path.join(analysis_dir, drug, folder, tier, level_1, level_2)
+            level2_path = os.path.join(analysis_dir, drug, "ATU", tier, level_1, level_2)
 
             if os.path.isfile(os.path.join(level2_path, "model_matrix.pkl")):
                 analysis_paths.append(level2_path)
           
         
-if folder == "ATU":
-    print(f"Computing univariate statistics for {len(analysis_paths)*2} models")
-else:
-    print(f"Computing univariate statistics for {len(analysis_paths)} models")
-
+print(f"Computing univariate statistics for {len(analysis_paths)*2} models")
     
-# get dataframes of mutations for WHO isolates only
-df_phenos, df_genos, annotated_genos = get_genos_phenos(analysis_dir, folder, drug)
+df_phenos, df_genos, annotated_genos = get_genos_phenos(analysis_dir, drug)
 
-for model_path in all_analysis_paths:  
+for model_path in analysis_paths:  
     
-    if "dropAF" in model_path:
-        compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, alpha=0.05)
-    else:
-        # just add predicted effect and Significance to these
-        res_df = pd.read_csv(os.path.join(analysis_dir, drug, path, "model_analysis.csv"))
+    for model_suffix in ["CC", "CC_ATU"]:
+        if "dropAF" in model_path:
+            compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
+        else:
+            # just add predicted effect and Significance to these
+            res_df = pd.read_csv(os.path.join(analysis_dir, drug, "ATU", path, f"model_analysis_{model_suffix}.csv"))
 
-        res_df = res_df.merge(annotated_genos, on="mutation", how="outer")
-        res_df = res_df.loc[~pd.isnull(res_df["coef"])]
-        res_df.loc[res_df["mutation"].str.contains("lof"), "predicted_effect"] = "lof"
-        res_df.loc[res_df["mutation"].str.contains("inframe"), "predicted_effect"] = "inframe"
+            res_df = res_df.merge(annotated_genos, on="mutation", how="outer")
+            res_df = res_df.loc[~pd.isnull(res_df["coef"])]
+            res_df.loc[res_df["mutation"].str.contains("lof"), "predicted_effect"] = "lof"
+            res_df.loc[res_df["mutation"].str.contains("inframe"), "predicted_effect"] = "inframe"
 
-        res_df.loc[res_df["BH_pval"] < 0.01, "Significant"] = 1
-        res_df["Significant"] = res_df["Significant"].fillna(0).astype(int)
+            res_df.loc[res_df["BH_pval"] < 0.01, "Significant"] = 1
+            res_df["Significant"] = res_df["Significant"].fillna(0).astype(int)
 
-        res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval',
-           'Bonferroni_pval', 'Significant']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(analysis_dir, drug, path, "model_analysis_with_stats.csv"), index=False)
+            res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval',
+               'Bonferroni_pval', 'Significant']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(analysis_dir, drug, path, f"model_analysis_with_stats_{model_suffix}.csv"), index=False)
+            
+    print(model_path)
 
 print(f"Finished {drug}!")
 

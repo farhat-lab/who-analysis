@@ -1,6 +1,6 @@
 binary: true
 atu_analysis: true
-atu_analysis_type: CC
+atu_analysis_type: CC-ATU
 pheno_category_lst: WHO
 tiers_lst:
 - '1'

@@ -128,34 +128,45 @@ for i, drug in enumerate(drug_names):
 #     i += 1
 
 
-# ###### TODO: CONFIG FILES FOR THE CC vs. CC-ATU ANALYSIS: SHOULD BE 8 TOTAL (SO FAR) ######
+###### TODO: CONFIG FILES FOR THE CC vs. CC-ATU ANALYSIS: SHOULD BE 8 TOTAL (SO FAR) ######
 
-# # not relevant, but the parameter will get ignored in the scripts
-# phenos = ["WHO"]
-# tiers = [["1"], ["1", "2"]]
-# unpooled = [False, True]
-# syn = [False, True]
-# amb_mode = ["DROP", "AF"]
+# order of parameters to be updated:, tiers_lst, unpooled, atu_analysis_type
+all_combos = [[["1"], False, "CC"],
+              [["1"], True, "CC"],
+              [["1"], False, "CC-ATU"],
+              [["1"], True, "CC-ATU"],
+              [["1", "2"], False, "CC"],
+              [["1", "2"], True, "CC"],
+              [["1", "2"], False, "CC-ATU"],
+              [["1", "2"], True, "CC-ATU"]
+            ]
 
-# all_combos = list(itertools.product(*[phenos, tiers, unpooled, syn, amb_mode]))
-# print(len(all_combos))
+# example set of kwargs
+kwargs = yaml.safe_load(open("config.yaml"))
 
-# # example set of kwargs
-# kwargs = yaml.safe_load(open("config.yaml"))
-
-# # config files run from 1 - len(all_combos)
-# for i in list(range(len(1, all_combos+1))):
+# config files run from 1 - len(all_combos)
+for i in list(range(1, len(all_combos)+1)):
         
-#     # if the number is less than 10, add a 0 in front of it to keep them in order
-#     if i < 10:
-#         num_str = f"0{i}"
-#     else:
-#         num_str = str(i)
+    # if the number is less than 10, add a 0 in front of it to keep them in order
+    if i < 10:
+        num_str = f"0{i}"
+    else:
+        num_str = str(i)
     
-#     with open(f"config_files/atu_{num_str}.yaml", "r+") as file:
+    with open(f"config_files/atu_{num_str}.yaml", "w+") as file:
         
-#         kwargs["binary"] = True
-#         kwargs["atu_analysis"] = False
-#         yaml.dump(kwargs, file, default_flow_style=False, sort_keys=False)
+        # constant for all cases
+        kwargs["binary"] = True
+        kwargs["atu_analysis"] = True
+        kwargs["synonymous"] = False
+        kwargs["amb_mode"] = "DROP"
+        
+        # not relevant, but set them all to WHO here
+        kwargs["pheno_category_lst"] = "WHO"
+        
+        # update param combinations and write to the file
+        param_dict = dict(zip(["tiers_lst", "unpooled", "atu_analysis_type"], all_combos[i-1]))
+        kwargs.update(param_dict)
+        yaml.dump(kwargs, file, default_flow_style=False, sort_keys=False)
     
-#     i += 1
+    i += 1

@@ -32,9 +32,9 @@ config_array=(
 )
 
 for i in ${!config_array[@]}; do 
-    python3 -u 01_make_model_inputs.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
-    python3 -u 02_regression_with_bootstrap.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
-    python3 -u 03_model_analysis.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
+    python3 -u 01_make_model_inputs.py "${config_array[$i]}" "$drug" "$drug_abbr"
+    python3 -u 02_regression_with_bootstrap.py "${config_array[$i]}" "$drug" "$drug_abbr"
+    python3 -u 03_model_analysis.py "${config_array[$i]}" "$drug" "$drug_abbr"
 done
 
 python3 -u 04_compute_univariate_stats.py "$drug"

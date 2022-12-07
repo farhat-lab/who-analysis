@@ -43,7 +43,7 @@ if binary:
     if atu_analysis:
         out_dir = os.path.join(analysis_dir, drug, "ATU", f"tiers={'+'.join(tiers_lst)}", model_prefix)
         
-        # the CC and CC-ATU models are in the same folder, but the output files (i.e. regression_coef.csv should have different suffixes to distinguish)
+        # the CC and CC-ATU models are in the same folder, but the output files (i.e. regression_coef.csv have different suffixes to distinguish)
         model_suffix = kwargs["atu_analysis_type"]
         assert model_suffix == "CC" or model_suffix == "CC-ATU"
     else:
