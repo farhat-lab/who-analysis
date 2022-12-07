@@ -128,7 +128,7 @@ for i, drug in enumerate(drug_names):
 #     i += 1
 
 
-###### TODO: CONFIG FILES FOR THE CC vs. CC-ATU ANALYSIS: SHOULD BE 8 TOTAL (SO FAR) ######
+###### CONFIG FILES FOR THE CC vs. CC-ATU ANALYSIS: SHOULD BE 8 TOTAL (SO FAR) ######
 
 # order of parameters to be updated:, tiers_lst, unpooled, atu_analysis_type
 all_combos = [[["1"], False, "CC"],
