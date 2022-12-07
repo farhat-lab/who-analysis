@@ -52,9 +52,51 @@ for i in list(range(1, len(all_combos)+1)):
     
     
     
-# ###### CONFIG FILES FOR THE MIC ANALYSIS: SHOULD BE 8 TOTAL (SO FAR) ######
+###### BASH SCRIPTS FOR EACH DRUG: SHOULD BE 15 TOTAL ######
+    
+# manually write bash_scripts/run_AMI.sh, then copied everything else from there and updated drug names
+    
+drug_abbr_dict = {"Delamanid": "DLM",
+                  "Bedaquiline": "BDQ",
+                  "Clofazimine": "CFZ",
+                  "Ethionamide": "ETH",
+                  "Linezolid": "LZD",
+                  "Moxifloxacin": "MXF",
+                  "Capreomycin": "CAP",
+                  "Amikacin": "AMI",
+                  "Pyrazinamide": "PZA",
+                  "Kanamycin": "KAN",
+                  "Levofloxacin": "LEV",
+                  "Streptomycin": "STM",
+                  "Ethambutol": "EMB",
+                  "Isoniazid": "INH",
+                  "Rifampicin": "RIF"
+                 }
 
-# # not relevant 
+drug_names = list(drug_abbr_dict.keys())
+    
+with open("bash_scripts/run_AMI.sh", "r+") as file:
+    lines = file.readlines()
+    
+# make config files for multiple days and more RAM
+for i, drug in enumerate(drug_names):
+
+    with open(f"bash_scripts/run_{drug_abbr_dict[drug]}.sh", "w+") as new_file:
+
+        for line in lines:
+
+            if "drug=" in line:
+                new_file.write(f'drug="{drug}"\n')
+            elif "drug_abbr=" in line:
+                new_file.write(f'drug_abbr="{drug_abbr_dict[drug]}"\n')
+            else:
+                new_file.write(line)
+                
+                
+    
+# ###### TODO: CONFIG FILES FOR THE MIC ANALYSIS: SHOULD BE 8 TOTAL (SO FAR) ######
+
+# # not relevant, but the parameter will get ignored in the scripts
 # phenos = ["WHO"]
 # tiers = [["1"], ["1", "2"]]
 # unpooled = [False, True]
@@ -76,7 +118,40 @@ for i in list(range(1, len(all_combos)+1)):
 #     else:
 #         num_str = str(i)
     
-#     with open(f"config_files/binary_{num_str}.yaml", "r+") as file:
+#     with open(f"config_files/mic_{num_str}.yaml", "r+") as file:
+        
+#         kwargs["binary"] = True
+#         kwargs["atu_analysis"] = False
+#         yaml.dump(kwargs, file, default_flow_style=False, sort_keys=False)
+    
+#     i += 1
+
+
+# ###### TODO: CONFIG FILES FOR THE CC vs. CC-ATU ANALYSIS: SHOULD BE 8 TOTAL (SO FAR) ######
+
+# # not relevant, but the parameter will get ignored in the scripts
+# phenos = ["WHO"]
+# tiers = [["1"], ["1", "2"]]
+# unpooled = [False, True]
+# syn = [False, True]
+# amb_mode = ["DROP", "AF"]
+
+# all_combos = list(itertools.product(*[phenos, tiers, unpooled, syn, amb_mode]))
+# print(len(all_combos))
+
+# # example set of kwargs
+# kwargs = yaml.safe_load(open("config.yaml"))
+
+# # config files run from 1 - len(all_combos)
+# for i in list(range(len(1, all_combos+1))):
+        
+#     # if the number is less than 10, add a 0 in front of it to keep them in order
+#     if i < 10:
+#         num_str = f"0{i}"
+#     else:
+#         num_str = str(i)
+    
+#     with open(f"config_files/atu_{num_str}.yaml", "r+") as file:
         
 #         kwargs["binary"] = True
 #         kwargs["atu_analysis"] = False

@@ -8,8 +8,8 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=skulkarni@g.harvard.edu
 
-drug="Ethionamide"
-drug_abbr="ETH"
+drug="Bedaquiline"
+drug_abbr="BDQ"
 
 # list of config files to use
 config_array=(

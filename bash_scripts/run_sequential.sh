@@ -61,6 +61,5 @@ for k in ${!drug_array[@]}; do
         python3 -u 02_regression_with_bootstrap.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
         python3 -u 03_model_analysis.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
     done
-
     python3 -u 04_compute_univariate_stats.py "${drug_array[$k]}"
 done
