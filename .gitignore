@@ -8,3 +8,6 @@ sandbox.ipynb
 data/sample_ids_mapping.csv
 data/lineages.csv
 data/combined_lineage_sample_IDs.pkl
+
+# extra semi-duplicate files used for testing
+bash_scripts/dup*.sh
