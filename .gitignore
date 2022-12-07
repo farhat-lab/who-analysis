@@ -6,8 +6,7 @@ sandbox.ipynb
 
 # extra config and bash files made during testing
 config_*.yaml
-*.sh
-config_files/
+config_files/config_*.yaml
 
 # confidential information
 data/sample_ids_mapping.csv
