@@ -1,5 +1,6 @@
-
-
+import sys, glob, os, yaml
+import numpy as np
+import pandas as pd
 
 
 ###### CONFIG FILES FOR THE BINARY ANALYSIS: SHOULD BE 16 TOTAL ######
@@ -51,34 +52,34 @@ for i in list(range(1, len(all_combos)+1)):
     
     
     
-###### CONFIG FILES FOR THE MIC ANALYSIS: SHOULD BE 8 TOTAL (SO FAR) ######
+# ###### CONFIG FILES FOR THE MIC ANALYSIS: SHOULD BE 8 TOTAL (SO FAR) ######
 
-# not relevant 
-phenos = ["WHO"]
-tiers = [["1"], ["1", "2"]]
-unpooled = [False, True]
-syn = [False, True]
-amb_mode = ["DROP", "AF"]
+# # not relevant 
+# phenos = ["WHO"]
+# tiers = [["1"], ["1", "2"]]
+# unpooled = [False, True]
+# syn = [False, True]
+# amb_mode = ["DROP", "AF"]
 
-all_combos = list(itertools.product(*[phenos, tiers, unpooled, syn, amb_mode]))
-print(len(all_combos))
+# all_combos = list(itertools.product(*[phenos, tiers, unpooled, syn, amb_mode]))
+# print(len(all_combos))
 
-# example set of kwargs
-kwargs = yaml.safe_load(open("config.yaml"))
+# # example set of kwargs
+# kwargs = yaml.safe_load(open("config.yaml"))
 
-# config files run from 1 - len(all_combos)
-for i in list(range(len(1, all_combos+1))):
+# # config files run from 1 - len(all_combos)
+# for i in list(range(len(1, all_combos+1))):
         
-    # if the number is less than 10, add a 0 in front of it to keep them in order
-    if i < 10:
-        num_str = f"0{i}"
-    else:
-        num_str = str(i)
+#     # if the number is less than 10, add a 0 in front of it to keep them in order
+#     if i < 10:
+#         num_str = f"0{i}"
+#     else:
+#         num_str = str(i)
     
-    with open(f"config_files/binary_{num_str}.yaml", "r+") as file:
+#     with open(f"config_files/binary_{num_str}.yaml", "r+") as file:
         
-        kwargs["binary"] = True
-        kwargs["atu_analysis"] = False
-        yaml.dump(kwargs, file, default_flow_style=False, sort_keys=False)
+#         kwargs["binary"] = True
+#         kwargs["atu_analysis"] = False
+#         yaml.dump(kwargs, file, default_flow_style=False, sort_keys=False)
     
-    i += 1
+#     i += 1
