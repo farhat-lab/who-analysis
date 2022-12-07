@@ -92,7 +92,7 @@ Parameters in the yaml file are as follows:
     <li><code>tiers_lst</code>: list of tiers to include in the model</li>
     <li><code>pheno_category_lst</code>: list of phenotype categories to include. The list can include the strings WHO and ALL. Only used if <code>binary = True</code> and <code>atu_analysis = False</code></li>
     <li><code>synonymous</code>: boolean for whether synonymous variants should be included</li>
-    <li><code>pool_lof</code>: boolean for whether or not LOF variants should be pooled</li>
+    <li><code>unpooled</code>: boolean for whether or not LOF mutations and inframe mutations should be unpooled. By default, the features are pooled into an aggregate "LOF" feature and an aggregate "inframe" feature</li>
     <li><code>amb_mode</code>: how to handle mutations with intermediate AF. Options are DROP, AF, and BINARY. </li>
     <li><code>missing_isolate_thresh</code>: threshold for missing isolates (0-1). i.e. if an isolate has more than N% of variants missing, drop it.</li>
     <li><code>missing_feature_thresh</code>: threshold for missing variants (0-1), i.e. if a variant has more than N% of isolates missing, drop it.</li>
