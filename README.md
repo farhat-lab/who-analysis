@@ -121,6 +121,10 @@ Parameters in the yaml file are as follows:
 14. <b>Tier 1+2</b>, WHO, no synonymous, <b>encode AF</b>
 15. Tier 1, <b>ALL</b>, no synonymous, <b>encode AF</b>
 16. <b>Tier 1+2, ALL</b>, no synonymous, <b>encode AF</b>
+
+### Final Analysis
+
+Run the top cells in the Jupyter notebook `analysis/analysis.ipynb` to write all model analyses to individual Excel files (one for each drug) and generate a summary Excel file for all drugs.
  
 ### Pooling LOF Mutations
     

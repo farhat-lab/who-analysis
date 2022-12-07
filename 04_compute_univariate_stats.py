@@ -265,21 +265,24 @@ continuous_analysis_paths = ["tiers=1/phenos=WHO/encodeAF_noSyn",
 df_phenos, df_genos, annotated_genos = get_genos_phenos(analysis_dir, drug)
 
 for path in all_analysis_paths:  
-    compute_statistics_single_model(os.path.join(analysis_dir, drug, path), df_phenos, df_genos, annotated_genos, alpha=0.05)
+    out_path = os.path.join(analysis_dir, drug, "BINARY", path)
+    compute_statistics_single_model(out_path, df_phenos, df_genos, annotated_genos, alpha=0.05)
     
 # reduce dataframe size for the WHO only analyses
 df_phenos = df_phenos.query("phenotypic_category=='WHO'")
 df_genos = df_genos.query("sample_id in @df_phenos.sample_id")
 
 for path in who_analysis_paths:
-    compute_statistics_single_model(os.path.join(analysis_dir, drug, path), df_phenos, df_genos, annotated_genos, alpha=0.05)
+    out_path = os.path.join(analysis_dir, drug, "BINARY", path)
+    compute_statistics_single_model(out_path, df_phenos, df_genos, annotated_genos, alpha=0.05)
     
 del df_phenos
 del df_genos
 
-# just add WHO 2021 confidence gradings, predicted effect, and Significance to these
+# just add predicted effect and Significance to these
 for path in continuous_analysis_paths:
-    res_df = pd.read_csv(os.path.join(analysis_dir, drug, path, "model_analysis.csv"))
+    out_path = os.path.join(analysis_dir, drug, "BINARY", path)
+    res_df = pd.read_csv(os.path.join(analysis_dir, drug, "BINARY", path, "model_analysis.csv"))
 
     res_df = res_df.merge(annotated_genos, on="mutation", how="outer")
     res_df = res_df.loc[~pd.isnull(res_df["coef"])]
@@ -290,7 +293,7 @@ for path in continuous_analysis_paths:
     res_df["Significant"] = res_df["Significant"].fillna(0).astype(int)
         
     res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval',
-       'Bonferroni_pval', 'Significant']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(analysis_dir, drug, path, "model_analysis_with_stats.csv"), index=False)
+       'Bonferroni_pval', 'Significant']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(out_path, "model_analysis_with_stats.csv"), index=False)
 
 print(f"Finished {drug}!")
 

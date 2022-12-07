@@ -21,12 +21,16 @@ who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
 # # combine with the new names to get a dataframe with the confidence leve,s and variant mappings between 2021 and 2022
 # who_variants_combined = who_variants.merge(variant_mapping[["V1", "mutation"]], left_on="variant", right_on="V1", how="inner")
 # del who_variants_combined["variant"]
+
+# # check that they have all the same variants
 # assert len(set(who_variants_combined["V1"]).symmetric_difference(set(who_variants["variant"]))) == 0
 
-# who_variants_combined = who_variants_combined.drop_duplicates()
-# who_variants_combined = who_variants_combined.dropna(subset=["drug", "genome_index", "confidence", "gene", "V1", "mutation"])
-# who_variants_combined[["drug", "confidence", "mutation"]].to_csv("analysis/who_confidence_2021.csv", index=False)
+# del who_variants_combined["genome_index"]
+# del who_variants_combined["gene"]
+# del who_variants_combined["V1"]
 
+# who_variants_combined = who_variants_combined.dropna().drop_duplicates()
+# who_variants_combined.to_csv("analysis/who_confidence_2021.csv", index=False)
 
 
 def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
