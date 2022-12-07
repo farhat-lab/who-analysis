@@ -1,0 +1,19 @@
+binary: true
+atu_analysis: false
+atu_analysis_type: CC
+pheno_category_lst:
+- ALL
+tiers_lst:
+- '1'
+- '2'
+unpooled: false
+synonymous: true
+amb_mode: DROP
+AF_thresh: 0.75
+missing_isolate_thresh: 0.01
+missing_feature_thresh: 0.25
+drop_isolates_before_variants: false
+impute: false
+num_PCs: 5
+num_bootstrap: 1000
+alpha: 0.05
