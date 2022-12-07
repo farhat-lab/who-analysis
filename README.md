@@ -87,8 +87,10 @@ Parameters in the yaml file are as follows:
     
 <ul>
     <li><code>binary</code>: boolean for whether to fit a binary or quantitative (MIC) model</li>
+    <li><code>atu_analysis</code>: boolean for whether this is the normal binary analysis or a CC vs. CC-ATU analysis</li>
+    <li><code>atu_analysis_type</code>: string "CC" or "CC-ATU" denoting which model to run in this analysis. Only used if <code>atu_analysis = True</code></li>
     <li><code>tiers_lst</code>: list of tiers to include in the model</li>
-    <li><code>pheno_category_lst</code>: list of phenotype categories to include. The list can include the strings WHO and ALL.</li>
+    <li><code>pheno_category_lst</code>: list of phenotype categories to include. The list can include the strings WHO and ALL. Only used if <code>binary = True</code> and <code>atu_analysis = False</code></li>
     <li><code>synonymous</code>: boolean for whether synonymous variants should be included</li>
     <li><code>pool_lof</code>: boolean for whether or not LOF variants should be pooled</li>
     <li><code>amb_mode</code>: how to handle mutations with intermediate AF. Options are DROP, AF, and BINARY. </li>
