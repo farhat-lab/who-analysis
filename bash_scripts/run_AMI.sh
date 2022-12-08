@@ -1,3 +1,13 @@
+#!/bin/bash 
+#SBATCH -c 10
+#SBATCH -t 0-11:59
+#SBATCH -p short 
+#SBATCH --mem=100G 
+#SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
+#SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=skulkarni@g.harvard.edu
+
 drug="Amikacin"
 drug_abbr="AMI"
 
@@ -27,4 +37,4 @@ for i in ${!config_array[@]}; do
     python3 -u 03_model_analysis.py "${config_array[$i]}" "$drug" "$drug_abbr"
 done
 
-python3 -u 04_compute_univariate_stats.py "$drug" "BINARY" /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue"
+python3 -u 04_compute_univariate_stats.py "$drug" "BINARY" "/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue"
