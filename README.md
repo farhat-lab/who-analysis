@@ -86,6 +86,8 @@ For every drug, run the following numbered scripts in order, with the `config.ya
 Parameters in the yaml file are as follows:
     
 <ul>
+    <li><code>input_dir</code>: Directory where all input directories are stored. Contains subfolders "grm", "phenotypes", and "full_genotypes".</li>
+    <li><code>output_dir</code>: Directory where model results will be stored.</li>
     <li><code>binary</code>: boolean for whether to fit a binary or quantitative (MIC) model</li>
     <li><code>atu_analysis</code>: boolean for whether this is the normal binary analysis or a CC vs. CC-ATU analysis</li>
     <li><code>atu_analysis_type</code>: string "CC" or "CC-ATU" denoting which model to run in this analysis. Only used if <code>atu_analysis = True</code></li>
@@ -104,7 +106,7 @@ Parameters in the yaml file are as follows:
     <li><code>alpha</code>: significance level</li>
 </ul>
 
-### Order of Models:
+### Order of Binary Models:
 
 1. Tier 1, WHO, no synonymous, DROP Hets
 2. Tier 1, WHO, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
@@ -125,8 +127,14 @@ Parameters in the yaml file are as follows:
 
 ### Final Analysis
 
-After all 16 models above have been run, run <code>04_compute_univariate_stats.py</code> to compute univariate statistics, 95% binomial confidence intervals, and add some other annotations for the mutations in all models (<b>TODO: Make this more efficient by eliminating redundant computations</b>). 
+After all 16 models above have been run, run <code>04_compute_univariate_stats.py</code> to compute univariate statistics, 95% binomial confidence intervals, and add some other annotations for the mutations in all models (<b>TODO: Make this more efficient by eliminating redundant computations</b>). This script requires the following arguments:
 
+<ul>
+    <li><code>drug</code> (same as the previous scripts)</li>
+    <li><code>folder</code> (should be one of "BINARY", "ATU", or "MIC", depending on the analysis</li>
+    <li><code>input_dir</code> (same as the previous scripts)</li>
+</ul>
+    
 Finally, run the top cells in the Jupyter notebook `analysis/analysis.ipynb` to write all model analyses to individual Excel files (one for each drug) and generate a summary Excel file for all drugs.
  
 ### Pooling LOF Mutations
