@@ -1,27 +1,23 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-plt.rcParams['figure.dpi'] = 150
 import scipy.stats as st
-import sys
-
-import glob, os, yaml
-import warnings
+import sys, glob, os, yaml, tracemalloc, warnings
 warnings.filterwarnings("ignore")
-import tracemalloc
 
 # starting the memory monitoring
 tracemalloc.start()
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
 
-def get_genos_phenos(analysis_dir, drug):
+def get_genos_phenos(analysis_dir, folder, drug):
     '''
-    This function gets the phenotype and genotype dataframes for a given drug. These are the same across models. 
+    This function gets the phenotype and genotype dataframes for a given drug. These are the same across models of the same type (i.e. all BINARY with WHO phenotypes, or all ATU models). 
     '''
         
-    df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv"))
+    df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, f"phenos_{folder.lower()}.csv"))
     df_genos = pd.read_csv(os.path.join(analysis_dir, drug, "genos.csv.gz"), compression="gzip")
+    
+    # get only samples that are in the phenotypes file (this is greater than or equal to the number of phenotypes actually used to fit the model because some get dropped)
+    df_genos = df_genos.query("sample_id in @df_phenos.sample_id")
 
     # get pooled mutations
     df_genos["mutation"] = df_genos["resolved_symbol"] + "_" + df_genos["variant_category"]
@@ -42,6 +38,7 @@ def get_genos_phenos(analysis_dir, drug):
     annotated_genos = df_genos.query("variant_category not in ['lof', 'inframe']").drop_duplicates(["mutation", "predicted_effect", "position"])[["mutation", "predicted_effect", "position"]]
 
     return df_phenos, df_genos, annotated_genos
+
 
 
 
@@ -156,10 +153,10 @@ def compute_likelihood_ratio_confidence_intervals(alpha, res_df):
 
 
 
-def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, alpha=0.05):
+def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05):
 
     # final_analysis file with all significant variants for a drug
-    old_df = pd.read_csv(os.path.join(model_path, "model_analysis.csv"))
+    old_df = pd.read_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"))
     res_df = old_df.copy()
     
     # check that all variants are there
@@ -233,71 +230,103 @@ def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_g
        'Bonferroni_pval', 'Significant', 'Num_Isolates', 'Total_Isolates', 'TP', 'FP', 'TN', 'FN', 'PPV', 'NPV', 'Sens', 'Spec',
        'LR+', 'LR-', 'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB',
        'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
-       ]].to_csv(os.path.join(model_path, "model_analysis_with_stats.csv"), index=False)
+       ]].to_csv(os.path.join(model_path, f"model_analysis_with_stats{model_suffix}.csv"), index=False)
+  
+
+
+def add_significance_predicted_effect(model_path, annotated_genos, model_suffix):
+    '''
+    Use this function for models in without binary inputs and outputs. This function just adds significance and predicted effect and saves the dataframe. 
+    '''
     
-
-_, drug = sys.argv
-
-who_analysis_paths = ["tiers=1/phenos=WHO/dropAF_noSyn",
-                  "tiers=1/phenos=WHO/dropAF_noSyn_unpooled",
-                  "tiers=1/phenos=WHO/dropAF_withSyn",
-                  "tiers=1+2/phenos=WHO/dropAF_noSyn",
-                  "tiers=1+2/phenos=WHO/dropAF_noSyn_unpooled",
-                  "tiers=1+2/phenos=WHO/dropAF_withSyn",
-]
-
-all_analysis_paths = ["tiers=1/phenos=ALL/dropAF_noSyn",
-                  "tiers=1/phenos=ALL/dropAF_noSyn_unpooled",
-                  "tiers=1/phenos=ALL/dropAF_withSyn",
-                  "tiers=1+2/phenos=ALL/dropAF_noSyn",
-                  "tiers=1+2/phenos=ALL/dropAF_noSyn_unpooled",
-                  "tiers=1+2/phenos=ALL/dropAF_withSyn",
-]
-
-continuous_analysis_paths = ["tiers=1/phenos=WHO/encodeAF_noSyn",
-                  "tiers=1+2/phenos=WHO/encodeAF_noSyn",
-                  "tiers=1/phenos=ALL/encodeAF_noSyn",
-                  "tiers=1+2/phenos=ALL/encodeAF_noSyn",
-]
-
-
-# get dataframes of mutations for WHO isolates only
-df_phenos, df_genos, annotated_genos = get_genos_phenos(analysis_dir, drug)
-
-for path in all_analysis_paths:  
-    out_path = os.path.join(analysis_dir, drug, "BINARY", path)
-    compute_statistics_single_model(out_path, df_phenos, df_genos, annotated_genos, alpha=0.05)
-    
-# reduce dataframe size for the WHO only analyses
-df_phenos = df_phenos.query("phenotypic_category=='WHO'")
-df_genos = df_genos.query("sample_id in @df_phenos.sample_id")
-
-for path in who_analysis_paths:
-    out_path = os.path.join(analysis_dir, drug, "BINARY", path)
-    compute_statistics_single_model(out_path, df_phenos, df_genos, annotated_genos, alpha=0.05)
-    
-del df_phenos
-del df_genos
-
-# just add predicted effect and Significance to these
-for path in continuous_analysis_paths:
-    out_path = os.path.join(analysis_dir, drug, "BINARY", path)
-    res_df = pd.read_csv(os.path.join(analysis_dir, drug, "BINARY", path, "model_analysis.csv"))
+    res_df = pd.read_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"))
 
     res_df = res_df.merge(annotated_genos, on="mutation", how="outer")
     res_df = res_df.loc[~pd.isnull(res_df["coef"])]
     res_df.loc[res_df["mutation"].str.contains("lof"), "predicted_effect"] = "lof"
     res_df.loc[res_df["mutation"].str.contains("inframe"), "predicted_effect"] = "inframe"
-    
+
     res_df.loc[res_df["BH_pval"] < 0.01, "Significant"] = 1
     res_df["Significant"] = res_df["Significant"].fillna(0).astype(int)
-        
+
     res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval',
-       'Bonferroni_pval', 'Significant']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(out_path, "model_analysis_with_stats.csv"), index=False)
+       'Bonferroni_pval', 'Significant']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis_with_stats{model_suffix}.csv"), index=False)
 
-print(f"Finished {drug}!")
+    
 
+_, drug, folder, analysis_dir = sys.argv
+
+# this is the intermediate folder
+folder = folder.upper()
+assert folder in ["BINARY", "ATU", "MIC"]
+
+# get dataframes of mutations for ALL isolates
+df_phenos, df_genos, annotated_genos = get_genos_phenos(analysis_dir, folder, drug)
+    
+# get all models for which to compute univariate statistics
+analysis_paths = []
+
+for tier in os.listdir(os.path.join(analysis_dir, drug, folder)):
+    tiers_path = os.path.join(analysis_dir, drug, folder, tier)
+
+    for level_1 in os.listdir(tiers_path):
+        level1_path = os.path.join(analysis_dir, drug, folder, tier, level_1)
+
+        if os.path.isfile(os.path.join(level1_path, "model_matrix.pkl")):
+            analysis_paths.append(level1_path)
+
+        for level_2 in os.listdir(level1_path):
+            level2_path = os.path.join(analysis_dir, drug, folder, tier, level_1, level_2)
+
+            if os.path.isfile(os.path.join(level2_path, "model_matrix.pkl")):
+                analysis_paths.append(level2_path)
+
+if folder == "BINARY":
+    print(f"Computing univariate statistics for {len(analysis_paths)} BINARY models")
+    model_suffix = ""
+
+    # compute the univariate statistics using the full dataframes for the ALL models
+    for model_path in analysis_paths:  
+        if "dropAF" in model_path:
+            if "phenos=ALL" in model_path:
+                compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
+        else:
+            add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
+        print(model_path)
+
+    # reduce dataframe size for the WHO only analyses
+    df_phenos = df_phenos.query("phenotypic_category=='WHO'")
+    df_genos = df_genos.query("sample_id in @df_phenos.sample_id")
+
+    # compute the univariate statistics using the subsetted dataframes for the WHO analyses
+    for model_path in analysis_paths:  
+        if "dropAF" in model_path and "phenos=WHO" in model_path:
+            compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
+        print(model_path)
+
+        
+elif folder == "ATU":
+    print(f"Computing univariate statistics for {len(analysis_paths)*2} CC and CC-ATU models")
+
+    for model_path in analysis_paths:  
+        for model_suffix in ["_CC", "_CC_ATU"]:
+            if "dropAF" in model_path:
+                compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
+            else:
+                add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
+        print(model_path)
+        
+else:
+    print(f"Computing univariate statistics for {len(analysis_paths)} MIC models")
+    model_suffix = ""
+    
+    # just add predicted effect and Significance to these because there are no positive or negative outputs (output is continuous MIC)
+    for model_path in analysis_paths:
+        add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
+        print(model_path)
+
+        
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
 tracemalloc.stop()
-print(f"{script_memory} GB\n")
+print(f"    {script_memory} GB\n")

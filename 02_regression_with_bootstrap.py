@@ -7,7 +7,6 @@ from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge
 import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
 
 ############# STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES #############
@@ -23,6 +22,7 @@ kwargs = yaml.safe_load(open(config_file))
 tiers_lst = kwargs["tiers_lst"]
 binary = kwargs["binary"]
 atu_analysis = kwargs["atu_analysis"]
+analysis_dir = kwargs["output_dir"]
 
 # double check. If running CC vs. CC-ATU analysis, they are binary phenotypes
 if atu_analysis:

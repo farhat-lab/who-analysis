@@ -8,7 +8,6 @@ import sys
 import glob, os, yaml
 import warnings
 warnings.filterwarnings("ignore")
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
 
 
@@ -94,6 +93,7 @@ def run_all(drug, drug_abbr, who_variants_combined, **kwargs):
     pheno_category_lst = kwargs["pheno_category_lst"]
     atu_analysis = kwargs["atu_analysis"]
     atu_analysis_type = kwargs["atu_analysis_type"]
+    analysis_dir = kwargs["output_dir"]
     
     if "ALL" in pheno_category_lst:
         phenos_name = "ALL"

@@ -1,8 +1,8 @@
 #!/bin/bash 
 #SBATCH -c 10
-#SBATCH -t 0-11:59
+#SBATCH -t 0-04:00
 #SBATCH -p short 
-#SBATCH --mem=100G 
+#SBATCH --mem=50G 
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
@@ -31,10 +31,10 @@ config_array=(
  'config_files/binary_16.yaml'
 )
 
-for i in ${!config_array[@]}; do 
+for i in ${!config_array[@]}; do
     python3 -u 01_make_model_inputs.py "${config_array[$i]}" "$drug" "$drug_abbr"
     python3 -u 02_regression_with_bootstrap.py "${config_array[$i]}" "$drug" "$drug_abbr"
     python3 -u 03_model_analysis.py "${config_array[$i]}" "$drug" "$drug_abbr"
 done
 
-python3 -u 04_compute_univariate_stats.py "$drug"
+python3 -u 04_compute_univariate_stats.py "$drug" "BINARY" /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue"

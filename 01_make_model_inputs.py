@@ -4,7 +4,6 @@ import glob, os, yaml, sys
 import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 drug_gene_mapping = pd.read_csv("data/drug_gene_mapping.csv")
 
 
@@ -21,6 +20,8 @@ kwargs = yaml.safe_load(open(config_file))
 tiers_lst = kwargs["tiers_lst"]
 binary = kwargs["binary"]
 atu_analysis = kwargs["atu_analysis"]
+input_data_dir = kwargs["input_dir"]
+analysis_dir = kwargs["output_dir"]
 
 # double check. If running CC vs. CC-ATU analysis, they are binary phenotypes
 if atu_analysis:
@@ -78,19 +79,19 @@ if not os.path.isdir(out_dir):
 print(f"\nSaving model results to {out_dir}")            
 
 if binary:
-    phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
+    phenos_dir = os.path.join(input_data_dir, "phenotypes")
     pheno_col = "phenotype"
     if atu_analysis:
         phenos_file = os.path.join(analysis_dir, drug, "phenos_atu.csv")
     else:
         phenos_file = os.path.join(analysis_dir, drug, "phenos_binary.csv")
 else:
-    phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/mic'
+    phenos_dir = os.path.join(input_data_dir, "mic")
     phenos_file = os.path.join(analysis_dir, drug, "phenos_mic.csv")
     pheno_col = "mic_value"
     
 phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
-genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
+genos_dir = os.path.join(input_data_dir, "full_genotypes")
 genos_file = os.path.join(analysis_dir, drug, "genos.csv.gz")
 
 

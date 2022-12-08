@@ -1,3 +1,5 @@
+input_dir: /n/data1/hms/dbmi/farhat/ye12/who
+output_dir: /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue
 binary: true
 atu_analysis: false
 atu_analysis_type: CC
@@ -16,3 +18,4 @@ impute: false
 num_PCs: 5
 num_bootstrap: 1000
 alpha: 0.05
+model_prefix: dropAF_withSyn

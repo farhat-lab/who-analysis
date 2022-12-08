@@ -1,18 +1,11 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-plt.rcParams['figure.dpi'] = 150
 import scipy.stats as st
-import sys
-
-import glob, os, yaml
-import warnings
+import sys, glob, os, yaml, tracemalloc, warnings
 warnings.filterwarnings("ignore")
-import tracemalloc
 
 # starting the memory monitoring
 tracemalloc.start()
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
 
 def get_genos_phenos(analysis_dir, drug):
@@ -242,7 +235,7 @@ def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_g
        ]].to_csv(os.path.join(model_path, f"model_analysis_with_stats_{model_suffix}.csv"), index=False)
     
 
-_, drug = sys.argv
+_, drug, analysis_dir = sys.argv
 
 analysis_paths = []
 

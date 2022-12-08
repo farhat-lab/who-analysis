@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, sparse, itertools
+import glob, os, yaml, sparse, itertools, sys, warnings
 from Bio import Seq, SeqIO
-import warnings
 warnings.filterwarnings("ignore")
 
 
@@ -12,10 +11,14 @@ warnings.filterwarnings("ignore")
 # It also generates the minor allele counts dataframe from the GRM directory. 
 # Principal components are computed from this dataframe for lineage structure correction.
 
-snp_dir = "/n/data1/hms/dbmi/farhat/ye12/who/grm"
-genos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/full_genotypes'
-phenos_dir = '/n/data1/hms/dbmi/farhat/ye12/who/phenotypes'
-mic_dir = '/n/data1/hms/dbmi/farhat/ye12/who/mic'
+
+# default for Farhat analysis: input_data_dir = "/n/data1/hms/dbmi/farhat/ye12/who"
+_, input_data_dir = sys.argv
+
+snp_dir = os.path.join(input_data_dir, "grm")
+genos_dir = os.path.join(input_data_dir, "full_genotypes")
+phenos_dir = os.path.join(input_data_dir, "phenotypes")
+mic_dir = os.path.join(input_data_dir, "mic")
 
 pheno_drugs = os.listdir(phenos_dir)
 geno_drugs = os.listdir(genos_dir)
@@ -169,4 +172,4 @@ if len(summary_df.query("Genos != Binary_Phenos")) > 0:
 if len(summary_df.query("Genos != SNP_Matrix")) > 0:
     print("There are different numbers of genotypes and SNP matrix entries")
     
-summary_df.sort_values("Drug", ascending=True).to_csv("data/samples_summary_new.csv", index=False)
+summary_df.sort_values("Drug", ascending=True).to_csv("data/samples_summary.csv", index=False)
