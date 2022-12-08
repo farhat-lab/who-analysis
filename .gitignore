@@ -4,6 +4,9 @@ __pycache__/
 # scratch notebook
 sandbox.ipynb
 
+# config_files -- they keep getting updated as models are run, so can cause merge conflicts
+config_files/
+
 # confidential information
 data/sample_ids_mapping.csv
 data/lineages.csv
