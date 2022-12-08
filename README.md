@@ -87,7 +87,7 @@ Parameters in the yaml file are as follows:
     
 <ul>
     <li><code>input_dir</code>: Directory where all input directories are stored. Contains subfolders "grm", "phenotypes", and "full_genotypes".</li>
-    <li><code>output_dir</code>: Directory where model results will be stored.</li>
+    <li><code>output_dir</code>: Directory where model results will be written.</li>
     <li><code>binary</code>: boolean for whether to fit a binary or quantitative (MIC) model</li>
     <li><code>atu_analysis</code>: boolean for whether this is the normal binary analysis or a CC vs. CC-ATU analysis</li>
     <li><code>atu_analysis_type</code>: string "CC" or "CC-ATU" denoting which model to run in this analysis. Only used if <code>atu_analysis = True</code></li>
