@@ -231,6 +231,8 @@ def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_g
        'LR+', 'LR-', 'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB',
        'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
        ]].to_csv(os.path.join(model_path, f"model_analysis_with_stats{model_suffix}.csv"), index=False)
+    
+    print(model_path)
   
 
 
@@ -292,7 +294,6 @@ if folder == "BINARY":
                 compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
         else:
             add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
-        print(model_path)
 
     # reduce dataframe size for the WHO only analyses
     df_phenos = df_phenos.query("phenotypic_category=='WHO'")
@@ -302,7 +303,6 @@ if folder == "BINARY":
     for model_path in analysis_paths:  
         if "dropAF" in model_path and "phenos=WHO" in model_path:
             compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
-        print(model_path)
 
         
 elif folder == "ATU":
@@ -314,7 +314,6 @@ elif folder == "ATU":
                 compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
             else:
                 add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
-        print(model_path)
         
 else:
     print(f"Computing univariate statistics for {len(analysis_paths)} MIC models")
@@ -323,7 +322,6 @@ else:
     # just add predicted effect and Significance to these because there are no positive or negative outputs (output is continuous MIC)
     for model_path in analysis_paths:
         add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
-        print(model_path)
 
         
 # returns a tuple: current, peak memory in bytes 
