@@ -29,7 +29,8 @@ who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
 # del who_variants_combined["gene"]
 # del who_variants_combined["V1"]
 
-# who_variants_combined = who_variants_combined.dropna().drop_duplicates()
+# # some V1 mutations were combined into a single V2 mutation, so they may have multiple confidences listed. Keep the highest confidence instance
+# who_variants_combined = who_variants_combined.dropna().sort_values("confidence", ascending=True).drop_duplicates(subset=["drug", "mutation"], keep="first")
 # who_variants_combined.to_csv("analysis/who_confidence_2021.csv", index=False)
 
 
