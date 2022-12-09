@@ -2,7 +2,7 @@
 #SBATCH -c 10
 #SBATCH -t 0-04:00
 #SBATCH -p short 
-#SBATCH --mem=50G 
+#SBATCH --mem=250G 
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
