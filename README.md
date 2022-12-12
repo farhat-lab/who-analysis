@@ -94,7 +94,7 @@ Parameters in the yaml file are as follows:
     <li><code>tiers_lst</code>: list of tiers to include in the model</li>
     <li><code>pheno_category_lst</code>: list of phenotype categories to include. The list can include the strings WHO and ALL. Only used if <code>binary = True</code> and <code>atu_analysis = False</code></li>
     <li><code>synonymous</code>: boolean for whether synonymous variants should be included</li>
-    <li><code>unpooled</code>: boolean for whether or not LOF mutations and inframe mutations should be unpooled. By default, the features are pooled into an aggregate "LOF" feature and an aggregate "inframe" feature</li>
+    <li><code>pool_type</code>: one of 3 strings (<code>poolSeparate</code>, <code>poolALL</code>, or <code>unpooled</code>. The first pools features into 2 aggregate features: "LOF" and "inframe". The second pools both into a combined feature "LOF_all," and the third disaggregates all features.</li>
     <li><code>amb_mode</code>: how to handle mutations with intermediate AF. Options are DROP, AF, and BINARY. </li>
     <li><code>missing_isolate_thresh</code>: threshold for missing isolates (0-1). i.e. if an isolate has more than N% of variants missing, drop it.</li>
     <li><code>missing_feature_thresh</code>: threshold for missing variants (0-1), i.e. if a variant has more than N% of isolates missing, drop it.</li>
@@ -108,22 +108,26 @@ Parameters in the yaml file are as follows:
 
 ### Order of Binary Models:
 
-1. Tier 1, WHO, no synonymous, DROP Hets
-2. Tier 1, WHO, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
-3. Tier 1, WHO, <b>with synonymous</b>, DROP Hets
-4. <b>Tier 1+2</b>, WHO, no synonymous, DROP Hets
-5. <b>Tier 1+2</b>, WHO, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
-6. <b>Tier 1+2</b>, WHO, <b>with synonymous</b>, DROP Hets
-7. Tier 1, <b>ALL</b>, no synonymous, DROP Hets
-8. Tier 1, ALL, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
-9. Tier 1, <b>ALL, with synonymous</b>, DROP Hets
-10. <b>Tier 1+2, ALL</b>, no synonymous, DROP Hets
-11. <b>Tier 1+2, ALL</b>, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
-12. <b>Tier 1+2, ALL</b>, <b>with synonymous</b>, DROP Hets
-13. Tier 1, WHO, no synonymous, <b>encode AF</b>
-14. <b>Tier 1+2</b>, WHO, no synonymous, <b>encode AF</b>
-15. Tier 1, <b>ALL</b>, no synonymous, <b>encode AF</b>
-16. <b>Tier 1+2, ALL</b>, no synonymous, <b>encode AF</b>
+1. Tier 1, WHO, no synonymous, DROP Hets, pool LOF and inframe mutations SEPARATELY
+2. Tier 1, WHO, no synonymous, DROP Hets, <b>pool LOF and inframe mutations TOGETHER</b>
+3. Tier 1, WHO, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
+4. Tier 1, WHO, <b>with synonymous</b>, DROP Hets, pool LOF and inframe mutations SEPARATELY
+5. <b>Tier 1+2</b>, WHO, no synonymous, DROP Hets, pool LOF and inframe mutations SEPARATELY
+6. <b>Tier 1+2</b>, WHO, no synonymous, DROP Hets, <b>pool LOF and inframe mutations TOGETHER</b>
+7. <b>Tier 1+2</b>, WHO, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
+8. <b>Tier 1+2</b>, WHO, <b>with synonymous</b>, DROP Hets, pool LOF and inframe mutations SEPARATELY
+9. Tier 1, <b>ALL</b>, no synonymous, DROP Hets, pool LOF and inframe mutations SEPARATELY
+10. Tier 1, <b>ALL</b>, no synonymous, DROP Hets, <b>pool LOF and inframe mutations TOGETHER</b>
+11. Tier 1, ALL, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
+12. Tier 1, <b>ALL, with synonymous</b>, DROP Hets, pool LOF and inframe mutations SEPARATELY
+13. <b>Tier 1+2, ALL</b>, no synonymous, DROP Hets, pool LOF and inframe mutations SEPARATELY
+14. <b>Tier 1+2, ALL</b>, no synonymous, DROP Hets, <b>pool LOF and inframe mutations TOGETHER</b>
+15. <b>Tier 1+2, ALL</b>, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
+16. <b>Tier 1+2, ALL</b>, <b>with synonymous</b>, DROP Hets, pool LOF and inframe mutations SEPARATELY
+17. Tier 1, WHO, no synonymous, <b>encode AF</b>, pool LOF and inframe mutations SEPARATELY
+18. <b>Tier 1+2</b>, WHO, no synonymous, <b>encode AF</b>, pool LOF and inframe mutations SEPARATELY
+19. Tier 1, <b>ALL</b>, no synonymous, <b>encode AF</b>, pool LOF and inframe mutations SEPARATELY
+20. <b>Tier 1+2, ALL</b>, no synonymous, <b>encode AF</b>, pool LOF and inframe mutations SEPARATELY
 
 ### Final Analysis
 
