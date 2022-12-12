@@ -94,7 +94,7 @@ Parameters in the yaml file are as follows:
     <li><code>tiers_lst</code>: list of tiers to include in the model</li>
     <li><code>pheno_category_lst</code>: list of phenotype categories to include. The list can include the strings WHO and ALL. Only used if <code>binary = True</code> and <code>atu_analysis = False</code></li>
     <li><code>synonymous</code>: boolean for whether synonymous variants should be included</li>
-    <li><code>pool_type</code>: one of 3 strings (<code>poolSeparate</code>, <code>poolALL</code>, or <code>unpooled</code>. The first pools features into 2 aggregate features: "LOF" and "inframe". The second pools both into a combined feature "LOF_all," and the third disaggregates all features.</li>
+    <li><code>pool_type</code>: one of 3 strings (<code>poolSeparate</code>, <code>poolALL</code>, or <code>unpooled</code>). The first pools features into 2 aggregate features: "LOF" and "inframe". The second pools both into a combined feature "LOF_all," and the third disaggregates all features.</li>
     <li><code>amb_mode</code>: how to handle mutations with intermediate AF. Options are DROP, AF, and BINARY. </li>
     <li><code>missing_isolate_thresh</code>: threshold for missing isolates (0-1). i.e. if an isolate has more than N% of variants missing, drop it.</li>
     <li><code>missing_feature_thresh</code>: threshold for missing variants (0-1), i.e. if a variant has more than N% of isolates missing, drop it.</li>
@@ -140,12 +140,6 @@ After all 20 models above have been run, run <code>04_compute_univariate_stats.p
 </ul>
     
 Finally, run the top cells in the Jupyter notebook `analysis/analysis.ipynb` to write all model analyses to individual Excel files (one for each drug) and generate a summary Excel file for all drugs.
- 
-### Pooling LOF Mutations
-    
-If the argument `pool_lof` is set to True, then LOF mutations are pooled for each (sample, gene) pair. A custom function is used for this so that genes containing multiple frameshift mutations are not considered LOF. If this is decided against, then pooling can be done on the `Effect` column in the genotypes dataframes. 
-    
-When an LOF variant (i.e. loss of start or stop codons, early stop, large deletion) and multiple frameshift mutations co-occur, LOF will be generated as a new feature, and the frameshift mutations will remain as additional features. If an LOF variant co-occurs with a single frameshift mutation, then they are pooled into a single LOF feature. 
 
 ### Intermediate Allele Frequencies
 
