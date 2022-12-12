@@ -41,7 +41,7 @@ amb_mode = kwargs["amb_mode"]
 AF_thresh = kwargs["AF_thresh"]
 impute = kwargs["impute"]
 synonymous = kwargs["synonymous"]
-unpooled = kwargs["unpooled"]
+pool_type = kwargs["pool_type"]
 
 if amb_mode == "DROP":
     model_prefix = "dropAF"
@@ -57,8 +57,7 @@ if synonymous:
 else:
     model_prefix += "_noSyn"
     
-if unpooled:
-    model_prefix += "_unpooled" 
+model_prefix += f"_{pool_type}"
     
 # add to config file for use in the second and third scripts
 kwargs["model_prefix"] = model_prefix
@@ -271,10 +270,15 @@ def pool_mutations(df, effect_lst, pool_col):
     return pd.concat([df_pooled, df.query("variant_category != @pool_col")], axis=0)
 
 
-if not unpooled:
-    print("Pooling LOF and inframe mutations ")
+# options for pool_type are unpooled, poolSeparate, and poolALL
+if pool_type == "poolSeparate":
+    print("Pooling LOF and inframe mutations separately")
     df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation"], "lof")
     df_model = pool_mutations(df_model, ["inframe_insertion", "inframe_deletion"], "inframe")
+
+elif pool_type == "poolALL":
+    print("Pooling LOF and inframe mutations together into a single feature")
+    df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation", "inframe_insertion", "inframe_deletion"], "lof_all")
 
 
 ############# STEP 4: PROCESS AMBIGUOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #############
@@ -289,7 +293,6 @@ if amb_mode == "BINARY":
 # use ambiguous AF as the matrix value for variants with AF > 0.25. Below 0.25, the AF measurements aren't reliable
 elif amb_mode == "AF":
     print("Encoding ambiguous variants with their AF")
-    
     # encode all variants with AF > 0.25 with their AF
     df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_binary_status"] = df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_allele_frequency"].values
    

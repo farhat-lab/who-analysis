@@ -9,7 +9,7 @@ pheno_category_lst:
 tiers_lst:
 - '1'
 - '2'
-unpooled: false
+pool_type: "poolSeparate"
 synonymous: false
 amb_mode: DROP
 AF_thresh: 0.75

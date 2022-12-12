@@ -12,7 +12,7 @@ who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
 
 
 ############# CODE TO MAKE THE COMBINE WHO 2021 VARIANTS + CONFIDENCES FILE #############
-# who_variants = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/WHO_resistance_variants_all.csv")
+# who_variants = pd.read_csv("analysis/who_resistance_variants_all.csv")
 # variant_mapping = pd.read_csv("data/v1_to_v2_variants_mapping.csv", usecols=["gene_name", "variant", "raw_variant_mapping_data.variant_category"])
 # variant_mapping.columns = ["gene", "V1", "V2"]
 # variant_mapping["mutation"] = variant_mapping["gene"] + "_" + variant_mapping["V2"]
