@@ -131,7 +131,7 @@ Parameters in the yaml file are as follows:
 
 ### Final Analysis
 
-After all 16 models above have been run, run <code>04_compute_univariate_stats.py</code> to compute univariate statistics, 95% binomial confidence intervals, and add some other annotations for the mutations in all models (<b>TODO: Make this more efficient by eliminating redundant computations</b>). This script requires the following arguments:
+After all 20 models above have been run, run <code>04_compute_univariate_stats.py</code> to compute univariate statistics, 95% binomial confidence intervals, and add some other annotations for the mutations in all models. This script requires the following arguments:
 
 <ul>
     <li><code>drug</code> (same as the previous scripts)</li>
