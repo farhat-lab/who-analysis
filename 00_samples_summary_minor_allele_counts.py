@@ -159,7 +159,7 @@ for drug in drugs_for_analysis:
                          num_lof_tier1,
                          num_inframe_tier1,
                          num_lof_tier2,
-                         num_inframe_tier2
+                         num_inframe_tier2,
                         ]
     i += 1
         

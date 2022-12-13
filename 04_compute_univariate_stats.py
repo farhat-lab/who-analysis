@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import scipy.stats as st
+from scipy.stats import binomtest
 import sys, glob, os, yaml, tracemalloc, warnings
 warnings.filterwarnings("ignore")
 
@@ -31,18 +32,26 @@ def get_genos_phenos(analysis_dir, folder, drug):
     df_copy["mutation"] = df_copy["resolved_symbol"] + "_" + df_copy["variant_category"]
     df_pooled = df_copy.query(f"variant_category in ['lof', 'inframe']").sort_values(by=["variant_binary_status", "variant_allele_frequency"], ascending=False, na_position="last").drop_duplicates(subset=["sample_id", "mutation"], keep="first")
     del df_copy
-    df_genos = pd.concat([df_genos, df_pooled], axis=0)
+    
+    # df_pooled is already sorted by variant_allele_frequency and variant_binary_status
+    # drop duplicates by sample and gene to get a pooled LOF all feature for each (sample, gene) pair
+    df_pooled_all = df_pooled.drop_duplicates(subset=["sample_id", "resolved_symbol"], keep="first")
+    df_pooled_all["variant_category"] = "lof_all"
+    df_pooled_all["mutation"] = df_pooled_all["resolved_symbol"] + "_" + df_pooled_all["variant_category"]
+
+    df_genos = pd.concat([df_genos, df_pooled, df_pooled_all], axis=0)
     del df_pooled
+    del df_pooled_all
     
     # get annotations for mutations to combine later. Exclude lof and inframe, these will be manually replaced later
-    annotated_genos = df_genos.query("variant_category not in ['lof', 'inframe']").drop_duplicates(["mutation", "predicted_effect", "position"])[["mutation", "predicted_effect", "position"]]
+    annotated_genos = df_genos.query("variant_category not in ['lof', 'inframe', 'lof_all']").drop_duplicates(["mutation", "predicted_effect", "position"])[["mutation", "predicted_effect", "position"]]
 
     return df_phenos, df_genos, annotated_genos
 
 
 
 
-def compute_univariate_stats(combined_df, variant_coef_dict, return_stats=[]):
+def compute_univariate_stats(combined_df, variant_coef_dict):
     '''
     Compute positive predictive value. 
     Compute sensitivity, specificity, and positive and negative likelihood ratios. 
@@ -101,44 +110,46 @@ def compute_univariate_stats(combined_df, variant_coef_dict, return_stats=[]):
     final["LR+"] = final["Sens"] / (1 - final["Spec"])
     final["LR-"] = (1 - final["Sens"]) / final["Spec"]
     
-    if len(return_stats) == 0:
-        return final[["mutation", "Num_Isolates", "Total_Isolates", "TP", "FP", "TN", "FN", "PPV", "NPV", "Sens", "Spec", "LR+", "LR-"]]
-    else:
-        return final[return_stats]
+    return final[["mutation", "Num_Isolates", "Total_Isolates", "TP", "FP", "TN", "FN", "PPV", "NPV", "Sens", "Spec", "LR+", "LR-"]]
     
 
 
-def compute_wilson_conf_interval(var, alpha, res_df):
-    '''
-    Compute confidence intervals for values that range between 0 and 1. Use this for sensitivity, specificity, and PPV. 
-    Both the normal approximation (i.e. Wald interval) and  Wilson interval are used for such binomial cases. 
-    But the Wilson interval is preferred when the number of trials (big N) is small or the probabilities are extreme (i.e. 0 or 1)
+def compute_exact_confidence_intervals(res_df, alpha):
     
-    There are many cases of extreme sensitivity, specificity, or PPV in this analysis, so we will use Wilson intervals. 
-    '''
+    res_df = res_df.reset_index(drop=True)
     
-    if var == "PPV":
-        N = res_df["TP"] + res_df["FP"]
-    elif var == "NPV":
-        N = res_df["TN"] + res_df["FN"]
-    elif var == "Sens":
-        N = res_df["TP"] + res_df["FN"]
-    elif var == "Spec":
-        N = res_df["TN"] + res_df["FP"]
+    # add exact binomial confidence intervals for the binomial variables. The other two will be done in another function
+    for i, row in res_df.iterrows():
         
-    z = np.abs(st.t.ppf(q=alpha/2, df=N, loc=0, scale=1))
-    
-    center = 1 / (1 + z**2 / N) * (res_df[var] + z**2 / (2 * N))
-
-    error = z / (1 + z**2 / N) * np.sqrt(res_df[var] * (1 - res_df[var]) / N + z**2 / (4 * N**2))
+        # will be null for the principal components, so skip them
+        if not pd.isnull(row["TP"]):
+            
+            # binomtest requires the numbers to be integers
+            row[["TP", "FP", "TN", "FN"]] = row[["TP", "FP", "TN", "FN"]].astype(int)
         
-    return (center - error, center + error)
+            # PPV
+            ci = binomtest(k=row["TP"], n=row["TP"] + row["FP"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
+            res_df.loc[i, ["PPV_LB", "PPV_UB"]] = [ci.low, ci.high]
+            
+            # NPV
+            ci = binomtest(k=row["TN"], n=row["TN"] + row["FN"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
+            res_df.loc[i, ["NPV_LB", "NPV_UB"]] = [ci.low, ci.high]
+            
+            # Sensitivity
+            ci = binomtest(k=row["TP"], n=row["TP"] + row["FN"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
+            res_df.loc[i, ["Sens_LB", "Sens_UB"]] = [ci.low, ci.high]
+            
+            # Specificity
+            ci = binomtest(k=row["TN"], n=row["TN"] + row["FP"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
+            res_df.loc[i, ["Spec_LB", "Spec_UB"]] = [ci.low, ci.high]
+    
+    return res_df
 
 
     
-def compute_likelihood_ratio_confidence_intervals(alpha, res_df):
+def compute_likelihood_ratio_confidence_intervals(res_df, alpha):
     
-    z = np.abs(st.t.ppf(q=alpha/2, df=res_df["Total_Isolates"]-1, loc=0, scale=1))
+    z = np.abs(st.norm.ppf(q=alpha/2))
     
     LRpos_error = np.exp(z * np.sqrt(1/res_df["TP"] - 1/(res_df["TP"] + res_df["FN"]) + 1/res_df["FP"] - 1/(res_df["FP"] + res_df["TN"])))
     LRneg_error = np.exp(z * np.sqrt(1/res_df["FN"] - 1/(res_df["TP"] + res_df["FN"]) + 1/res_df["TN"] - 1/(res_df["FP"] + res_df["TN"])))
@@ -175,22 +186,17 @@ def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_g
     res_df = res_df.merge(full_predict_values, on="mutation", how="outer").drop_duplicates("mutation", keep="first")
     
     # add confidence intervals for all stats except the likelihood ratios
-    for var in ["PPV", "NPV", "Sens", "Spec"]:
-        
-        var_lb, var_ub = compute_wilson_conf_interval(var, alpha, res_df)
-        
-        # in case there are any numbers outside the range [0, 1] 
-        res_df[f"{var}_LB"] = np.max([var_lb, np.zeros(len(res_df))], axis=0)
-        res_df[f"{var}_UB"] = np.min([var_ub, np.ones(len(res_df))], axis=0)
+    res_df = compute_exact_confidence_intervals(res_df, alpha)
 
     # add confidence intervals for the likelihood ratios
-    res_df = compute_likelihood_ratio_confidence_intervals(alpha, res_df)
+    res_df = compute_likelihood_ratio_confidence_intervals(res_df, alpha)
         
     # get effect annotations and merge them with the results dataframe
     res_df = res_df.merge(annotated_genos, on="mutation", how="outer")
     res_df = res_df.loc[~pd.isnull(res_df["coef"])]
-    res_df.loc[res_df["mutation"].str.contains("lof"), "predicted_effect"] = "lof"
-    res_df.loc[res_df["mutation"].str.contains("inframe"), "predicted_effect"] = "inframe"
+    res_df.loc[(res_df["mutation"].str.contains("lof")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "lof"
+    res_df.loc[(res_df["mutation"].str.contains("inframe")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "inframe"
+    res_df.loc[res_df["mutation"].str.contains("all"), "predicted_effect"] = "lof_all"
         
     # predicted effect should only be NaN for PCs. position is NaN only for the pooled mutations and PCs
     assert len(res_df.loc[(pd.isnull(res_df["predicted_effect"])) & (~res_df["mutation"].str.contains("|".join(["PC"])))]) == 0
@@ -203,7 +209,8 @@ def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_g
     assert len(res_df.loc[~res_df["mutation"].str.contains("PC")][pd.isnull(res_df[['Num_Isolates', 'Total_Isolates', 'TP', 'FP', 'TN', 'FN', 'PPV', 'NPV', 'Sens', 'Spec', 'LR+', 'LR-',
                                    'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB', 'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR-_LB', 'LR-_UB']]).any(axis=1)]) == 0
         
-    # check confidence intervals. LB ≤ var ≤ UB, and no confidence intervals have width 0
+    # check confidence intervals. LB ≤ var ≤ UB, and no confidence intervals have width 0. When the probability is 0 or 1, there are numerical precision issues
+    # i.e. python says 1 != 1. So ignore those cases when checking
     for var in ["PPV", "NPV", "Sens", "Spec", "LR+", "LR-"]:
         assert len(res_df.loc[(~res_df[var].isin([0, 1])) & (res_df[var] < res_df[f"{var}_LB"])]) == 0
         assert len(res_df.loc[(~res_df[var].isin([0, 1])) & (res_df[var] > res_df[f"{var}_UB"])]) == 0
@@ -212,7 +219,7 @@ def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_g
         assert np.min(width) > 0
     
     # add significance. encodeAF not included in this one because only the HET == DROP models should be passed in here
-    secondary_analysis_criteria = ["+2", "ALL", "unpooled", "withSyn"]
+    secondary_analysis_criteria = ["+2", "ALL", "unpooled", "poolALL", "withSyn"]
     significance_thresh = 0.05
     
     # if any of the secondary analysis criteria are met, change the threshold
@@ -245,8 +252,9 @@ def add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
 
     res_df = res_df.merge(annotated_genos, on="mutation", how="outer")
     res_df = res_df.loc[~pd.isnull(res_df["coef"])]
-    res_df.loc[res_df["mutation"].str.contains("lof"), "predicted_effect"] = "lof"
-    res_df.loc[res_df["mutation"].str.contains("inframe"), "predicted_effect"] = "inframe"
+    res_df.loc[(res_df["mutation"].str.contains("lof")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "lof"
+    res_df.loc[(res_df["mutation"].str.contains("inframe")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "inframe"
+    res_df.loc[res_df["mutation"].str.contains("all"), "predicted_effect"] = "lof_all"
 
     res_df.loc[res_df["BH_pval"] < 0.01, "Significant"] = 1
     res_df["Significant"] = res_df["Significant"].fillna(0).astype(int)
