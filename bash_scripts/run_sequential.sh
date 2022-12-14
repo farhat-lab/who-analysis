@@ -53,6 +53,10 @@ config_array=(
  'config_files/binary_14.yaml'
  'config_files/binary_15.yaml'
  'config_files/binary_16.yaml'
+ 'config_files/binary_17.yaml'
+ 'config_files/binary_18.yaml'
+ 'config_files/binary_19.yaml'
+ 'config_files/binary_20.yaml'
 )
 
 for k in ${!drug_array[@]}; do
