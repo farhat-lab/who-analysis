@@ -179,6 +179,8 @@ if not os.path.isfile(phenos_file):
 
     # check that there is resistance data for all samples
     assert sum(pd.isnull(df_phenos[pheno_col])) == 0
+    
+    # additional checks
     if binary:
         assert sum(np.unique(df_phenos["phenotype"]) != np.array(['R', 'S'])) == 0
         df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})

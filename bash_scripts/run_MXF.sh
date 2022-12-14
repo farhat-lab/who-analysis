@@ -1,12 +1,13 @@
 #!/bin/bash 
 #SBATCH -c 10
-#SBATCH -t 0-04:00
+#SBATCH -t 0-11:59
 #SBATCH -p short 
 #SBATCH --mem=50G 
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=skulkarni@g.harvard.edu
+
 
 drug="Moxifloxacin"
 drug_abbr="MXF"
@@ -21,6 +22,10 @@ config_array=(
  'config_files/atu_06.yaml'
  'config_files/atu_07.yaml'
  'config_files/atu_08.yaml'
+ 'config_files/atu_09.yaml'
+ 'config_files/atu_10.yaml'
+ 'config_files/atu_11.yaml'
+ 'config_files/atu_12.yaml'
 )
 
 for i in ${!config_array[@]}; do

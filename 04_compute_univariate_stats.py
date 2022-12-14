@@ -245,7 +245,7 @@ def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_g
 
 def add_significance_predicted_effect(model_path, annotated_genos, model_suffix):
     '''
-    Use this function for models in without binary inputs and outputs. This function just adds significance and predicted effect and saves the dataframe. 
+    Use this function for models without binary inputs and outputs. This function just adds significance and predicted effect and saves the dataframe. 
     '''
     
     res_df = pd.read_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"))
@@ -256,11 +256,17 @@ def add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
     res_df.loc[(res_df["mutation"].str.contains("inframe")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "inframe"
     res_df.loc[res_df["mutation"].str.contains("all"), "predicted_effect"] = "lof_all"
 
+    # use p-value threshold of 0.01 because this function will be used for secondary analyses (non-binary inputs (encodeAF) /outputs (MICs))
     res_df.loc[res_df["BH_pval"] < 0.01, "Significant"] = 1
     res_df["Significant"] = res_df["Significant"].fillna(0).astype(int)
 
-    res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval',
-       'Bonferroni_pval', 'Significant']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis_with_stats{model_suffix}.csv"), index=False)
+    # no odds ratios, save coefficients
+    if "MIC" in model_path:
+        res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'coef_LB', 'coef_UB', 'pval', 'BH_pval', 'Bonferroni_pval', 'Significant']].sort_values("coef", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis_with_stats{model_suffix}.csv"), index=False)
+    
+    # save odds ratios
+    else:
+        res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval','Bonferroni_pval', 'Significant']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis_with_stats{model_suffix}.csv"), index=False)
 
     
 
@@ -270,9 +276,10 @@ _, drug, folder, analysis_dir = sys.argv
 folder = folder.upper()
 assert folder in ["BINARY", "ATU", "MIC"]
 
-# get dataframes of mutations for ALL isolates
+# get dataframes of genotypes and phenotypes. the folder argument ensures that we get only samples with CC and CC-ATU phenotypes, instead of all of them
 df_phenos, df_genos, annotated_genos = get_genos_phenos(analysis_dir, folder, drug)
-    
+print(df_phenos.shape, df_genos.shape, annotated_genos.shape)
+
 # get all models for which to compute univariate statistics
 analysis_paths = []
 
@@ -306,6 +313,7 @@ if folder == "BINARY":
     # reduce dataframe size for the WHO only analyses
     df_phenos = df_phenos.query("phenotypic_category=='WHO'")
     df_genos = df_genos.query("sample_id in @df_phenos.sample_id")
+    print(df_phenos.shape, df_genos.shape)
 
     # compute the univariate statistics using the subsetted dataframes for the WHO analyses
     for model_path in analysis_paths:  

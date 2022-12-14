@@ -71,6 +71,30 @@ if atu_analysis:
     df_phenos = df_phenos.query("phenotypic_category == @model_suffix")
     print(f"Running model on {model_suffix} phenotypes")
     
+    
+############# STEP 1.1: MAKE SURE THAT EVERY SAMPLE ONLY HAS A SINGLE MIC #############
+    
+    
+# keep only unique MICs. Many samples have MICs tested in different media, so prioritize them according to the model hierarchy and
+if not binary:
+    # general hierarchy: solid > liquid > plates
+    # MABA, Frozen Broth Microdilution Plate (PMID31969421), UKMYC5, UKMYC6, and REMA are plates
+    # 7H9 is a liquid media
+    media_lst = ["7H10", "LJ", "7H11", "MGIT", "MODS", "BACTEC", "7H9", "Frozen Broth Microdilution Plate (PMID31969421)", "UKMYC6", "UKMYC5", 
+                 "REMA", "MYCOTB", "MABA", "MABA24", "MABA48", "non-colourmetric", "M24 BMD"]
+
+    media_hierarchy = dict(zip(media_lst, np.arange(len(media_lst))+1))
+    
+    # check that no media are missing from either
+    if len(set(df_phenos.medium.values) - set(media_hierarchy.keys())) > 0:
+        raise ValueError(f"{set(df_phenos.medium.values).symmetric_difference(set(media_hierarchy.keys()))} media are different between df_phenos and media_hierarchy")
+    # add media hierarchy to dataframe, sort so that the highest (1) positions come first, then drop duplicates so that every sample has a single MIC
+    else:
+        df_phenos["media_hierarchy_pos"] = df_phenos["medium"].map(media_hierarchy)
+        df_phenos = df_phenos.sort_values("media_hierarchy_pos", ascending=True).drop_duplicates(["sample_id", "mic_value"], keep="first").reset_index(drop=True)
+        del df_phenos["media_hierarchy_pos"]
+        assert len(df_phenos) == len(df_phenos["sample_id"].unique())
+    
 
 ############# STEP 2: COMPUTE THE GENETIC RELATEDNESS MATRIX, REMOVING RESISTANCE LOCI #############
 
