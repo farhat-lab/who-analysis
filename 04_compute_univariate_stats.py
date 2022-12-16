@@ -237,10 +237,8 @@ def compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_g
        'Bonferroni_pval', 'Significant', 'Num_Isolates', 'Total_Isolates', 'TP', 'FP', 'TN', 'FN', 'PPV', 'NPV', 'Sens', 'Spec',
        'LR+', 'LR-', 'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB',
        'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
-       ]].to_csv(os.path.join(model_path, f"model_analysis_with_stats{model_suffix}.csv"), index=False)
-    
-    print(model_path)
-  
+       ]].to_csv(os.path.join(model_path, f"model_analysis_with_stats{model_suffix}.csv"), index=False)  
+
 
 
 def add_significance_predicted_effect(model_path, annotated_genos, model_suffix):
