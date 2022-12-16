@@ -75,7 +75,11 @@ If <code>fast-lineage-caller</code> does not install properly from the environme
     
 ### Model Scripts
 
-Before building any models, <code>00_samples_summary_minor_allele_counts.py</code> must be run. It generates the dataframe of minor allele counts (<code>data/minor_allele_counts.npz</code>) from the SNP data directory, which is needed to compute the genetic relatedness matrix for population structure correction. This script also generates the <code>data/samples_summary.csv</code> file.
+Before building any models, run <code>00_samples_summary_minor_allele_counts.py</code> and <code>make_gene_drug_mapping.py</code>.
+
+The first script generates the dataframe of minor allele counts (<code>data/minor_allele_counts.npz</code>) from the SNP data directory, which is needed to compute the genetic relatedness matrix for population structure correction. It also creates the <code>data/samples_summary.csv</code> file to see how much data we have for each drug (mostly just for reference and to make sure nothing was missing during the debugging process).
+
+The second script generates a dataframe mapping every gene to the drug it is hypothesized or known to be relevant for and the tier. This dataframe is used to select variants to pass into the model from the master <code>genos.csv.gz</code> file for each drug. 
 
 For every drug, run the following numbered scripts in order, with the `config.yaml` file, the full drug name, and the 3-letter abbreviation used in the 2021 WHO catalog. For example, for isoniazid, the arguments after the script name would be `config.yaml Isoniazid INH`. 
   
@@ -105,6 +109,8 @@ Parameters in the yaml file are as follows:
     <li><code>num_bootstrap</code>: number of bootstrap samples</li>
     <li><code>alpha</code>: significance level</li>
 </ul>
+
+Some of the parameters above were kept constant throughout all analyses, but they remained as parameters if they need to be toggled in the future. 
 
 ### Order of Binary Models:
 
