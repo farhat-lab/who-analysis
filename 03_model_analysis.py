@@ -118,6 +118,10 @@ def run_all(drug, drug_abbr, who_variants_combined, **kwargs):
     else:
         model_suffix = ""
     
+    # no model (basically just for Pretomanid)
+    if not os.path.isfile(os.path.join(out_dir, f"regression_coef{model_suffix}.csv")):
+        exit()
+        
     # coefficients from L2 regularized regression ("baseline" regression)
     coef_df = pd.read_csv(os.path.join(out_dir, f"regression_coef{model_suffix}.csv"))
 

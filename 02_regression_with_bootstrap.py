@@ -11,7 +11,7 @@ import tracemalloc
 
 ############# STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES #############
 
-
+    
 # starting the memory monitoring
 tracemalloc.start()
 
@@ -53,6 +53,10 @@ else:
 
 scaler = StandardScaler()
 
+# no model (basically just for Pretomanid)
+if not os.path.isfile(os.path.join(out_dir, "filt_matrix.pkl")) and not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+    exit()
+    
 
 ############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES #############
 
@@ -206,7 +210,7 @@ else:
 
 if len(y) != X.shape[0]:
     raise ValueError(f"Shapes of model inputs {X.shape} and outputs {len(y)} are incompatible")
-print(f"{X.shape[0]} samples and {X.shape[1]} variables in the model")
+print(f"    {X.shape[0]} samples and {X.shape[1]} variables in the model")
 
 
 ############# STEP 5: FIT L2-PENALIZED REGRESSION #############
@@ -229,9 +233,9 @@ else:
 model.fit(X, y)
 
 if binary:
-    print(f"Regularization parameter: {model.C_[0]}")
+    print(f"    Regularization parameter: {model.C_[0]}")
 else:
-    print(f"Regularization parameter: {model.alpha_}")
+    print(f"    Regularization parameter: {model.alpha_}")
 
 # save coefficients
 res_df = pd.DataFrame({"mutation": np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]]), 'coef': np.squeeze(model.coef_)})

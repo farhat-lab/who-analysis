@@ -1,15 +1,15 @@
 #!/bin/bash 
 #SBATCH -c 10
-#SBATCH -t 0-06:00
+#SBATCH -t 0-03:00
 #SBATCH -p short 
-#SBATCH --mem=50G 
+#SBATCH --mem=30G 
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=skulkarni@g.harvard.edu
 
-drug="Delamanid"
-drug_abbr="DLM"
+drug="Pretomanid"
+drug_abbr="PTM"
 
 # list of config files to use
 config_array=(

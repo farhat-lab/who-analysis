@@ -28,7 +28,7 @@ if atu_analysis:
     binary = True
     
 pheno_category_lst = kwargs["pheno_category_lst"]
-# make sure that both phenotypes are included just in case
+# make sure that both phenotypes are included
 if "ALL" in pheno_category_lst:
     phenos_name = "ALL"
     pheno_category_lst = ["ALL", "WHO"]
@@ -202,6 +202,10 @@ else:
 if binary and not atu_analysis:
     df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
     
+# this only happens for Pretomanid because there are no WHO phenotypes
+if len(df_phenos) == 0:
+    print("No model for this set of parameters")
+    exit()
     
 
 ############# STEP 2: GET ALL AVAILABLE GENOTYPES #############
@@ -327,7 +331,7 @@ if amb_mode.upper() in ["BINARY", "DROP"]:
 else:
     assert np.sort(np.unique(matrix.values))[1] > 0.25
 
-# compare proportions of missing isolates or variants to determine which is more problematic and drop that first. usually, isolates will be more problematic    
+# compare proportions of missing isolates or variants to determine which is larger and drop that first. usually, isolates have more missingness
 # maximum proportion of missing isolates per feature
 max_prop_missing_isolates_per_feature = matrix.isna().sum(axis=0).max() / matrix.shape[0]
 # maximum proportion of missing features per isolate
@@ -416,4 +420,4 @@ filtered_matrix.to_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
 tracemalloc.stop()
-print(f"{script_memory} GB\n")
+print(f"{script_memory} GB")

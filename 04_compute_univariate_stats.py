@@ -278,7 +278,6 @@ assert folder in ["BINARY", "ATU", "MIC"]
 
 # get dataframes of genotypes and phenotypes. the folder argument ensures that we get only samples with CC and CC-ATU phenotypes, instead of all of them
 df_phenos, df_genos, annotated_genos = get_genos_phenos(analysis_dir, folder, drug)
-print(df_phenos.shape, df_genos.shape, annotated_genos.shape)
 
 # get all models for which to compute univariate statistics
 analysis_paths = []
@@ -298,46 +297,50 @@ for tier in os.listdir(os.path.join(analysis_dir, drug, folder)):
             if os.path.isfile(os.path.join(level2_path, "model_matrix.pkl")):
                 analysis_paths.append(level2_path)
 
-if folder == "BINARY":
-    print(f"Computing univariate statistics for {len(analysis_paths)} BINARY models")
-    model_suffix = ""
+                
+if len(df_phenos) > 0 and len(df_genos) > 0:
+    
+    if folder == "BINARY":
+        print(f"\nComputing univariate statistics for {len(analysis_paths)} BINARY models")
+        model_suffix = ""
 
-    # compute the univariate statistics using the full dataframes for the ALL models
-    for model_path in analysis_paths:  
-        if "dropAF" in model_path:
-            if "phenos=ALL" in model_path:
-                compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
-        else:
-            add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
-
-    # reduce dataframe size for the WHO only analyses
-    df_phenos = df_phenos.query("phenotypic_category=='WHO'")
-    df_genos = df_genos.query("sample_id in @df_phenos.sample_id")
-    print(df_phenos.shape, df_genos.shape)
-
-    # compute the univariate statistics using the subsetted dataframes for the WHO analyses
-    for model_path in analysis_paths:  
-        if "dropAF" in model_path and "phenos=WHO" in model_path:
-            compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
-
-        
-elif folder == "ATU":
-    print(f"Computing univariate statistics for {len(analysis_paths)*2} CC and CC-ATU models")
-
-    for model_path in analysis_paths:  
-        for model_suffix in ["_CC", "_CC_ATU"]:
+        # compute the univariate statistics using the full dataframes for the ALL models
+        for model_path in analysis_paths:  
             if "dropAF" in model_path:
-                compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
+                if "phenos=ALL" in model_path:
+                    compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
             else:
                 add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
-        
-else:
-    print(f"Computing univariate statistics for {len(analysis_paths)} MIC models")
-    model_suffix = ""
-    
-    # just add predicted effect and Significance to these because there are no positive or negative outputs (output is continuous MIC)
-    for model_path in analysis_paths:
-        add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
+
+        # reduce dataframe size for the WHO only analyses
+        df_phenos = df_phenos.query("phenotypic_category=='WHO'")
+        df_genos = df_genos.query("sample_id in @df_phenos.sample_id")
+
+        # mainly for Pretomanid, which has no WHO phenotypes 
+        if len(df_phenos) > 0 and len(df_genos) > 0:
+            # compute the univariate statistics using the subsetted dataframes for the WHO analyses
+            for model_path in analysis_paths:  
+                if "dropAF" in model_path and "phenos=WHO" in model_path:
+                    compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
+
+
+    elif folder == "ATU":
+        print(f"\nComputing univariate statistics for {len(analysis_paths)*2} CC and CC-ATU models")
+
+        for model_path in analysis_paths:  
+            for model_suffix in ["_CC", "_CC_ATU"]:
+                if "dropAF" in model_path:
+                    compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
+                else:
+                    add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
+
+    else:
+        print(f"\nComputing univariate statistics for {len(analysis_paths)} MIC models")
+        model_suffix = ""
+
+        # just add predicted effect and Significance to these because there are no positive or negative outputs (output is continuous MIC)
+        for model_path in analysis_paths:
+            add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
 
         
 # returns a tuple: current, peak memory in bytes 
