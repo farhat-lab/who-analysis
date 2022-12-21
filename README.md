@@ -77,17 +77,17 @@ If <code>fast-lineage-caller</code> does not install properly from the environme
 
 Before building any models, run <code>00_samples_summary_minor_allele_counts.py</code> and <code>make_gene_drug_mapping.py</code>.
 
-The first script generates the dataframe of minor allele counts (<code>data/minor_allele_counts.npz</code>) from the SNP data directory, which is needed to compute the genetic relatedness matrix for population structure correction. It also creates the <code>data/samples_summary.csv</code> file to see how much data we have for each drug (mostly just for reference and to make sure nothing was missing during the debugging process).
+The first script generates the dataframe of minor allele counts (<code>data/minor_allele_counts.npz</code>) from the SNP data directory. We compute the genetic relatedness matrix for population structure correction from this matrix. The script also creates the <code>data/samples_summary.csv</code> file to see how many samples there are for each drug (this was primarily used for debugging).
 
 The second script generates a dataframe mapping every gene to the drug it is hypothesized or known to be relevant for and the tier. This dataframe is used to select variants to pass into the model from the master <code>genos.csv.gz</code> file for each drug. 
 
-For every drug, run the following numbered scripts in order, with the `config.yaml` file, the full drug name, and the 3-letter abbreviation used in the 2021 WHO catalog. For example, for isoniazid, the arguments after the script name would be `config.yaml Isoniazid INH`. 
+For every drug, run the following numbered scripts in order, with `config.yaml`, the full drug name, and the 3-letter abbreviation used in the 2021 WHO catalog. For example, for isoniazid, the arguments after the script name would be `config.yaml Isoniazid INH`. 
   
 1. <code>01_make_model_inputs.py</code>: create input matrices to fit a regression model.
 2. <code>02_regression_with_bootstrap.py</code> performs a Ridge (L2-penalized) regression. 
-3. <code>03_model_analysis.py</code> gets p-values (including false discovery rate-corrected p-values) and confidence intervals for the coefficients/odds ratios. It creates a summary file called `model_analysis.csv` in every output directory, which contains all variants with non-zero coefficients and nominally significant p-values (p-value before FDR is less than 0.05).
+3. <code>03_model_analysis.py</code> computes p-values (including false discovery rate-corrected p-values) and confidence intervals for the coefficients/odds ratios for each mutation in the model. It creates a summary file called `model_analysis.csv` in every model output directory.
     
-Parameters in the yaml file are as follows:
+Parameters in the yaml file:
     
 <ul>
     <li><code>input_dir</code>: Directory where all input directories are stored. Contains subfolders "grm", "phenotypes", and "full_genotypes".</li>
