@@ -140,10 +140,12 @@ def run_all(drug, drug_abbr, who_variants_combined, **kwargs):
     
     # Bonferroni correction
     coef_df["Bonferroni_pval"] = np.min([coef_df["pval"] * len(coef_df["pval"]), np.ones(len(coef_df["pval"]))], axis=0)
-
+    
     # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
-    assert len(coef_df.query("pval > BH_pval")) == 0
-    assert len(coef_df.query("pval > Bonferroni_pval")) == 0
+    if len(coef_df.query("pval > BH_pval")) > 0:
+        print(coef_df.query("pval > BH_pval"))
+    if len(coef_df.query("pval > Bonferroni_pval")) > 0:
+        print(coef_df.query("pval > Bonferroni_pval"))
     
     # convert to odds ratios
     if binary:

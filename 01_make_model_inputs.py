@@ -155,7 +155,11 @@ if not os.path.isfile(phenos_file):
             df_phenos = df_phenos.loc[df_phenos["phenotypic_category"].str.contains("CC")]
         else:
             df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
+        
         print(f"Phenotypic categoryies: {df_phenos.phenotypic_category.unique()}")
+        if len(df_phenos) == 0:
+            print("There are no phenotypes for this analysis. Quitting this model")
+            exit()
     else:
         df_phenos["medium"] = df_phenos["medium"].replace("Middlebrook7H10", "7H10")
 
@@ -169,7 +173,7 @@ if not os.path.isfile(phenos_file):
             df_phenos = df_phenos.query("sample_id not in @drop_samples")
     else:
         if len(drop_samples) == 0:
-            print("Phenotypes for all samples are the same for CC and CC-ATU designations. Quitting this model!")
+            print("Phenotypes for all samples are the same for CC and CC-ATU designations. Quitting this model")
             exit()
         else:
             print(f"    {len(drop_samples)} of {len(df_phenos['sample_id'].unique())} isolates have different phenotypes using different CCs")
@@ -246,18 +250,29 @@ if not os.path.isfile(genos_file):
 
     if len(df_model.loc[~pd.isnull(df_model["neutral"])]) == 0:
         del df_model["neutral"]
+        
+    # the p.Gly139Arg variant is listed with predicted effects of both stop_retained_variant and missense_variant. The latter is correct, so remove the former
+    if drug == "Pyrazinamide":
+        df_model = df_model.query("~(variant_category=='p.Gly139Arg' & predicted_effect=='stop_retained_variant')")
+    
     df_model.to_csv(genos_file, compression="gzip", index=False)
 else:
     df_model = pd.read_csv(genos_file, compression="gzip")
 
 # keep only samples that are in the phenotypes dataframe and variants in the desired tiers
 keep_genes = drug_gene_mapping.loc[(drug_gene_mapping["Drug"] == drug) & 
-                      (drug_gene_mapping["Tier"].isin(np.array(tiers_lst).astype(int)))
-                     ]["Gene"].values
+                                   (drug_gene_mapping["Tier"].isin(np.array(tiers_lst).astype(int)))
+                                  ]
+
+if len(np.unique(keep_genes["Tier"].values)) == 1 and np.unique(keep_genes["Tier"].values) == np.array([1]) and "2" in tiers_lst:
+    print("There are no tier 2 genes. Quitting this model")
+    exit()
+else:
+    keep_genes = keep_genes["Gene"].values
 
 df_model = df_model.loc[(df_model["sample_id"].isin(df_phenos["sample_id"].values)) & 
-             (df_model["resolved_symbol"].isin(keep_genes))
-            ]
+                        (df_model["resolved_symbol"].isin(keep_genes))
+                       ]
 
 if not synonymous:
     df_model = df_model.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']").reset_index(drop=True)

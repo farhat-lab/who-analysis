@@ -1,6 +1,6 @@
 #!/bin/bash 
 #SBATCH -c 10
-#SBATCH -t 0-06:00
+#SBATCH -t 0-11:59
 #SBATCH -p short 
 #SBATCH --mem=50G 
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
