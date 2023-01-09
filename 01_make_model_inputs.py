@@ -251,9 +251,9 @@ if not os.path.isfile(genos_file):
     if len(df_model.loc[~pd.isnull(df_model["neutral"])]) == 0:
         del df_model["neutral"]
         
-    # the p.Gly139Arg variant is listed with predicted effects of both stop_retained_variant and missense_variant. The latter is correct, so remove the former
-    if drug == "Pyrazinamide":
-        df_model = df_model.query("~(variant_category=='p.Gly139Arg' & predicted_effect=='stop_retained_variant')")
+#     # the p.Gly139Arg variant is listed with predicted effects of both stop_retained_variant and missense_variant. The latter is correct, so remove the former
+#     if drug == "Pyrazinamide":
+#         df_model = df_model.query("~(variant_category=='p.Gly139Arg' & predicted_effect=='stop_retained_variant')")
     
     df_model.to_csv(genos_file, compression="gzip", index=False)
 else:
@@ -345,7 +345,7 @@ if amb_mode.upper() in ["BINARY", "DROP"]:
 # the smallest value will be 0. Check that the second smallest value is greater than 0.25 (below this, AFs are not really reliable)
 else:
     assert np.sort(np.unique(matrix.values))[1] > 0.25
-
+    
 # compare proportions of missing isolates or variants to determine which is larger and drop that first. usually, isolates have more missingness
 # maximum proportion of missing isolates per feature
 max_prop_missing_isolates_per_feature = matrix.isna().sum(axis=0).max() / matrix.shape[0]
@@ -363,7 +363,7 @@ if max_prop_missing_variants_per_isolate >= max_prop_missing_isolates_per_featur
     num_isolates_after_isolate_thresh = filtered_matrix.shape[0]
     num_features_after_isolate_thresh = filtered_matrix.shape[1]
     
-    # drop features (columns) with missingness above the threshold (default = 1%)
+    # drop features (columns) with missingness above the threshold (default = 25%)
     filtered_matrix = filtered_matrix.dropna(axis=1, thresh=(1-missing_feature_thresh)*filtered_matrix.shape[0])
     print(f"    Dropped {num_features_after_isolate_thresh - filtered_matrix.shape[1]}/{num_features_after_isolate_thresh} variants with >{int(missing_feature_thresh*100)}% missingness")
     num_isolates_after_thresholding = filtered_matrix.shape[0]
@@ -372,7 +372,7 @@ if max_prop_missing_variants_per_isolate >= max_prop_missing_isolates_per_featur
 else:
     print(f"    Up to {round(max_prop_missing_isolates_per_feature*100, 2)}% of isolates per variant and {round(max_prop_missing_variants_per_isolate*100, 2)}% of variants per isolate have missing data")
     
-    # drop features (columns) with missingness above the threshold (default = 1%)
+    # drop features (columns) with missingness above the threshold (default = 25%)
     filtered_matrix = matrix.dropna(axis=1, thresh=(1-missing_feature_thresh)*matrix.shape[0])
     
     print(f"    Dropped {matrix.shape[1] - filtered_matrix.shape[1]}/{matrix.shape[1]} variants with >{int(missing_feature_thresh*100)}% missingness")
@@ -388,7 +388,7 @@ else:
 ############# STEP 6: IMPUTE OR DROP REMAINING NANS IN THE GENOTYPES -- THESE ARE LOW FREQUENCY MISSING DATA #############
 
 
-# can only impute as this is written for binary phenotypes. Not going to impute anyway, so I'm not going to adapt this for MIC samples
+# can only impute as this is written for binary phenotypes
 if impute and binary:
     # use only samples that are in the filtered matrix for imputation
     df_phenos = df_phenos.query("sample_id in @filtered_matrix.index.values")
