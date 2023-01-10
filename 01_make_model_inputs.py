@@ -75,6 +75,10 @@ else:
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
+    
+if not os.path.isdir(os.path.join(out_dir, "dropped_features")):
+    os.makedirs(os.path.join(out_dir, "dropped_features"))
+    
 print(f"\nSaving model results to {out_dir}")            
 
 if binary:
@@ -94,10 +98,10 @@ genos_dir = os.path.join(input_data_dir, "full_genotypes")
 genos_file = os.path.join(analysis_dir, drug, "genos.csv.gz")
 
 
-# this is mainly for the CC vs. CC-ATU analysis, which use the same genotype dataframes. Only the phenotypes are different
-if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
-    print("Model matrix already exists. Proceeding with modeling")
-    exit()
+# # this is mainly for the CC vs. CC-ATU analysis, which use the same genotype dataframes. Only the phenotypes are different
+# if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+#     print("Model matrix already exists. Proceeding with modeling")
+#     exit()
     
 
 ############# STEP 1: GET ALL AVAILABLE PHENOTYPES, PROCESS THEM, AND SAVE TO A GENERAL PHENOTYPES FILE FOR EACH MODEL TYPE #############
@@ -250,11 +254,6 @@ if not os.path.isfile(genos_file):
 
     if len(df_model.loc[~pd.isnull(df_model["neutral"])]) == 0:
         del df_model["neutral"]
-        
-#     # the p.Gly139Arg variant is listed with predicted effects of both stop_retained_variant and missense_variant. The latter is correct, so remove the former
-#     if drug == "Pyrazinamide":
-#         df_model = df_model.query("~(variant_category=='p.Gly139Arg' & predicted_effect=='stop_retained_variant')")
-    
     df_model.to_csv(genos_file, compression="gzip", index=False)
 else:
     df_model = pd.read_csv(genos_file, compression="gzip")
@@ -336,7 +335,6 @@ df_model["mutation"] = df_model["resolved_symbol"] + "_" + df_model["variant_cat
 # drop more duplicates, but I think this might be because we have multiple data pulls at a time
 # NaN is larger than any number, so sort ascending and keep first
 df_model = df_model.sort_values("variant_binary_status").drop_duplicates(["sample_id", "mutation"], keep="first")
-
 matrix = df_model.pivot(index="sample_id", columns="mutation", values="variant_binary_status")
 
 # in this case, only 3 possible values -- 0 (ref), 1 (alt), NaN (missing)
@@ -358,16 +356,22 @@ if max_prop_missing_variants_per_isolate >= max_prop_missing_isolates_per_featur
     
     # drop isolates (rows) with missingness above the threshold (default = 1%)
     filtered_matrix = matrix.dropna(axis=0, thresh=(1-missing_isolate_thresh)*matrix.shape[1])
-    
+
+    pd.Series(list(set(matrix.columns) - set(filtered_matrix.columns))).to_csv(os.path.join(out_dir, "dropped_features/isolate_missing.txt"), sep="\t", index=False, header=None)
     print(f"    Dropped {matrix.shape[0] - filtered_matrix.shape[0]}/{matrix.shape[0]} isolates with >{int(missing_isolate_thresh*100)}% missingness")
     num_isolates_after_isolate_thresh = filtered_matrix.shape[0]
     num_features_after_isolate_thresh = filtered_matrix.shape[1]
     
     # drop features (columns) with missingness above the threshold (default = 25%)
+    filt_matrix_features = filtered_matrix.columns
     filtered_matrix = filtered_matrix.dropna(axis=1, thresh=(1-missing_feature_thresh)*filtered_matrix.shape[0])
+    pd.Series(list(set(filt_matrix_features) - set(filtered_matrix.columns))).to_csv(os.path.join(out_dir, "dropped_features/feature_missing.txt"), sep="\t", index=False, header=None)
     print(f"    Dropped {num_features_after_isolate_thresh - filtered_matrix.shape[1]}/{num_features_after_isolate_thresh} variants with >{int(missing_feature_thresh*100)}% missingness")
     num_isolates_after_thresholding = filtered_matrix.shape[0]
     
+    # print the dropped features
+    print(f"Dropped the features {list(set(matrix.columns) - set(filtered_matrix.columns))} becuase isolates had too much missingness")
+
 # drop variants first if there are variants with a lot of missingness (many isolates missing)
 else:
     print(f"    Up to {round(max_prop_missing_isolates_per_feature*100, 2)}% of isolates per variant and {round(max_prop_missing_variants_per_isolate*100, 2)}% of variants per isolate have missing data")
@@ -375,15 +379,18 @@ else:
     # drop features (columns) with missingness above the threshold (default = 25%)
     filtered_matrix = matrix.dropna(axis=1, thresh=(1-missing_feature_thresh)*matrix.shape[0])
     
+    pd.Series(list(set(matrix.columns) - set(filtered_matrix.columns))).to_csv(os.path.join(out_dir, "dropped_features/feature_missing.txt"), sep="\t", index=False, header=None)
     print(f"    Dropped {matrix.shape[1] - filtered_matrix.shape[1]}/{matrix.shape[1]} variants with >{int(missing_feature_thresh*100)}% missingness")
     num_isolates_after_variant_thresh = filtered_matrix.shape[0]
     num_variants_after_variant_thresh = filtered_matrix.shape[1]
 
     # drop isolates (rows) with missingness above the threshold (default = 1%)
+    filt_matrix_features = filtered_matrix.columns
     filtered_matrix = filtered_matrix.dropna(axis=0, thresh=(1-missing_isolate_thresh)*filtered_matrix.shape[1])
+    pd.Series(list(set(filt_matrix_features) - set(filtered_matrix.columns))).to_csv(os.path.join(out_dir, "dropped_features/isolate_missing.txt"), sep="\t", index=False, header=None)
     print(f"    Dropped {num_isolates_after_variant_thresh - filtered_matrix.shape[0]}/{num_isolates_after_variant_thresh} isolates with >{int(missing_isolate_thresh*100)}% missingness")
     num_isolates_after_thresholding = filtered_matrix.shape[0]
-
+    
 
 ############# STEP 6: IMPUTE OR DROP REMAINING NANS IN THE GENOTYPES -- THESE ARE LOW FREQUENCY MISSING DATA #############
 
@@ -419,15 +426,19 @@ if impute and binary:
 
 # don't impute anything, simply drop all isolates (rows) with NaNs.
 else:
+    filt_matrix_features = filtered_matrix.columns
+    
     filtered_matrix.dropna(axis=0, inplace=True, how="any")
     print(f"    Dropped {num_isolates_after_thresholding - filtered_matrix.shape[0]} isolates with any remaining missingness")
-       
+    pd.Series(list(set(filt_matrix_features) - set(filtered_matrix.columns))).to_csv(os.path.join(out_dir, "dropped_features/final_missing.txt"), sep="\t", index=False, header=None)
         
 # there should not be any more NaNs
 assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
 
 # remove mutations that are 0 for all isolates (there is no signal, and the variant will have a coefficient of 0)
+filt_matrix_features = filtered_matrix.columns
 filtered_matrix = filtered_matrix[filtered_matrix.columns[~((filtered_matrix == 0).all())]]
+pd.Series(list(set(filt_matrix_features) - set(filtered_matrix.columns))).to_csv(os.path.join(out_dir, "dropped_features/no_signal.txt"), sep="\t", index=False, header=None)
 
 print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} genetic variants")
 filtered_matrix.to_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
