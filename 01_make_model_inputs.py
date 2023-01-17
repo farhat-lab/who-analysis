@@ -73,27 +73,24 @@ if binary:
 else:
     out_dir = os.path.join(analysis_dir, drug, "MIC", f"tiers={'+'.join(tiers_lst)}", model_prefix)
 
-if not os.path.isdir(out_dir):
-    os.makedirs(out_dir)
-    
+# create all directories down to dropped_features, which will contain text files of the features dropped during data processing
 if not os.path.isdir(os.path.join(out_dir, "dropped_features")):
     os.makedirs(os.path.join(out_dir, "dropped_features"))
     
 print(f"\nSaving model results to {out_dir}")            
 
 if binary:
-    phenos_dir = os.path.join(input_data_dir, "phenotypes")
+    phenos_dir = os.path.join(input_data_dir, "phenotypes", f"drug_name={drug}")
     pheno_col = "phenotype"
     if atu_analysis:
         phenos_file = os.path.join(analysis_dir, drug, "phenos_atu.csv")
     else:
         phenos_file = os.path.join(analysis_dir, drug, "phenos_binary.csv")
 else:
-    phenos_dir = os.path.join(input_data_dir, "mic")
+    phenos_dir = os.path.join(input_data_dir, "mic", f"drug_name={drug}")
     phenos_file = os.path.join(analysis_dir, drug, "phenos_mic.csv")
     pheno_col = "mic_value"
     
-phenos_dir = os.path.join(phenos_dir, f"drug_name={drug}")
 genos_dir = os.path.join(input_data_dir, "full_genotypes")
 genos_file = os.path.join(analysis_dir, drug, "genos.csv.gz")
 
