@@ -101,6 +101,7 @@ def compute_univariate_stats(combined_df, variant_coef_dict):
     assert len(final) == len(melted["variable"].unique())
     assert len(final) == len(final.drop_duplicates("mutation"))
         
+    # LR+ ranges from 1 to infinity. LR- ranges from 0 to 1
     final["Num_Isolates"] = final["TP"] + final["FP"]
     final["Total_Isolates"] = final[["TP", "FP", "TN", "FN"]].sum(axis=1)
     final["PPV"] = final["TP"] / (final["TP"] + final["FP"])

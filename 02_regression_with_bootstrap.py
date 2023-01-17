@@ -4,9 +4,8 @@ import glob, os, yaml, sparse, sys
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
-import warnings
+import tracemalloc, pickle, warnings
 warnings.filterwarnings("ignore")
-import tracemalloc
 
 
 ############# STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES #############
@@ -104,6 +103,7 @@ if not binary:
 
 
 if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+    
     model_inputs = pd.read_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
 
     # reset index so that sample_id is now a column, which makes slicing easier
@@ -126,7 +126,7 @@ if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
             # make sample ids the index again
             minor_allele_counts = minor_allele_counts.set_index("sample_id")
 
-            # compute GRM using the mino allele counts of only the samples in the model
+            # compute GRM using the minor allele counts of only the samples in the model
             minor_allele_counts = minor_allele_counts.query("sample_id in @model_inputs.sample_id.values")
             grm = np.cov(minor_allele_counts.values)
 
@@ -236,7 +236,7 @@ if binary:
     print(f"    Regularization parameter: {model.C_[0]}")
 else:
     print(f"    Regularization parameter: {model.alpha_}")
-
+    
 # save coefficients
 res_df = pd.DataFrame({"mutation": np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]]), 'coef': np.squeeze(model.coef_)})
 
@@ -249,7 +249,7 @@ else:
 ############# STEP 6: BOOTSTRAP COEFFICIENTS #############
 
 # use the regularization parameter determined above
-def bootstrap_coef():
+def bootstrap_coef(model, X, y):
     coefs = []
     for i in range(num_bootstrap):
 
@@ -264,6 +264,7 @@ def bootstrap_coef():
             bs_model = LogisticRegression(C=model.C_[0], penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
         else:
             bs_model = Ridge(alpha=model.alpha_, max_iter=10000)
+        
         bs_model.fit(X_bs, y_bs)
         coefs.append(np.squeeze(bs_model.coef_))
 
@@ -271,7 +272,7 @@ def bootstrap_coef():
 
 
 # save bootstrapped coefficients and principal components
-coef_df = bootstrap_coef()
+coef_df = bootstrap_coef(model, X, y)
 coef_df.columns = np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]])
 
 if atu_analysis:
