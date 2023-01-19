@@ -128,12 +128,12 @@ def run_all(drug, drug_abbr, who_variants_combined, **kwargs):
     # coefficients from bootstrap replicates
     bs_df = pd.read_csv(os.path.join(out_dir, f"coef_bootstrap{model_suffix}.csv"))
     
-    # to get the number of samples, read in the model eigenvectors file
-    model_eigenvecs = pd.read_pickle(os.path.join(out_dir, "model_eigenvecs.pkl"))
+    # to get the number of samples, read in the model matrix file
+    model_matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
 
     # add confidence intervals and p-values (both based on the bootstrapped models) to the results dataframe    
-    coef_df = get_pvalues_add_ci(coef_df, bs_df, "mutation", len(model_eigenvecs), alpha=alpha)
-    del model_eigenvecs
+    coef_df = get_pvalues_add_ci(coef_df, bs_df, "mutation", len(model_matrix), alpha=alpha)
+    del model_matrix
     
     # Benjamini-Hochberg correction
     coef_df = BH_FDR_correction(coef_df)

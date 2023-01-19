@@ -8,7 +8,7 @@ import tracemalloc, pickle, warnings
 warnings.filterwarnings("ignore")
 
 
-############# STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES #############
+########################## STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES ##########################
 
     
 # starting the memory monitoring
@@ -49,17 +49,17 @@ if binary:
         out_dir = os.path.join(analysis_dir, drug, "BINARY", f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
 else:
     out_dir = os.path.join(analysis_dir, drug, "MIC", f"tiers={'+'.join(tiers_lst)}", model_prefix)
-
-scaler = StandardScaler()
-
-# no model (basically just for Pretomanid)
-if not os.path.isfile(os.path.join(out_dir, "filt_matrix.pkl")) and not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
-    exit()
     
 
-############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES #############
+########################## STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES ##########################
 
 
+# no model (basically just for Pretomanid because there are no WHO phenotypes, so some models don't exist)
+if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+    exit()
+else:
+    model_inputs = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
+    
 if binary:
     if atu_analysis:
         phenos_file = os.path.join(analysis_dir, drug, "phenos_atu.csv")
@@ -68,14 +68,14 @@ if binary:
 else:
     phenos_file = os.path.join(analysis_dir, drug, "phenos_mic.csv")
 
-df_phenos = pd.read_csv(phenos_file)
+df_phenos = pd.read_csv(phenos_file).set_index("sample_id")
 
 if atu_analysis:
     df_phenos = df_phenos.query("phenotypic_category == @model_suffix")
     print(f"Running model on {model_suffix} phenotypes")
     
     
-############# STEP 1.1: MAKE SURE THAT EVERY SAMPLE ONLY HAS A SINGLE MIC #############
+########################## STEP 1.1: MAKE SURE THAT EVERY SAMPLE ONLY HAS A SINGLE MIC ##########################
     
     
 # keep only unique MICs. Many samples have MICs tested in different media, so prioritize them according to the model hierarchy and
@@ -99,106 +99,26 @@ if not binary:
         assert len(df_phenos) == len(df_phenos["sample_id"].unique())
     
 
-############# STEP 2: COMPUTE THE GENETIC RELATEDNESS MATRIX, REMOVING RESISTANCE LOCI #############
+############# STEP 2: GET THE MATRIX ON WHICH TO FIT THE DATA +/- EIGENVECTOR COORDINATES, DEPENDING ON THE PARAM #############
 
-
-if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
-    
-    model_inputs = pd.read_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
-
-    # reset index so that sample_id is now a column, which makes slicing easier
-    model_inputs = model_inputs.reset_index()
-
-    if num_PCs > 0:
-        if not os.path.isfile("data/minor_allele_counts.npz"):
-            raise ValueError("Minor allele counts dataframe does not exist. Please run compute_samples_summary.py")
-
-        def read_in_matrix_compute_grm(fName, model_inputs):
-            minor_allele_counts = sparse.load_npz(fName).todense()
-
-            # convert to dataframe
-            minor_allele_counts = pd.DataFrame(minor_allele_counts)
-            minor_allele_counts.columns = minor_allele_counts.iloc[0, :]
-            minor_allele_counts = minor_allele_counts.iloc[1:, :]
-            minor_allele_counts.rename(columns={0:"sample_id"}, inplace=True)
-            minor_allele_counts["sample_id"] = minor_allele_counts["sample_id"].astype(int)
-
-            # make sample ids the index again
-            minor_allele_counts = minor_allele_counts.set_index("sample_id")
-
-            # compute GRM using the minor allele counts of only the samples in the model
-            minor_allele_counts = minor_allele_counts.query("sample_id in @model_inputs.sample_id.values")
-            grm = np.cov(minor_allele_counts.values)
-
-            minor_allele_counts_samples = minor_allele_counts.index.values
-            del minor_allele_counts
-            return grm, minor_allele_counts_samples
-
-
-        # compute GRM
-        grm, minor_allele_counts_samples = read_in_matrix_compute_grm("data/minor_allele_counts.npz", model_inputs)
-
-
-    ############# STEP 3: RUN PCA ON THE GRM #############
-
-
-        pca = PCA(n_components=num_PCs)
-        pca.fit(scaler.fit_transform(grm))
-
-        print(f"Explained variance ratios of {num_PCs} principal components: {pca.explained_variance_ratio_}")
-        eigenvec = pca.components_.T
-        eigenvec_df = pd.DataFrame(eigenvec)
-        eigenvec_df["sample_id"] = minor_allele_counts_samples
-        del grm
-
-
-    ############# STEP 4: PREPARE INPUTS TO THE MODEL #############
-
-        # drop any samples from the genotypes dataframe that are not in the eigenvector dataframe (some samples may not have genotypes)
-        model_inputs = model_inputs.query("sample_id in @eigenvec_df.sample_id.values").sort_values("sample_id", ascending=True).reset_index(drop=True)
-        eigenvec_df = eigenvec_df.sort_values("sample_id", ascending=True).reset_index(drop=True)
-
-        # set index for these 2 dataframes so that later only the values can be extracted
-        model_inputs = model_inputs.set_index("sample_id")
-        eigenvec_df = eigenvec_df.set_index("sample_id")
-
-        # save model_inputs to use later. This is the actual matrix used for model fitting, after all filtering steps
-        model_inputs.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
-        eigenvec_df.to_pickle(os.path.join(out_dir, "model_eigenvecs.pkl"))
-
-    else:
-        # sort by sample_id so that everything is in the same order
-        model_inputs = model_inputs.sort_values("sample_id", ascending=True).reset_index(drop=True)
-
-        # set index so that later only the values can be extracted and save it. This is the actual matrix used for model fitting, after all filtering steps
-        model_inputs = model_inputs.set_index("sample_id")
-        model_inputs.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
-    
-else:
-    model_inputs = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
-    eigenvec_df = pd.read_pickle(os.path.join(out_dir, "model_eigenvecs.pkl"))
-    
-    model_inputs = model_inputs.query("sample_id in @eigenvec_df.index.values").sort_values("sample_id", ascending=True)
-    
 
 if num_PCs > 0:
-    # get only phenotypes for isolates that are in the model_inputs and eigenvector dataframes
-    df_phenos = df_phenos.query("sample_id in @eigenvec_df.index.values").sort_values("sample_id", ascending=True).reset_index(drop=True)
-    assert sum(model_inputs.merge(eigenvec_df, left_index=True, right_index=True).index != df_phenos["sample_id"]) == 0
+    # read in eigenvectors files, which was previously computed, and keep only the desired number of PCs
+    eigenvec_df = pd.read_csv("data/eigenvec_10PC.csv", index_col=[0]).iloc[:, :num_PCs]
     
-    # concatenate the eigenvectors to the matrix and check the index ordering against the phenotypes matrix
-    X = model_inputs.merge(eigenvec_df, left_index=True, right_index=True).values
-else:
-    df_phenos = df_phenos.query("sample_id in @model_inputs.index.values").sort_values("sample_id", ascending=True).reset_index(drop=True)
-    assert sum(model_inputs.index != df_phenos["sample_id"]) == 0
-    X = model_inputs.values
-    
- 
-# to save space, delete this file. Don't need it anymore
-if os.path.isfile(os.path.join(out_dir, "filt_matrix.pkl")):
-    os.remove(os.path.join(out_dir, "filt_matrix.pkl"))
+    # keep only the samples that are in this model, then concatenate the eigenvectors to the matrix
+    eigenvec_df = eigenvec_df.loc[model_inputs.index]
+    model_inputs = model_inputs.merge(eigenvec_df, left_index=True, right_index=True)
 
+# keep only samples (rows) that are in model_inputs
+df_phenos = df_phenos.loc[model_inputs.index]
+
+# check that the sample ordering is the same in the genotype and phenotype matrices
+assert sum(model_inputs.index != df_phenos.index) == 0
+X = model_inputs.values
+    
 # scale inputs
+scaler = StandardScaler()
 X = scaler.fit_transform(X)
 
 # binary vs. quant (MIC) phenotypes
@@ -213,7 +133,7 @@ if len(y) != X.shape[0]:
 print(f"    {X.shape[0]} samples and {X.shape[1]} variables in the model")
 
 
-############# STEP 5: FIT L2-PENALIZED REGRESSION #############
+########################## STEP 3: FIT L2-PENALIZED REGRESSION ##########################
 
 
 if binary:
@@ -225,6 +145,8 @@ if binary:
                                  scoring='neg_log_loss',
                                  class_weight='balanced'
                                 )
+    
+    
 else:
     model = RidgeCV(alphas=np.logspace(-6, 6, 13),
                     cv=5,
@@ -238,7 +160,7 @@ else:
     print(f"    Regularization parameter: {model.alpha_}")
     
 # save coefficients
-res_df = pd.DataFrame({"mutation": np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]]), 'coef': np.squeeze(model.coef_)})
+res_df = pd.DataFrame({"mutation": model_inputs.columns, 'coef': np.squeeze(model.coef_)})
 
 if atu_analysis:
     res_df.to_csv(os.path.join(out_dir, f"regression_coef_{model_suffix.replace('-', '_')}.csv"), index=False)
@@ -246,7 +168,8 @@ else:
     res_df.to_csv(os.path.join(out_dir, "regression_coef.csv"), index=False)
 
 
-############# STEP 6: BOOTSTRAP COEFFICIENTS #############
+########################## STEP 4: BOOTSTRAP COEFFICIENTS ##########################
+
 
 # use the regularization parameter determined above
 def bootstrap_coef(model, X, y):
@@ -273,7 +196,7 @@ def bootstrap_coef(model, X, y):
 
 # save bootstrapped coefficients and principal components
 coef_df = bootstrap_coef(model, X, y)
-coef_df.columns = np.concatenate([model_inputs.columns, [f"PC{num}" for num in np.arange(num_PCs)]])
+coef_df.columns = model_inputs.columns
 
 if atu_analysis:
     coef_df.to_csv(os.path.join(out_dir, f"coef_bootstrap_{model_suffix.replace('-', '_')}.csv"), index=False)

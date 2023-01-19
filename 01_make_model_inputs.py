@@ -471,12 +471,12 @@ else:
 # there should not be any more NaNs
 assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
 
-# check that all columns are not 0 (or 1, but that is extremely rare)
+# check that all columns are not 0 (or 1, but that never happens)
 assert len(filtered_matrix.columns[((filtered_matrix == 0).all())]) == 0
 assert len(filtered_matrix.columns[((filtered_matrix == 1).all())]) == 0
 
 print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} genetic variants")
-filtered_matrix.to_pickle(os.path.join(out_dir, "filt_matrix.pkl"))
+filtered_matrix.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
