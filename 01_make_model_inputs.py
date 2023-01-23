@@ -1,13 +1,13 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, sys
+import glob, os, yaml, sys, subprocess
 import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
 drug_gene_mapping = pd.read_csv("data/drug_gene_mapping.csv")
 
 
-############# STEP 0: READ IN PARAMETERS FILE AND MAKE OUTPUT DIRECTORIES #############
+######################### STEP 0: READ IN PARAMETERS FILE AND MAKE OUTPUT DIRECTORIES #########################
 
 
 # starting the memory monitoring
@@ -90,10 +90,6 @@ else:
     phenos_dir = os.path.join(input_data_dir, "mic", f"drug_name={drug}")
     phenos_file = os.path.join(analysis_dir, drug, "phenos_mic.csv")
     pheno_col = "mic_value"
-    
-genos_dir = os.path.join(input_data_dir, "full_genotypes")
-genos_file = os.path.join(analysis_dir, drug, "genos.csv.gz")
-
 
 # this is mainly for the CC vs. CC-ATU analysis, which use the same genotype dataframes. Only the phenotypes are different
 if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
@@ -122,7 +118,7 @@ def save_feature_list(feat1_array, feat2_array, fName):
                 file.write(feature + "\n")
     
 
-############# STEP 1: GET ALL AVAILABLE PHENOTYPES, PROCESS THEM, AND SAVE TO A GENERAL PHENOTYPES FILE FOR EACH MODEL TYPE #############
+######################### STEP 1: GET ALL AVAILABLE PHENOTYPES, PROCESS THEM, AND SAVE TO A GENERAL PHENOTYPES FILE FOR EACH DRUG #########################
 
 
 def get_mic_midpoints(mic_df, pheno_col):
@@ -178,7 +174,7 @@ if not os.path.isfile(phenos_file):
         else:
             df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
         
-        print(f"Phenotypic categoryies: {df_phenos.phenotypic_category.unique()}")
+        print(f"Phenotypic categories: {df_phenos.phenotypic_category.unique()}")
         if len(df_phenos) == 0:
             print("There are no phenotypes for this analysis. Quitting this model")
             exit()
@@ -230,72 +226,57 @@ if binary and not atu_analysis:
     
 # this only happens for Pretomanid because there are no WHO phenotypes
 if len(df_phenos) == 0:
-    print("No model for this set of parameters")
+    print(f"There are no {' and '.join(pheno_category_lst)} phenotypes for this model")
     exit()
     
 
-############# STEP 2: GET ALL AVAILABLE GENOTYPES #############
+######################### STEP 2: GET ALL AVAILABLE GENOTYPES #########################
           
         
-def read_in_all_genos(drug):
+genos_dir = os.path.join(input_data_dir, "full_genotypes")
+tier1_genos_file = os.path.join(analysis_dir, drug, "genos_1.csv.gz")
+tier2_genos_file = os.path.join(analysis_dir, drug, "genos_2.csv.gz")
+
+
+def create_master_genos_files(drug):
+
+    tier_paths = glob.glob(os.path.join(genos_dir, f"drug_name={drug}", "*"))
+
+    for dir_name in tier_paths:
+        
+        if dir_name[-1] in ["1", "2"]:
             
-    # first get all the genotype files associated with the drug
-    geno_files = []
+            tier = dir_name[-1]
+            num_files = len(os.listdir(dir_name))
 
-    for subdir in os.listdir(os.path.join(genos_dir, f"drug_name={drug}")):
+            # concatenate all files in the directory and save to a gzipped csv file with the tier number as the suffix
+            # 5th column is the neutral column, but it's all NaN, so remove to save space
+            command = f"awk '(NR == 1) || (FNR > 1)' {dir_name}/* | cut --complement -d ',' -f 5 | gzip > {analysis_dir}/{drug}/genos_{tier}.csv.gz"
+            subprocess.run(command, shell=True)
+            
+            print(f"Created {analysis_dir}/{drug}/genos_{tier}.csv.gz from {num_files} files")
 
-        # subdirectory (tiers)
-        full_subdir = os.path.join(genos_dir, f"drug_name={drug}", subdir)
-
-        # the last character is the tier number. Get variants from both tiers
-        if full_subdir[-1] in ["1", "2"]:
-            for fName in os.listdir(full_subdir):
-                if "run" in fName:
-                    geno_files.append(os.path.join(full_subdir, fName))
-
-    print(f"    {len(geno_files)} files with genotypes")
-
-    dfs_lst = []
-    for i, fName in enumerate(geno_files):
-
-        # print(f"Reading in genotypes dataframe {i+1}/{len(geno_files)}")
-        df = pd.read_csv(fName, low_memory=False)            
-        dfs_lst.append(df)
-
-    # remove any duplicate rows
-    return pd.concat(dfs_lst).drop_duplicates().reset_index(drop=True)
-
-
-if not os.path.isfile(genos_file):
-    # read in all available genotypes and save to a compressed file for each drug
-    df_model = read_in_all_genos(drug)
-
-    if len(df_model.loc[~pd.isnull(df_model["neutral"])]) == 0:
-        del df_model["neutral"]
-    df_model.to_csv(genos_file, compression="gzip", index=False)
-else:
-    df_model = pd.read_csv(genos_file, compression="gzip")
-
-# keep only samples that are in the phenotypes dataframe and variants in the desired tiers
-keep_genes = drug_gene_mapping.loc[(drug_gene_mapping["Drug"] == drug) & 
-                                   (drug_gene_mapping["Tier"].isin(np.array(tiers_lst).astype(int)))
-                                  ]
-
-if len(np.unique(keep_genes["Tier"].values)) == 1 and np.unique(keep_genes["Tier"].values) == np.array([1]) and "2" in tiers_lst:
+if not os.path.isfile(tier1_genos_file):
+    print("Creating master genotype dataframes...")
+    create_master_genos_files(drug)
+        
+# this only happens for Pretomanid because there are no Tier 2 genes
+if "2" in tiers_lst and not os.path.isfile(tier2_genos_file):
     print("There are no tier 2 genes. Quitting this model")
     exit()
-else:
-    keep_genes = keep_genes["Gene"].values
 
-df_model = df_model.loc[(df_model["sample_id"].isin(df_phenos["sample_id"].values)) & 
-                        (df_model["resolved_symbol"].isin(keep_genes))
-                       ]
+# read in only the genotypes files for the tiers for this model
+df_model = pd.concat([pd.read_csv(os.path.join(analysis_dir, drug, f"genos_{num}.csv.gz"), compression="gzip", low_memory=False) for num in tiers_lst])
 
+# then keep only samples of the desired phenotype
+df_model = df_model.loc[df_model["sample_id"].isin(df_phenos["sample_id"])]
+
+# drop synonymous variants, unless the boolean is True
 if not synonymous:
     df_model = df_model.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']").reset_index(drop=True)
 
     
-############# STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #############
+######################### STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #########################
 
 
 def pool_mutations(df, effect_lst, pool_col):
@@ -320,7 +301,7 @@ elif pool_type == "poolALL":
     df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation", "inframe_insertion", "inframe_deletion"], "lof_all")
 
 
-############# STEP 4: PROCESS AMBIGUOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #############
+######################### STEP 4: PROCESS AMBIGUOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #########################
 
 
 # set variants with AF <= the threshold as wild-type and AF > the threshold as alternative
@@ -346,13 +327,13 @@ elif amb_mode == "DROP":
     
     # get the features in the dataframe after dropping isolates with ambiguous allele fractions, then save to a file if there are any dropped features
     post_dropAmb_mutations = df_model.query("variant_binary_status==1")["resolved_symbol"] + "_" + df_model.query("variant_binary_status==1")["variant_category"]
-    save_feature_list(pre_dropAmb_mutations, post_dropAmb_mutations, os.path.join(out_dir, "dropped_features/feature_HET.txt"))
+    save_feature_list(pre_dropAmb_mutations, post_dropAmb_mutations, os.path.join(out_dir, "dropped_features/isolates_with_amb.txt"))
     
 # check after this step that the only NaNs left are truly missing data --> NaN in variant_binary_status must also be NaN in variant_allele_frequency
 assert len(df_model.loc[(~pd.isnull(df_model["variant_allele_frequency"])) & (pd.isnull(df_model["variant_binary_status"]))]) == 0
 
 
-############# STEP 5: PIVOT TO MATRIX AND DROP HIGH-FREQUENCY MISSINGNESS #############
+######################### STEP 5: PIVOT TO MATRIX AND DROP HIGH-FREQUENCY MISSINGNESS #########################
 
 
 # 1 = alternative allele, 0 = reference allele, NaN = missing
@@ -360,8 +341,9 @@ df_model["mutation"] = df_model["resolved_symbol"] + "_" + df_model["variant_cat
 
 # drop more duplicates, but I think this might be because we have multiple data pulls at a time
 # NaN is larger than any number, so sort ascending and keep first
-df_model = df_model.sort_values("variant_binary_status").drop_duplicates(["sample_id", "mutation"], keep="first")
+df_model = df_model.sort_values("variant_binary_status", ascending=True).drop_duplicates(["sample_id", "mutation"], keep="first")
 matrix = df_model.pivot(index="sample_id", columns="mutation", values="variant_binary_status")
+del df_model
 
 # drop any features with no signal and write them to the file
 matrix_features = matrix.columns
@@ -390,7 +372,7 @@ if max_prop_missing_variants_per_isolate >= max_prop_missing_isolates_per_featur
     filtered_matrix = filtered_matrix[filtered_matrix.columns[~((filtered_matrix == 0).all())]]
 
     # save a list of features that were dropped at this step and print the number of dropped samples
-    save_feature_list(matrix.columns, filtered_matrix.columns, os.path.join(out_dir, "dropped_features/isolate_missing.txt"))
+    save_feature_list(matrix.columns, filtered_matrix.columns, os.path.join(out_dir, "dropped_features/isolates_dropped.txt"))
     print(f"    Dropped {matrix.shape[0] - filtered_matrix.shape[0]}/{matrix.shape[0]} samples with >{int(missing_isolate_thresh*100)}% missingness and {len(matrix.columns)-len(filtered_matrix.columns)} associated features")
     
     # drop features (columns) with missingness above the threshold (default = 25%) and remove features with all zeros
@@ -399,7 +381,7 @@ if max_prop_missing_variants_per_isolate >= max_prop_missing_isolates_per_featur
     filtered_matrix = filtered_matrix[filtered_matrix.columns[~((filtered_matrix == 0).all())]]
     
     # save a list of features that were dropped at this step and print the number of dropped features
-    save_feature_list(filt_matrix_features, filtered_matrix.columns, os.path.join(out_dir, "dropped_features/feature_missing.txt"))
+    save_feature_list(filt_matrix_features, filtered_matrix.columns, os.path.join(out_dir, "dropped_features/features_missing.txt"))
     print(f"    Dropped {len(filt_matrix_features) - filtered_matrix.shape[1]}/{len(filt_matrix_features)} features with >{int(missing_feature_thresh*100)}% missingness")
     num_isolates_after_thresholding = filtered_matrix.shape[0]
     
@@ -412,7 +394,7 @@ else:
     filtered_matrix = matrix.dropna(axis=1, thresh=(1-missing_feature_thresh)*matrix.shape[0])
     
     # save a list of features that were dropped at this step and print the number of dropped features
-    save_feature_list(matrix.columns, filtered_matrix.columns, os.path.join(out_dir, "dropped_features/feature_missing.txt"))
+    save_feature_list(matrix.columns, filtered_matrix.columns, os.path.join(out_dir, "dropped_features/features_missing.txt"))
     print(f"    Dropped {matrix.shape[1] - filtered_matrix.shape[1]}/{matrix.shape[1]} features with >{int(missing_feature_thresh*100)}% missingness")
 
     # drop isolates (rows) with missingness above the threshold (default = 1%)
@@ -422,12 +404,12 @@ else:
     filtered_matrix = filtered_matrix[filtered_matrix.columns[~((filtered_matrix == 0).all())]]
     
     # save a list of features that were dropped at this step and print the number of dropped features
-    save_feature_list(filt_matrix_features, filtered_matrix.columns, os.path.join(out_dir, "dropped_features/isolate_missing.txt"))
+    save_feature_list(filt_matrix_features, filtered_matrix.columns, os.path.join(out_dir, "dropped_features/isolates_dropped.txt"))
     print(f"    Dropped {num_isolates_after_variant_thresh - filtered_matrix.shape[0]}/{num_isolates_after_variant_thresh} samples with >{int(missing_isolate_thresh*100)}% missingness and {len(filt_matrix_features)-len(filtered_matrix.columns)} associated features")
     num_isolates_after_thresholding = filtered_matrix.shape[0]
     
 
-############# STEP 6: IMPUTE OR DROP REMAINING NANS IN THE GENOTYPES -- THESE ARE LOW FREQUENCY MISSING DATA #############
+######################### STEP 6: IMPUTE OR DROP REMAINING NANS IN THE GENOTYPES -- THESE ARE LOW FREQUENCY MISSING DATA #########################
 
 
 # can only impute as this is written for binary phenotypes
@@ -466,14 +448,19 @@ else:
     filtered_matrix = filtered_matrix[filtered_matrix.columns[~((filtered_matrix == 0).all())]]
     
     print(f"    Dropped {num_isolates_after_thresholding - filtered_matrix.shape[0]} samples with any remaining missingness and {len(filt_matrix_features)-len(filtered_matrix.columns)} associated features")    
-    save_feature_list(filt_matrix_features, filtered_matrix.columns, os.path.join(out_dir, "dropped_features/final_missing.txt"))
+    save_feature_list(filt_matrix_features, filtered_matrix.columns, os.path.join(out_dir, "dropped_features/isolates_dropped_final.txt"))
         
 # there should not be any more NaNs
 assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
 
 # check that all columns are not 0 (or 1, but that never happens)
-assert len(filtered_matrix.columns[((filtered_matrix == 0).all())]) == 0
-assert len(filtered_matrix.columns[((filtered_matrix == 1).all())]) == 0
+if len(filtered_matrix.columns[((filtered_matrix == 0).all())]) != 0:
+    raise ValueError(f"Some columns in the {out_dir} matrix are all 0")
+    exit()
+    
+if len(filtered_matrix.columns[((filtered_matrix == 1).all())]) != 0:
+    raise ValueError(f"Some columns in the {out_dir} matrix are all 1")
+    exit()
 
 print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} genetic variants")
 filtered_matrix.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
@@ -481,4 +468,4 @@ filtered_matrix.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
 tracemalloc.stop()
-print(f"{script_memory} GB")
+print(f"    {script_memory} GB")

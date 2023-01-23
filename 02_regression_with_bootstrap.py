@@ -4,8 +4,11 @@ import glob, os, yaml, sparse, sys
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
-import tracemalloc, pickle, warnings
-warnings.filterwarnings("ignore")
+import tracemalloc, pickle
+
+# analysis utils is in the analysis folder
+sys.path.append(os.path.join(os.getcwd(), "analysis"))
+from stats_utils import *
 
 
 ########################## STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES ##########################
@@ -130,7 +133,7 @@ else:
 
 if len(y) != X.shape[0]:
     raise ValueError(f"Shapes of model inputs {X.shape} and outputs {len(y)} are incompatible")
-print(f"    {X.shape[0]} samples and {X.shape[1]} variables in the model")
+print(f"{X.shape[0]} samples and {X.shape[1]} variables in the model")
 
 
 ########################## STEP 3: FIT L2-PENALIZED REGRESSION ##########################
@@ -155,9 +158,9 @@ else:
 model.fit(X, y)
 
 if binary:
-    print(f"    Regularization parameter: {model.C_[0]}")
+    print(f"Regularization parameter: {model.C_[0]}")
 else:
-    print(f"    Regularization parameter: {model.alpha_}")
+    print(f"Regularization parameter: {model.alpha_}")
     
 # save coefficients
 res_df = pd.DataFrame({"mutation": model_inputs.columns, 'coef': np.squeeze(model.coef_)})
@@ -170,32 +173,9 @@ else:
 
 ########################## STEP 4: BOOTSTRAP COEFFICIENTS ##########################
 
-
-# use the regularization parameter determined above
-def bootstrap_coef(model, X, y):
-    coefs = []
-    for i in range(num_bootstrap):
-
-        # randomly draw sample indices
-        sample_idx = np.random.choice(np.arange(0, len(y)), size=len(y), replace=True)
-
-        # get the X and y matrices
-        X_bs = X[sample_idx, :]
-        y_bs = y[sample_idx]
-
-        if binary:
-            bs_model = LogisticRegression(C=model.C_[0], penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
-        else:
-            bs_model = Ridge(alpha=model.alpha_, max_iter=10000)
-        
-        bs_model.fit(X_bs, y_bs)
-        coefs.append(np.squeeze(bs_model.coef_))
-
-    return pd.DataFrame(coefs)
-
-
-# save bootstrapped coefficients and principal components
-coef_df = bootstrap_coef(model, X, y)
+# save bootstrapped coefficients and principal components. use regularization param determined above
+print(f"Bootstrapping {num_bootstrap} times")
+coef_df = bootstrap_coef(model, X, y, num_bootstrap, binary)
 coef_df.columns = model_inputs.columns
 
 if atu_analysis:

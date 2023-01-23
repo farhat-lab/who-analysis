@@ -1,15 +1,12 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-plt.rcParams['figure.dpi'] = 150
 import scipy.stats as st
-import sys
-
-import glob, os, yaml
-import warnings
-warnings.filterwarnings("ignore")
+import sys, glob, os, yaml
 who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
 
+# analysis utils is in the analysis folder
+sys.path.append(os.path.join(os.getcwd(), "analysis"))
+from stats_utils import *
 
 ############# CODE TO MAKE THE COMBINE WHO 2021 VARIANTS + CONFIDENCES FILE #############
 # who_variants = pd.read_csv("analysis/who_resistance_variants_all.csv")
@@ -31,56 +28,6 @@ who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
 # # some V1 mutations were combined into a single V2 mutation, so they may have multiple confidences listed. Keep the highest confidence instance
 # who_variants_combined = who_variants_combined.dropna().sort_values("confidence", ascending=True).drop_duplicates(subset=["drug", "mutation"], keep="first")
 # who_variants_combined.to_csv("analysis/who_confidence_2021.csv", index=False)
-
-
-def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
-    '''
-    Compute p-values using the Student's t-distribution. 
-    '''
-        
-    # first compute confidence intervals for the coefficients for all mutation, regardless of tier
-    ci = (1-alpha)*100
-    diff = (100-ci)/2
-        
-    # check ordering, then compute upper and lower bounds for the coefficients
-    assert sum(coef_df["mutation"].values != bootstrap_df.columns) == 0
-    lower, upper = np.percentile(bootstrap_df, axis=0, q=(diff, 100-diff))
-    coef_df["coef_LB"] = lower
-    coef_df["coef_UB"] = upper
-            
-    # degrees of freedom: N - k - 1, where N = number of samples, k = number of features
-    dof = num_samples - len(coef_df) - 1
-    
-    for i, row in coef_df.iterrows():
-        
-        # sanity check
-        assert bootstrap_df[row[col]].std() > 0  
-
-        # t-statistic is the true coefficient divided by the standard deviation of the bootstrapped coefficients
-        t = np.abs(row["coef"]) / bootstrap_df[row[col]].std()
-
-        # survival function = 1 - CDF = P(t > t_stat) = measure of extremeness        
-        coef_df.loc[i, "pval"] = st.t.sf(t, df=dof)
-        
-    assert len(coef_df.loc[pd.isnull(coef_df["pval"])]) == 0
-    return coef_df
-        
-
-
-def BH_FDR_correction(coef_df):
-    '''
-    Implement Benjamini-Hochberg FDR correction.
-    '''
-    
-    coef_df = coef_df.sort_values("pval", ascending=True)
-    
-    # assign ranks -- ties get the same value, and only increment by one
-    rank_dict = dict(zip(np.unique(coef_df["pval"]), np.arange(len(np.unique(coef_df["pval"])))+1))
-    ranks = coef_df["pval"].map(rank_dict).values
-    
-    coef_df["BH_pval"] = np.min([coef_df["pval"] * len(coef_df) / ranks, np.ones(len(coef_df))], axis=0) 
-
-    return coef_df
 
 
 def run_all(drug, drug_abbr, who_variants_combined, **kwargs):

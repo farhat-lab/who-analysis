@@ -37,7 +37,7 @@ else:
 scaler = StandardScaler()
 
 if not os.path.isdir(os.path.join(analysis_dir, drug, "BINARY/LRT")):
-    os.makedirs(os.path.join(analysis_dir, drug, "BINARY/LRT"))
+    os.makedirs(os.path.join(analysis_dir, drug, "BINARY/interaction"))
     
 
 ############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES #############
