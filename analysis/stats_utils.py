@@ -12,6 +12,22 @@ import tracemalloc, pickle
 scaler = StandardScaler()
 
 
+
+def get_binary_metrics_from_model(model, X, y):
+        
+    # get positive class probabilities and predicted classes after determining the binarization threshold
+    y_prob = model.predict_proba(X)[:, 1]
+    y_pred = get_threshold_val_and_classes(y_prob, y)
+    tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y, y_pred=y_pred).ravel()
+    
+    return np.array([sklearn.metrics.roc_auc_score(y_true=y, y_score=y_prob),
+                    tp / (tp + fn),
+                    tn / (tn + fp),
+                    sklearn.metrics.accuracy_score(y_true=y, y_pred=y_pred),
+                   ])
+
+
+
 def get_threshold_val_and_classes(y_prob, y_test):
     
     # Compute number resistant and sensitive
@@ -47,7 +63,6 @@ def get_threshold_val_and_classes(y_prob, y_test):
     # get index of highest sum(s) of sens and spec. Arbitrarily take the first threshold when there are multiple
     best_sens_spec_sum_idx = np.where(sens_spec_sum == np.max(sens_spec_sum))[0][0]
     select_thresh = thresholds[best_sens_spec_sum_idx]
-    print(f"Binarization threshold: {select_thresh}")
 
     # return the predicted class labels
     return (pred_df["y_prob"] > select_thresh).astype(int).values
@@ -56,7 +71,7 @@ def get_threshold_val_and_classes(y_prob, y_test):
 
 
 # use the regularization parameter determined above
-def bootstrap_coef(model, X, y, num_bootstrap, binary=True):
+def perform_bootstrapping(model, X, y, num_bootstrap, binary=True, save_summary_stats=False):
     
     if type(model) == float:
         reg_param = model
@@ -67,6 +82,8 @@ def bootstrap_coef(model, X, y, num_bootstrap, binary=True):
             reg_param = model.alpha_
     
     coefs = []
+    summary_stats_df = pd.DataFrame(columns=["AUC", "Sens", "Spec", "accuracy"])
+    
     for i in range(num_bootstrap):
 
         # randomly draw sample indices
@@ -84,11 +101,57 @@ def bootstrap_coef(model, X, y, num_bootstrap, binary=True):
         bs_model.fit(X_bs, y_bs)
         coefs.append(np.squeeze(bs_model.coef_))
         
-        if i % 10 == 0:
-            print(i)
+        # also output a dataframe with the AUC, sensitivity, specificity, and accuracy of the model
+        if save_summary_stats:
+            
+            y_prob = bs_model.predict_proba(X_bs)[:, 1]
+            y_pred = get_threshold_val_and_classes(y_prob, y_bs)
+            
+            tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y_bs, y_pred=y_pred).ravel()
+            
+            summary_stats_df.loc[i, :] = [sklearn.metrics.roc_auc_score(y_true=y_bs, y_score=y_prob),
+                                           tp / (tp + fn),
+                                           tn / (tn + fp),
+                                           sklearn.metrics.accuracy_score(y_true=y_bs, y_pred=y_pred),
+                                          ]
 
+    if save_summary_stats:        
+        return pd.DataFrame(coefs), summary_stats_df
+    else:
+        return pd.DataFrame(coefs)
+
+    
+    
+    
+# use the regularization parameter determined above
+def perform_permutation_test(model, X, y, num_reps, binary=True):
+    
+    if type(model) == float:
+        reg_param = model
+    else:
+        if binary:
+            reg_param = model.C_[0]
+        else:
+            reg_param = model.alpha_
+    
+    coefs = []    
+    for i in range(num_reps):
+
+        # shuffle phenotypes. np.random.shuffle works in-place
+        y_permute = y.copy()
+        np.random.shuffle(y_permute)
+
+        if binary:
+            rep_model = LogisticRegression(C=reg_param, penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
+        else:
+            rep_model = Ridge(alpha=reg_param, max_iter=10000)
+        
+        rep_model.fit(X, y_permute)
+        coefs.append(np.squeeze(rep_model.coef_))
+        
     return pd.DataFrame(coefs)
 
+    
 
 
 
@@ -291,12 +354,13 @@ def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
         
     assert len(coef_df.loc[pd.isnull(coef_df["pval"])]) == 0
     return coef_df
-        
 
 
-def BH_FDR_correction(df, col="pval"):
+
+
+def add_pval_corrections(df, col="pval"):
     '''
-    Implement Benjamini-Hochberg FDR correction.
+    Implement Benjamini-Hochberg FDR and Bonferroni corrections.
     '''
     
     if sum(pd.isnull(df[col])) > 0:
@@ -309,5 +373,6 @@ def BH_FDR_correction(df, col="pval"):
     ranks = df[col].map(rank_dict).values
     
     df["BH_pval"] = np.min([df[col] * len(df) / ranks, np.ones(len(df))], axis=0) 
-
-    return df
+    df["Bonferroni_pval"] = np.min([df[col] * len(df[col]), np.ones(len(df[col]))], axis=0)
+    
+    return df.reset_index(drop=True)

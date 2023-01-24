@@ -174,14 +174,15 @@ else:
 ########################## STEP 4: BOOTSTRAP COEFFICIENTS ##########################
 
 # save bootstrapped coefficients and principal components. use regularization param determined above
-print(f"Bootstrapping {num_bootstrap} times")
-coef_df = bootstrap_coef(model, X, y, num_bootstrap, binary)
+# X has already been scaled
+print(f"Peforming permutation test with {num_bootstrap} replicates")
+coef_df = perform_permutation_test(model, X, y, num_bootstrap, binary=True)
 coef_df.columns = model_inputs.columns
 
 if atu_analysis:
-    coef_df.to_csv(os.path.join(out_dir, f"coef_bootstrap_{model_suffix.replace('-', '_')}.csv"), index=False)
+    coef_df.to_csv(os.path.join(out_dir, f"coef_permutation_{model_suffix.replace('-', '_')}.csv"), index=False)
 else:
-    coef_df.to_csv(os.path.join(out_dir, "coef_bootstrap.csv"), index=False)
+    coef_df.to_csv(os.path.join(out_dir, "coef_permutation.csv"), index=False)
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
