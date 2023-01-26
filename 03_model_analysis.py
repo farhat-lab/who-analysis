@@ -71,7 +71,7 @@ if not os.path.isfile(os.path.join(out_dir, f"regression_coef{model_suffix}.csv"
 
 # coefficients from L2 regularized regression ("baseline" regression) and the coefficients from the permutation test
 coef_df = pd.read_csv(os.path.join(out_dir, f"regression_coef{model_suffix}.csv")).reset_index(drop=True)
-permute_df = pd.read_csv(os.path.join(out_dir, "coef_permutation.csv"))
+permute_df = pd.read_csv(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv"))
 
 # assess significance using the results of the permutation test
 for i, row in coef_df.iterrows():

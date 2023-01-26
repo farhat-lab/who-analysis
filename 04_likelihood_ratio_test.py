@@ -22,8 +22,8 @@ tracemalloc.start()
 _, config_file, drug, _ = sys.argv
 
 kwargs = yaml.safe_load(open(config_file))    
-tiers_lst = kwargs["tiers_lst"]
 binary = kwargs["binary"]
+tiers_lst = kwargs["tiers_lst"]
 synonymous = kwargs["synonymous"]
 alpha = kwargs["alpha"]
 model_prefix = kwargs["model_prefix"]
@@ -31,6 +31,7 @@ pheno_category_lst = kwargs["pheno_category_lst"]
 atu_analysis = kwargs["atu_analysis"]
 atu_analysis_type = kwargs["atu_analysis_type"]
 analysis_dir = kwargs["output_dir"]
+num_PCs = kwargs["num_PCs"]
 
 if "ALL" in pheno_category_lst:
     phenos_name = "ALL"
@@ -38,7 +39,9 @@ else:
     phenos_name = "WHO"
 
 scaler = StandardScaler()
-out_dir = os.path.join(analysis_dir, drug, f"BINARY/LRT/tiers={'+'.join(tiers_lst)}/phenos={phenos_name}")
+
+out_dir = os.path.join(analysis_dir, drug, f"BINARY/LRT/phenos={phenos_name}")
+print(f"Saving results to {out_dir}")
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
@@ -54,6 +57,11 @@ df_phenos = pd.read_csv(phenos_file).set_index("sample_id")
 matrix = pd.read_pickle(os.path.join(analysis_dir, drug, f"BINARY/tiers={'+'.join(tiers_lst)}/phenos={phenos_name}/{model_prefix}/model_matrix.pkl"))
 mutations_lst = matrix.columns
 
+# if this is for a tier 1 + 2 model, only compute LRT for tier 2 mutations, so remove the tier 1 mutations
+if len(tiers_lst) == 2:
+    tier1_mutations = pd.read_pickle(os.path.join(analysis_dir, drug, f"BINARY/tiers=1/phenos={phenos_name}/{model_prefix}/model_matrix.pkl")).columns
+    mutations_lst = list(set(mutations_lst) - set(tier1_mutations))
+ 
 # Read in the PC coordinates dataframe, then keep only the desired number of principal components
 eigenvec_df = pd.read_csv("data/eigenvec_10PC.csv", index_col=[0]).iloc[:, :num_PCs]
 
@@ -113,7 +121,7 @@ def run_regression_for_LRT(matrix, y, results_df, mutation=None, reg_param=None)
     model.fit(X, y)
     
     if mutation is None:
-        pickle.dump(model, open(os.path.join(out_dir, "model.sav"), "wb"))
+        pickle.dump(model, open(os.path.join(out_dir, f"tiers={'+'.join(tiers_lst)}_model.sav"), "wb"))
     
     # get positive class probabilities and predicted classes after determining the binarization threshold
     y_prob = model.predict_proba(X)[:, 1]
@@ -145,27 +153,27 @@ def run_regression_for_LRT(matrix, y, results_df, mutation=None, reg_param=None)
 
 # run regressions for the full model
 results_df = run_regression_for_LRT(matrix, y, results_df, mutation=None, reg_param=None)
-print(results_df)
-model = pickle.load(open(os.path.join(out_dir, "model.sav"), "rb"))
+model = pickle.load(open(os.path.join(out_dir, f"tiers={'+'.join(tiers_lst)}_model.sav"), "rb"))
 reg_param = model.C_[0]
 print(reg_param)
+print(results_df)
+
     
 ############# STEP 4: GET ALL MUTATIONS TO PERFORM THE LRT FOR AND FIT L2-PENALIZED REGRESSIONS FOR ALL MODELS WITH 1 FEATURE REMOVED #############
 
 
-# tier2_mutations = get_tier2_mutations_of_interest(analysis_dir, drug, phenos_name)
 print(f"Performing LRT for {len(mutations_lst)} mutations\n")
     
 for i, mutation in enumerate(mutations_lst):
     
-    print(f"Working on {mutation}")
     results_df = run_regression_for_LRT(matrix, y, results_df, mutation, reg_param)
     
-    if i % 1000 == 0:
-        results_df.to_csv(os.path.join(out_dir, "results.csv"))
+    if i % 100 == 0:
+        results_df.to_csv(os.path.join(out_dir, f"results_tier={tiers_lst[-1]}.csv"))
+        print(f"Finished {mutation}")
     
     
-results_df.to_csv(os.path.join(out_dir, "results.csv"))
+results_df.to_csv(os.path.join(out_dir, f"results_tier={tiers_lst[-1]}.csv"))
 # print(f"{len(results_df['penalty'].unique())} unique penalty terms in the {phenos_name} analysis")
 
 # returns a tuple: current, peak memory in bytes 
