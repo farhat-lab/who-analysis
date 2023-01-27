@@ -5,10 +5,34 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import tracemalloc, pickle
+who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
 
 # analysis utils is in the analysis folder
 sys.path.append(os.path.join(os.getcwd(), "analysis"))
 from stats_utils import *
+
+
+############# CODE TO MAKE THE COMBINE WHO 2021 VARIANTS + CONFIDENCES FILE #############
+# who_variants = pd.read_csv("analysis/who_resistance_variants_all.csv")
+# variant_mapping = pd.read_csv("data/v1_to_v2_variants_mapping.csv", usecols=["gene_name", "variant", "raw_variant_mapping_data.variant_category"])
+# variant_mapping.columns = ["gene", "V1", "V2"]
+# variant_mapping["mutation"] = variant_mapping["gene"] + "_" + variant_mapping["V2"]
+
+# # combine with the new names to get a dataframe with the confidence leve,s and variant mappings between 2021 and 2022
+# who_variants_combined = who_variants.merge(variant_mapping[["V1", "mutation"]], left_on="variant", right_on="V1", how="inner")
+# del who_variants_combined["variant"]
+
+# # check that they have all the same variants
+# assert len(set(who_variants_combined["V1"]).symmetric_difference(set(who_variants["variant"]))) == 0
+
+# del who_variants_combined["genome_index"]
+# del who_variants_combined["gene"]
+# del who_variants_combined["V1"]
+
+# # some V1 mutations were combined into a single V2 mutation, so they may have multiple confidences listed. Keep the highest confidence instance
+# who_variants_combined = who_variants_combined.dropna().sort_values("confidence", ascending=True).drop_duplicates(subset=["drug", "mutation"], keep="first")
+# who_variants_combined.to_csv("analysis/who_confidence_2021.csv", index=False)
+
 
 
 ########################## STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES ##########################
@@ -17,7 +41,7 @@ from stats_utils import *
 # starting the memory monitoring
 tracemalloc.start()
 
-_, config_file, drug, _ = sys.argv
+_, config_file, drug, drug_WHO_abbr = sys.argv
 
 kwargs = yaml.safe_load(open(config_file))
 
@@ -50,8 +74,10 @@ if binary:
         assert model_suffix == "CC" or model_suffix == "CC-ATU"
     else:
         out_dir = os.path.join(analysis_dir, drug, "BINARY", f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
+        model_suffx = ""
 else:
     out_dir = os.path.join(analysis_dir, drug, "MIC", f"tiers={'+'.join(tiers_lst)}", model_prefix)
+    model_suffx = ""
     
 
 ########################## STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES ##########################
@@ -73,9 +99,11 @@ else:
 
 df_phenos = pd.read_csv(phenos_file).set_index("sample_id")
 
+# replace - with _ for file naming later
 if atu_analysis:
     df_phenos = df_phenos.query("phenotypic_category == @model_suffix")
     print(f"Running model on {model_suffix} phenotypes")
+    model_suffix = "_" + model_suffix.replace('-', '_')
     
     
 ########################## STEP 1.1: MAKE SURE THAT EVERY SAMPLE ONLY HAS A SINGLE MIC ##########################
@@ -163,27 +191,54 @@ else:
     print(f"Regularization parameter: {model.alpha_}")
     
 # save coefficients
-res_df = pd.DataFrame({"mutation": model_inputs.columns, 'coef': np.squeeze(model.coef_)})
-
-if atu_analysis:
-    res_df.to_csv(os.path.join(out_dir, f"regression_coef_{model_suffix.replace('-', '_')}.csv"), index=False)
-else:
-    res_df.to_csv(os.path.join(out_dir, "regression_coef.csv"), index=False)
+coef_df.to_csv(os.path.join(out_dir, f"regression_coef{model_suffix}.csv"), index=False)
+   
+    
+########################## STEP 4: PERFORM PERMUTATION TEST TO GET SIGNIFICANCE ##########################
 
 
-########################## STEP 4: BOOTSTRAP COEFFICIENTS ##########################
-
-# save bootstrapped coefficients and principal components. use regularization param determined above
-# X has already been scaled
 print(f"Peforming permutation test with {num_bootstrap} replicates")
-coef_df = perform_permutation_test(model, X, y, num_bootstrap, binary=True)
-coef_df.columns = model_inputs.columns
+permute_df = perform_permutation_test(model, X, y, num_bootstrap, binary=True)
+permute_df.columns = model_inputs.columns
+permute_df.to_csv(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv"), index=False)
 
-if atu_analysis:
-    coef_df.to_csv(os.path.join(out_dir, f"coef_permutation_{model_suffix.replace('-', '_')}.csv"), index=False)
-else:
-    coef_df.to_csv(os.path.join(out_dir, "coef_permutation.csv"), index=False)
+    
+########################## STEP 4: ADD PERMUTATION TEST P-VALUES TO THE MAIN COEF DATAFRAME ##########################
+    
 
+# get dataframe of 2021 WHO confidence gradings
+who_variants_single_drug = who_variants_combined.query("drug==@drug_WHO_abbr")
+del who_variants_single_drug["drug"]
+del who_variants_combined
+
+
+# assess significance using the results of the permutation test
+for i, row in coef_df.iterrows():
+    # p-value is the proportion of permutation coefficients that are AT LEAST AS EXTREME as the test statistic
+    if row["coef"] > 0:
+        coef_df.loc[i, "pval"] = np.mean(permute_df[row["mutation"]] >= row["coef"])
+    else:
+        coef_df.loc[i, "pval"] = np.mean(permute_df[row["mutation"]] <= row["coef"])
+
+        
+# Benjamini-Hochberg and Bonferroni corrections
+coef_df = add_pval_corrections(coef_df)
+
+# adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
+assert len(coef_df.query("pval > BH_pval")) == 0
+assert len(coef_df.query("pval > Bonferroni_pval")) == 0
+
+# convert to odds ratios
+if binary:
+    coef_df["Odds_Ratio"] = np.exp(coef_df["coef"])
+    # coef_df["OR_LB"] = np.exp(coef_df["coef_LB"])
+    # coef_df["OR_UB"] = np.exp(coef_df["coef_UB"])
+
+# add in the WHO 2021 catalog confidence levels, using the dataframe with 2021 to 2022 mapping and save
+final_df = coef_df.merge(who_variants_single_drug, on="mutation", how="left")
+assert len(final_df) == len(coef_df)
+final_df.sort_values("coef", ascending=False).to_csv(os.path.join(out_dir, f"model_analysis{model_suffix}.csv"), index=False)        
+        
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
 tracemalloc.stop()

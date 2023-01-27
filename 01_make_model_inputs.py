@@ -91,31 +91,47 @@ else:
     phenos_file = os.path.join(analysis_dir, drug, "phenos_mic.csv")
     pheno_col = "mic_value"
 
-# # this is mainly for the CC vs. CC-ATU analysis, which use the same genotype dataframes. Only the phenotypes are different
-# if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
-#     print("Model matrix already exists. Proceeding with modeling")
-#     exit()
+    
+# this is mainly for the CC vs. CC-ATU analysis, which use the same genotype dataframes. Only the phenotypes are different
+if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+    print("Model matrix already exists. Proceeding with modeling")
+    exit()
 
-
-def save_feature_list(feat1_array, feat2_array, fName):
+                
+def remove_features_save_list(matrix, fName, dropNA=False):
     '''
     This function saves the names of features that were dropped during a given processing step.
-    
-    Inputs: feat1_array = names of features in the first set
-            feat2_array = names of features in the second set
-            fName = the file to write the names to
-            
-    feat2_array must be a subset of feat1_array. They may be the same arrays, which means that no features were dropped.
-    An output file is only written if there are features in feat1_array than are not in feat2_array.
+    An output file is only written if features were dropped (i.e., no empty files).
     '''
     
+    # original numbers of features and samples
+    matrix_features = matrix.columns
+    num_samples = len(matrix)
+
+    # drop any isolates with missingness
+    if dropNA:
+        matrix = matrix.dropna(axis=0, how="any")
+
+    # remove any features that have no signal after isolates were dropped, then save the list of dropped features
+    matrix = matrix[matrix.columns[~((matrix == 0).all())]]
+
     # get the dropped features = features in 1 that are not in 2
-    dropped_feat = list(set(feat1_array) - set(feat2_array))
+    dropped_feat = list(set(matrix.columns) - set(matrix_features))
+    num_dropped_samples = num_samples - len(matrix)
     
     if len(dropped_feat) > 0:
         with open(fName, "w+") as file:
             for feature in dropped_feat:
                 file.write(feature + "\n")
+                
+    # if no samples with NaNs were dropped, then the number of samples should not have changed
+    if dropNA:
+        print(f"    Dropped {num_dropped_samples}/{num_samples} samples with any missingness and {len(matrix_features) - len(matrix.columns)} associated features")
+    else:
+        print(f"    Dropped {len(matrix_features)-matrix.shape[1]} features that are not present in any sample")
+        assert num_dropped_samples == 0
+    
+    return matrix
     
 
 ######################### STEP 1: GET ALL AVAILABLE PHENOTYPES, PROCESS THEM, AND SAVE TO A GENERAL PHENOTYPES FILE FOR EACH DRUG #########################
@@ -327,13 +343,19 @@ elif amb_mode == "DROP":
     
     # get the features in the dataframe after dropping isolates with ambiguous allele fractions, then save to a file if there are any dropped features
     post_dropAmb_mutations = df_model.query("variant_binary_status==1")["resolved_symbol"] + "_" + df_model.query("variant_binary_status==1")["variant_category"]
-    save_feature_list(pre_dropAmb_mutations, post_dropAmb_mutations, os.path.join(out_dir, "dropped_features/isolates_with_amb.txt"))
+    
+    # get the dropped features that are in pre_dropAmb_mutations but not in post_dropAmb_mutations, then write them to a file
+    dropped_feat = list(set(pre_dropAmb_mutations) - set(post_dropAmb_mutations))
+    if len(dropped_feat) > 0:
+        with open(os.path.join(out_dir, "dropped_features/isolates_with_amb.txt"), "w+") as file:
+            for feature in dropped_feat:
+                file.write(feature + "\n")
     
 # check after this step that the only NaNs left are truly missing data --> NaN in variant_binary_status must also be NaN in variant_allele_frequency
 assert len(df_model.loc[(~pd.isnull(df_model["variant_allele_frequency"])) & (pd.isnull(df_model["variant_binary_status"]))]) == 0
 
 
-######################### STEP 5: PIVOT TO MATRIX AND DROP HIGH-FREQUENCY MISSINGNESS #########################
+######################### STEP 5: PIVOT TO MATRIX AND DROP MISSINGNESS AND ANY FEATURES THAT ARE ALL 0 #########################
 
 
 # 1 = alternative allele, 0 = reference allele, NaN = missing
@@ -341,36 +363,32 @@ df_model["mutation"] = df_model["resolved_symbol"] + "_" + df_model["variant_cat
 
 # drop any missing data (if variant_binary_status = NaN, then the mutation didn't pass quality control)
 # then drop any duplicates. Preferentially keep variant_binary_status = 1, so sort descending and keep first
+# if there was no risk of duplicates, then we could just drop NaNs in the next step from matrix, but because of potential duplicates, we drop NaNs, then drop duplicates
+# between 0s and 1s for the same mutation
 df_model = df_model.dropna(subset="variant_binary_status", axis=0, how="any")
 df_model = df_model.sort_values("variant_binary_status", ascending=False).drop_duplicates(["sample_id", "mutation"], keep="first")
 matrix = df_model.pivot(index="sample_id", columns="mutation", values="variant_binary_status")
 del df_model
-print(f"    Initially {matrix.shape[0]} samples and {matrix.shape[1]} features")
+print(f"    Initially {matrix.shape[0]} samples and {matrix.shape[1]} features")         
 
-# drop any features with no signal and write them to the file
-matrix_features = matrix.columns
-matrix = matrix[matrix.columns[~((matrix == 0).all())]]
-save_feature_list(matrix_features, matrix.columns, os.path.join(out_dir, "dropped_features/no_signal.txt"))
-print(f"    Dropped {len(matrix_features)-matrix.shape[1]} features that are not present in any sample")
-
-# drop samples with missing features. The step above drops a (sample, mutation) pair, but not all mutations for a given isolate. This is done here
-filtered_matrix = matrix.dropna(axis=0, how="any")
-save_feature_list(matrix.columns, filtered_matrix.columns, os.path.join(out_dir, "dropped_features/isolates_dropped.txt"))
-print(f"    Dropped {matrix.shape[0] - filtered_matrix.shape[0]}/{matrix.shape[0]} samples with any missingness and {len(matrix.columns)-len(filtered_matrix.columns)} associated features")
-del matrix
+# drop features that have no signal. Don't drop NaNs in samples in this step
+matrix = remove_features_save_list(matrix, os.path.join(out_dir, "dropped_features/no_signal.txt"), dropNA=False)
+        
+# drop isolates with any missingness, then remove features that became all 0s, and save the list
+matrix = remove_features_save_list(matrix, os.path.join(out_dir, "dropped_features/isolates_dropped.txt"), dropNA=True)
 
 # there should not be any more NaNs
-assert sum(pd.isnull(np.unique(filtered_matrix.values))) == 0
+assert sum(pd.isnull(np.unique(matrix.values))) == 0
 
 # in this case, only 2 possible values -- 0 (ref), 1 (alt) because we already dropped NaNs
 if amb_mode.upper() in ["BINARY", "DROP"]:
-    assert len(np.unique(filtered_matrix.values)) <= 2
+    assert len(np.unique(matrix.values)) <= 2
 # the smallest value will be 0. Check that the second smallest value is greater than 0.25 (below this, AFs are not really reliable)
 else:
-    assert np.sort(np.unique(filtered_matrix.values))[1] > 0.25
+    assert np.sort(np.unique(matrix.values))[1] > 0.25
 
-print(f"    Kept {filtered_matrix.shape[0]} isolates and {filtered_matrix.shape[1]} genetic variants")
-filtered_matrix.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
+print(f"    Kept {matrix.shape[0]} isolates and {matrix.shape[1]} genetic variants")
+matrix.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
