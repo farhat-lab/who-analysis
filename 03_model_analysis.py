@@ -95,10 +95,8 @@ for i, row in coef_df.iterrows():
 coef_df = add_pval_corrections(coef_df)
 
 # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
-if len(coef_df.query("pval > BH_pval")) > 0:
-    print(coef_df.query("pval > BH_pval"))
-if len(coef_df.query("pval > Bonferroni_pval")) > 0:
-    print(coef_df.query("pval > Bonferroni_pval"))
+assert len(coef_df.query("pval > BH_pval")) == 0
+assert len(coef_df.query("pval > Bonferroni_pval")) == 0
 
 # convert to odds ratios
 if binary:

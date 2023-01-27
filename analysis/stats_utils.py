@@ -6,7 +6,7 @@ import sklearn.metrics
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
-import tracemalloc, pickle
+import tracemalloc, pickle, statsmodels
 
 
 scaler = StandardScaler()
@@ -366,13 +366,10 @@ def add_pval_corrections(df, col="pval"):
     if sum(pd.isnull(df[col])) > 0:
         raise ValueError("There are NaNs in the p-value column!")
         
-    df = df.sort_values(col, ascending=True)
-    
-    # assign ranks -- ties get the same value, and only increment by one
-    rank_dict = dict(zip(np.unique(df[col]), np.arange(len(np.unique(df[col])))+1))
-    ranks = df[col].map(rank_dict).values
-    
-    df["BH_pval"] = np.min([df[col] * len(df) / ranks, np.ones(len(df))], axis=0) 
-    df["Bonferroni_pval"] = np.min([df[col] * len(df[col]), np.ones(len(df[col]))], axis=0)
+    _, bh_pvals, _, _ = statsmodels.stats.multitest.multipletests(df[col].values,  method='fdr_bh', is_sorted=False, returnsorted=False)
+    _, bonferroni_pvals, _, _ = statsmodels.stats.multitest.multipletests(df[col].values,  method='bonferroni', is_sorted=False, returnsorted=False)
+
+    df["BH_pval"] = bh_pvals
+    df["Bonferroni_pval"] = bonferroni_pvals
     
     return df.reset_index(drop=True)

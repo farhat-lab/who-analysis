@@ -59,6 +59,7 @@ assert sum(matrix.index != df_phenos.index.values) == 0
 X = scaler.fit_transform(matrix.values)
 y = df_phenos["phenotype"].values
 
+
 ############# STEP 2: FIT L2-PENALIZED REGRESSION FOR THE ORIGINAL MODEL #############
 
 
