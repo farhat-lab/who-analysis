@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 import glob, os, yaml, sparse, sys
 import scipy.stats as st
 import sklearn.metrics
@@ -45,6 +46,10 @@ print(f"Saving results to {out_dir}")
 
 if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
+    
+# run likelihood ratio test only for BINARY models currently
+if not binary or atu_analysis:
+    exit()
 
 
 ############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES #############
@@ -54,7 +59,11 @@ phenos_file = os.path.join(analysis_dir, drug, "phenos_binary.csv")
 df_phenos = pd.read_csv(phenos_file).set_index("sample_id")
 
 # different matrices, depending on the phenotypes. Get all mutations 
-matrix = pd.read_pickle(os.path.join(analysis_dir, drug, f"BINARY/tiers={'+'.join(tiers_lst)}/phenos={phenos_name}/{model_prefix}/model_matrix.pkl"))
+# no model (basically just for Pretomanid because there are no WHO phenotypes, so some models don't exist)
+if not os.path.isfile(os.path.join(analysis_dir, drug, f"BINARY/tiers={'+'.join(tiers_lst)}/phenos={phenos_name}/{model_prefix}/model_matrix.pkl")):
+    exit()
+else:
+    matrix = pd.read_pickle(os.path.join(analysis_dir, drug, f"BINARY/tiers={'+'.join(tiers_lst)}/phenos={phenos_name}/{model_prefix}/model_matrix.pkl"))
 mutations_lst = matrix.columns
 
 # if this is for a tier 1 + 2 model, only compute LRT for tier 2 mutations, so remove the tier 1 mutations
@@ -155,8 +164,6 @@ def run_regression_for_LRT(matrix, y, results_df, mutation=None, reg_param=None)
 results_df = run_regression_for_LRT(matrix, y, results_df, mutation=None, reg_param=None)
 model = pickle.load(open(os.path.join(out_dir, f"tiers={'+'.join(tiers_lst)}_model.sav"), "rb"))
 reg_param = model.C_[0]
-print(reg_param)
-print(results_df)
 
     
 ############# STEP 4: GET ALL MUTATIONS TO PERFORM THE LRT FOR AND FIT L2-PENALIZED REGRESSIONS FOR ALL MODELS WITH 1 FEATURE REMOVED #############
@@ -169,12 +176,9 @@ for i, mutation in enumerate(mutations_lst):
     results_df = run_regression_for_LRT(matrix, y, results_df, mutation, reg_param)
     
     if i % 100 == 0:
-        results_df.to_csv(os.path.join(out_dir, f"results_tier={tiers_lst[-1]}.csv"))
         print(f"Finished {mutation}")
     
-    
-results_df.to_csv(os.path.join(out_dir, f"results_tier={tiers_lst[-1]}.csv"))
-# print(f"{len(results_df['penalty'].unique())} unique penalty terms in the {phenos_name} analysis")
+results_df.to_csv(os.path.join(out_dir, f"tier={tiers_lst[-1]}_results.csv"))
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

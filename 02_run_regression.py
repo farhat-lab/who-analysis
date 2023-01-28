@@ -49,6 +49,7 @@ tiers_lst = kwargs["tiers_lst"]
 binary = kwargs["binary"]
 atu_analysis = kwargs["atu_analysis"]
 analysis_dir = kwargs["output_dir"]
+alpha = kwargs["alpha"]
 
 # double check. If running CC vs. CC-ATU analysis, they are binary phenotypes
 if atu_analysis:
@@ -74,10 +75,10 @@ if binary:
         assert model_suffix == "CC" or model_suffix == "CC-ATU"
     else:
         out_dir = os.path.join(analysis_dir, drug, "BINARY", f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
-        model_suffx = ""
+        model_suffix = ""
 else:
     out_dir = os.path.join(analysis_dir, drug, "MIC", f"tiers={'+'.join(tiers_lst)}", model_prefix)
-    model_suffx = ""
+    model_suffix = ""
     
 
 ########################## STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES ##########################
@@ -191,16 +192,22 @@ else:
     print(f"Regularization parameter: {model.alpha_}")
     
 # save coefficients
+coef_df = pd.DataFrame({"mutation": model_inputs.columns, "coef": np.squeeze(model.coef_)})
 coef_df.to_csv(os.path.join(out_dir, f"regression_coef{model_suffix}.csv"), index=False)
    
     
-########################## STEP 4: PERFORM PERMUTATION TEST TO GET SIGNIFICANCE ##########################
+########################## STEP 4: PERFORM PERMUTATION TEST TO GET SIGNIFICANCE AND BOOTSTRAPPING TO GET ODDS RATIO CONFIDENCE INTERVALS ##########################
 
 
 print(f"Peforming permutation test with {num_bootstrap} replicates")
-permute_df = perform_permutation_test(model, X, y, num_bootstrap, binary=True)
+permute_df = perform_permutation_test(model, X, y, num_bootstrap, binary=binary)
 permute_df.columns = model_inputs.columns
 permute_df.to_csv(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv"), index=False)
+
+print(f"Peforming bootstrapping with {num_bootstrap} replicates")
+bootstrap_df = perform_bootstrapping(model, X, y, num_bootstrap, binary=binary, save_summary_stats=False)
+bootstrap_df.columns = model_inputs.columns
+bootstrap_df.to_csv(os.path.join(out_dir, f"coef_bootstrapping{model_suffix}.csv"), index=False)
 
     
 ########################## STEP 4: ADD PERMUTATION TEST P-VALUES TO THE MAIN COEF DATAFRAME ##########################
@@ -211,7 +218,14 @@ who_variants_single_drug = who_variants_combined.query("drug==@drug_WHO_abbr")
 del who_variants_single_drug["drug"]
 del who_variants_combined
 
-
+# add confidence intervals for the coefficients for all mutation. first check ordering of mutations
+ci = (1-alpha)*100
+diff = (100-ci)/2
+assert sum(coef_df["mutation"].values != bootstrap_df.columns) == 0
+lower, upper = np.percentile(bootstrap_df, axis=0, q=(diff, 100-diff))
+coef_df["coef_LB"] = lower
+coef_df["coef_UB"] = upper
+    
 # assess significance using the results of the permutation test
 for i, row in coef_df.iterrows():
     # p-value is the proportion of permutation coefficients that are AT LEAST AS EXTREME as the test statistic
@@ -219,7 +233,6 @@ for i, row in coef_df.iterrows():
         coef_df.loc[i, "pval"] = np.mean(permute_df[row["mutation"]] >= row["coef"])
     else:
         coef_df.loc[i, "pval"] = np.mean(permute_df[row["mutation"]] <= row["coef"])
-
         
 # Benjamini-Hochberg and Bonferroni corrections
 coef_df = add_pval_corrections(coef_df)
@@ -231,8 +244,8 @@ assert len(coef_df.query("pval > Bonferroni_pval")) == 0
 # convert to odds ratios
 if binary:
     coef_df["Odds_Ratio"] = np.exp(coef_df["coef"])
-    # coef_df["OR_LB"] = np.exp(coef_df["coef_LB"])
-    # coef_df["OR_UB"] = np.exp(coef_df["coef_UB"])
+    coef_df["OR_LB"] = np.exp(coef_df["coef_LB"])
+    coef_df["OR_UB"] = np.exp(coef_df["coef_UB"])
 
 # add in the WHO 2021 catalog confidence levels, using the dataframe with 2021 to 2022 mapping and save
 final_df = coef_df.merge(who_variants_single_drug, on="mutation", how="left")

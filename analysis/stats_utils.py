@@ -1,12 +1,13 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, sparse, sys
+import glob, os, yaml, sys
 import scipy.stats as st
 import sklearn.metrics
+import statsmodels.stats.api as sm
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
-import tracemalloc, pickle, statsmodels
+import tracemalloc, pickle
 
 
 scaler = StandardScaler()
@@ -323,51 +324,19 @@ def get_tier2_mutations_of_interest(analysis_dir, drug, phenos_name):
 
 
 
-def get_pvalues_add_ci(coef_df, bootstrap_df, col, num_samples, alpha=0.05):
-    '''
-    Compute p-values using the Student's t-distribution. 
-    '''
-        
-    # first compute confidence intervals for the coefficients for all mutation, regardless of tier
-    ci = (1-alpha)*100
-    diff = (100-ci)/2
-        
-    # check ordering, then compute upper and lower bounds for the coefficients
-    assert sum(coef_df["mutation"].values != bootstrap_df.columns) == 0
-    lower, upper = np.percentile(bootstrap_df, axis=0, q=(diff, 100-diff))
-    coef_df["coef_LB"] = lower
-    coef_df["coef_UB"] = upper
-            
-    # degrees of freedom: N - k - 1, where N = number of samples, k = number of features
-    dof = num_samples - len(coef_df) - 1
-    
-    for i, row in coef_df.iterrows():
-        
-        # sanity check
-        assert bootstrap_df[row[col]].std() > 0  
-
-        # t-statistic is the true coefficient divided by the standard deviation of the bootstrapped coefficients
-        t = np.abs(row["coef"]) / bootstrap_df[row[col]].std()
-
-        # survival function = 1 - CDF = P(t > t_stat) = measure of extremeness        
-        coef_df.loc[i, "pval"] = st.t.sf(t, df=dof)
-        
-    assert len(coef_df.loc[pd.isnull(coef_df["pval"])]) == 0
-    return coef_df
-
-
-
-
 def add_pval_corrections(df, col="pval"):
     '''
     Implement Benjamini-Hochberg FDR and Bonferroni corrections.
     '''
     
+    # LINK TO HOW TO USE: https://tedboy.github.io/statsmodels_doc/generated/statsmodels.stats.multitest.fdrcorrection.html#statsmodels.stats.multitest.fdrcorrection
+
     if sum(pd.isnull(df[col])) > 0:
         raise ValueError("There are NaNs in the p-value column!")
         
-    _, bh_pvals, _, _ = statsmodels.stats.multitest.multipletests(df[col].values,  method='fdr_bh', is_sorted=False, returnsorted=False)
-    _, bonferroni_pvals, _, _ = statsmodels.stats.multitest.multipletests(df[col].values,  method='bonferroni', is_sorted=False, returnsorted=False)
+    # alpha argument doesn't matter because we threshold later. It's only relevant if you keep the first argument, which is a boolean of reject vs. not reject
+    _, bh_pvals, _, _ = sm.multipletests(df[col], method='fdr_bh', is_sorted=False, returnsorted=False)
+    _, bonferroni_pvals, _, _ = sm.multipletests(df[col], method='bonferroni', is_sorted=False, returnsorted=False)
 
     df["BH_pval"] = bh_pvals
     df["Bonferroni_pval"] = bonferroni_pvals

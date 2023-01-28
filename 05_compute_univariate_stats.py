@@ -8,10 +8,6 @@ import sys, glob, os, yaml, tracemalloc
 sys.path.append(os.path.join(os.getcwd(), "analysis"))
 from stats_utils import *
 
-# starting the memory monitoring
-tracemalloc.start()
-
-
 
 
 def get_annotated_genos(analysis_dir, drug):
@@ -163,22 +159,22 @@ def add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
 
     
 
+# starting the memory monitoring
+tracemalloc.start()
+
 _, drug, folder, analysis_dir = sys.argv
 
 # this is the intermediate folder
 folder = folder.upper()
 assert folder in ["BINARY", "ATU", "MIC"]
 
-df_phenos = pd.read_csv(phenos_file).set_index("sample_id")
-annotated_genos = get_annotated_genos(analysis_dir, drug)
-
 # get all models to compute univariate statistics for
 analysis_paths = []
 
 for tier in os.listdir(os.path.join(analysis_dir, drug, folder)):
     
-    # there are other folders in this folder
-    if "tiers" in tier:
+    # there are other folders in this folder. also, there is a file called significant_tiers=1+2_variants.csv
+    if "tiers" in tier and os.path.isdir(os.path.join(analysis_dir, drug, folder, tier)):
         tiers_path = os.path.join(analysis_dir, drug, folder, tier)
 
         for level_1 in os.listdir(tiers_path):
@@ -192,11 +188,15 @@ for tier in os.listdir(os.path.join(analysis_dir, drug, folder)):
 
                 if os.path.isfile(os.path.join(level2_path, "model_matrix.pkl")):
                     analysis_paths.append(level2_path)
+                            
+                        
+phenos_file = os.path.join(analysis_dir, drug, f"phenos_{folder.lower()}.csv")    
+df_phenos = pd.read_csv(phenos_file)
+annotated_genos = get_annotated_genos(analysis_dir, drug)
 
     
 if folder == "BINARY":
     print(f"\nComputing univariate statistics for {len(analysis_paths)} BINARY models")
-    print(analysis_paths)
     model_suffix = ""
 
     for model_path in analysis_paths:  

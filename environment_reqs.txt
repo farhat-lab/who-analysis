@@ -3,7 +3,6 @@
 # platform: linux-64
 biopython=1.79
 openpyxl=3.0.10
-fast-lineage-caller=0.3.1
 glob2=0.7
 matplotlib=3.5.1
 matplotlib-base=3.5.1
@@ -18,3 +17,4 @@ scikit-learn-intelex=2021.5.0
 scipy=1.7.3
 seaborn=0.11.2
 sparse=0.13.0
+statsmodels=0.13.5

@@ -1,8 +1,8 @@
 #!/bin/bash 
 #SBATCH -c 10
-#SBATCH -t 0-11:59
+#SBATCH -t 0-06:00
 #SBATCH -p short 
-#SBATCH --mem=100G 
+#SBATCH --mem=10G 
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
@@ -19,7 +19,7 @@ config_array=(
  # 'config_files/binary_04.yaml'
  # 'config_files/binary_05.yaml'
  # 'config_files/binary_06.yaml'
- 'config_files/binary_07.yaml'
+ # 'config_files/binary_07.yaml'
  # 'config_files/binary_08.yaml'
  # 'config_files/binary_09.yaml'
  # 'config_files/binary_10.yaml'
