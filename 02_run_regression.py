@@ -65,6 +65,7 @@ else:
 model_prefix = kwargs["model_prefix"]
 num_PCs = kwargs["num_PCs"]
 num_bootstrap = kwargs["num_bootstrap"]
+num_PCs = 10
 
 if binary:
     if atu_analysis:
@@ -140,7 +141,7 @@ if num_PCs > 0:
     
     # keep only the samples that are in this model, then concatenate the eigenvectors to the matrix
     eigenvec_df = eigenvec_df.loc[model_inputs.index]
-    model_inputs = model_inputs.merge(eigenvec_df, left_index=True, right_index=True)
+    model_inputs = model_inputs.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
 
 # keep only samples (rows) that are in model_inputs
 df_phenos = df_phenos.loc[model_inputs.index]

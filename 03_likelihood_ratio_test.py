@@ -41,7 +41,7 @@ else:
 
 scaler = StandardScaler()
 
-out_dir = os.path.join(analysis_dir, drug, f"BINARY/LRT/phenos={phenos_name}")
+out_dir = os.path.join(analysis_dir, drug, f"BINARY/analysis/phenos={phenos_name}")
 print(f"Saving results to {out_dir}")
 
 if not os.path.isdir(out_dir):
@@ -75,7 +75,7 @@ if len(tiers_lst) == 2:
 eigenvec_df = pd.read_csv("data/eigenvec_10PC.csv", index_col=[0]).iloc[:, :num_PCs]
 
 # concatenate the eigenvectors to the matrix and check the index ordering against the phenotypes matrix
-matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True)
+matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
 print(f"{matrix.shape[0]} samples and {matrix.shape[1]} variables in the largest {phenos_name} model")
 
 df_phenos = df_phenos.loc[matrix.index]
@@ -178,7 +178,7 @@ for i, mutation in enumerate(mutations_lst):
     if i % 100 == 0:
         print(f"Finished {mutation}")
     
-results_df.to_csv(os.path.join(out_dir, f"tier={tiers_lst[-1]}_results.csv"))
+results_df.to_csv(os.path.join(out_dir, f"tier={tiers_lst[-1]}_LRT_results.csv"))
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

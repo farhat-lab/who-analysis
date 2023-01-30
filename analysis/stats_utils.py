@@ -74,7 +74,7 @@ def get_threshold_val_and_classes(y_prob, y_test):
 # use the regularization parameter determined above
 def perform_bootstrapping(model, X, y, num_bootstrap, binary=True, save_summary_stats=False):
     
-    if type(model) == float:
+    if type(model) == float or type(model) == int:
         reg_param = model
     else:
         if binary:
@@ -127,7 +127,7 @@ def perform_bootstrapping(model, X, y, num_bootstrap, binary=True, save_summary_
 # use the regularization parameter determined above
 def perform_permutation_test(model, X, y, num_reps, binary=True):
     
-    if type(model) == float:
+    if type(model) == float or type(model) == int:
         reg_param = model
     else:
         if binary:

@@ -51,7 +51,7 @@ print(matrix.shape)
 
 # Read in the PC coordinates dataframe, then keep only the desired number of principal components
 eigenvec_df = pd.read_csv("data/eigenvec_10PC.csv", index_col=[0]).iloc[:, :num_PCs]
-matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True)
+matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
 
 df_phenos = df_phenos.loc[matrix.index]
 assert sum(matrix.index != df_phenos.index.values) == 0

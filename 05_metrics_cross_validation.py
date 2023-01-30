@@ -40,10 +40,11 @@ else:
 
 scaler = StandardScaler()
 
-if not os.path.isdir(os.path.join(analysis_dir, drug, "BINARY/LRT")):
-    os.makedirs(os.path.join(analysis_dir, drug, "BINARY/LRT"))
-    
-out_dir = os.path.join(analysis_dir, drug, f"BINARY/LRT/phenos={phenos_name}")
+out_dir = os.path.join(analysis_dir, drug, f"BINARY/analysis/phenos={phenos_name}")
+print(f"Saving results to {out_dir}")
+
+if not os.path.isdir(out_dir):
+    os.makedirs(out_dir)
     
 
 ############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES #############
@@ -70,7 +71,7 @@ if len(tiers_lst) == 2:
 eigenvec_df = pd.read_csv("data/eigenvec_10PC.csv", index_col=[0]).iloc[:, :num_PCs]
 
 # concatenate the eigenvectors to the matrix and check the index ordering against the phenotypes matrix
-matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True)
+matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
 df_phenos = df_phenos.loc[matrix.index]
 assert sum(matrix.index != df_phenos.index.values) == 0
 
@@ -146,9 +147,8 @@ for i, mutation in enumerate(mutations_lst):
     if i % 100 == 0:
         print(f"Finished {mutation}")
         
-#     if i % 500 == 0:
-#         summary_stats_all.to_csv(os.path.join(out_dir, f"tier={tiers_lst[-1]}_binaryMetrics_CV.csv"), index=False)
-        
+    if i % 500 == 0:
+        summary_stats_all.to_csv(os.path.join(out_dir, f"tier={tiers_lst[-1]}_binaryMetrics_CV.csv"), index=False)
         
 # save dataframe of all CV results
 del summary_stats_all["fit_time"]

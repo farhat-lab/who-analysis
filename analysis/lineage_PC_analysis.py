@@ -100,7 +100,7 @@ eigenvec_df = pd.DataFrame(eigenvec)
 eigenvec_df.columns = [f"PC{i}" for i in range(n)]
 
 eigenvec_df["Sample ID"] = minor_allele_counts.index.values
-eigenvec_df = eigenvec_df.merge(lineages, on="Sample ID")
+eigenvec_df = eigenvec_df.merge(lineages, on="Sample ID", how="inner")
 
 fig, ax = plt.subplots()
 
