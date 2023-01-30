@@ -65,7 +65,6 @@ else:
 model_prefix = kwargs["model_prefix"]
 num_PCs = kwargs["num_PCs"]
 num_bootstrap = kwargs["num_bootstrap"]
-num_PCs = 10
 
 if binary:
     if atu_analysis:
@@ -89,7 +88,7 @@ else:
 if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
     exit()
 else:
-    model_inputs = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
+    matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
     
 if binary:
     if atu_analysis:
@@ -140,15 +139,15 @@ if num_PCs > 0:
     eigenvec_df = pd.read_csv("data/eigenvec_10PC.csv", index_col=[0]).iloc[:, :num_PCs]
     
     # keep only the samples that are in this model, then concatenate the eigenvectors to the matrix
-    eigenvec_df = eigenvec_df.loc[model_inputs.index]
-    model_inputs = model_inputs.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
+    eigenvec_df = eigenvec_df.loc[matrix.index]
+    matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
 
-# keep only samples (rows) that are in model_inputs
-df_phenos = df_phenos.loc[model_inputs.index]
+# keep only samples (rows) that are in matrix
+df_phenos = df_phenos.loc[matrix.index]
 
 # check that the sample ordering is the same in the genotype and phenotype matrices
-assert sum(model_inputs.index != df_phenos.index) == 0
-X = model_inputs.values
+assert sum(matrix.index != df_phenos.index) == 0
+X = matrix.values
     
 # scale inputs
 scaler = StandardScaler()
@@ -187,13 +186,17 @@ else:
                    )
 model.fit(X, y)
 
+# save model because the regularization parameter will be used subsequently
+if not atu_analysis:
+    pickle.dump(model, open(os.path.join(out_dir, "model.sav"), "wb"))
+
 if binary:
     print(f"Regularization parameter: {model.C_[0]}")
 else:
     print(f"Regularization parameter: {model.alpha_}")
     
 # save coefficients
-coef_df = pd.DataFrame({"mutation": model_inputs.columns, "coef": np.squeeze(model.coef_)})
+coef_df = pd.DataFrame({"mutation": matrix.columns, "coef": np.squeeze(model.coef_)})
 coef_df.to_csv(os.path.join(out_dir, f"regression_coef{model_suffix}.csv"), index=False)
    
     
@@ -202,57 +205,21 @@ coef_df.to_csv(os.path.join(out_dir, f"regression_coef{model_suffix}.csv"), inde
 
 print(f"Peforming permutation test with {num_bootstrap} replicates")
 permute_df = perform_permutation_test(model, X, y, num_bootstrap, binary=binary)
-permute_df.columns = model_inputs.columns
+permute_df.columns = matrix.columns
 permute_df.to_csv(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv"), index=False)
 
 print(f"Peforming bootstrapping with {num_bootstrap} replicates")
 bootstrap_df = perform_bootstrapping(model, X, y, num_bootstrap, binary=binary, save_summary_stats=False)
-bootstrap_df.columns = model_inputs.columns
+bootstrap_df.columns = matrix.columns
 bootstrap_df.to_csv(os.path.join(out_dir, f"coef_bootstrapping{model_suffix}.csv"), index=False)
 
     
 ########################## STEP 4: ADD PERMUTATION TEST P-VALUES TO THE MAIN COEF DATAFRAME ##########################
     
-
-# get dataframe of 2021 WHO confidence gradings
-who_variants_single_drug = who_variants_combined.query("drug==@drug_WHO_abbr")
-del who_variants_single_drug["drug"]
-del who_variants_combined
-
-# add confidence intervals for the coefficients for all mutation. first check ordering of mutations
-ci = (1-alpha)*100
-diff = (100-ci)/2
-assert sum(coef_df["mutation"].values != bootstrap_df.columns) == 0
-lower, upper = np.percentile(bootstrap_df, axis=0, q=(diff, 100-diff))
-coef_df["coef_LB"] = lower
-coef_df["coef_UB"] = upper
     
-# assess significance using the results of the permutation test
-for i, row in coef_df.iterrows():
-    # p-value is the proportion of permutation coefficients that are AT LEAST AS EXTREME as the test statistic
-    if row["coef"] > 0:
-        coef_df.loc[i, "pval"] = np.mean(permute_df[row["mutation"]] >= row["coef"])
-    else:
-        coef_df.loc[i, "pval"] = np.mean(permute_df[row["mutation"]] <= row["coef"])
-        
-# Benjamini-Hochberg and Bonferroni corrections
-coef_df = add_pval_corrections(coef_df)
+final_df = get_coef_and_confidence_intervals(alpha, binary, who_variants_combined, drug_WHO_abbr, coef_df, permute_df, bootstrap_df)
+final_df.sort_values("coef", ascending=False).to_csv(os.path.join(out_dir, f"model_analysis{model_suffix}.csv"), index=False) 
 
-# adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
-assert len(coef_df.query("pval > BH_pval")) == 0
-assert len(coef_df.query("pval > Bonferroni_pval")) == 0
-
-# convert to odds ratios
-if binary:
-    coef_df["Odds_Ratio"] = np.exp(coef_df["coef"])
-    coef_df["OR_LB"] = np.exp(coef_df["coef_LB"])
-    coef_df["OR_UB"] = np.exp(coef_df["coef_UB"])
-
-# add in the WHO 2021 catalog confidence levels, using the dataframe with 2021 to 2022 mapping and save
-final_df = coef_df.merge(who_variants_single_drug, on="mutation", how="left")
-assert len(final_df) == len(coef_df)
-final_df.sort_values("coef", ascending=False).to_csv(os.path.join(out_dir, f"model_analysis{model_suffix}.csv"), index=False)        
-        
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
 tracemalloc.stop()

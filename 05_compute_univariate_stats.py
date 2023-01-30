@@ -126,7 +126,7 @@ def compute_statistics_single_model(model_path, model_suffix, df_phenos, annotat
        'Bonferroni_pval', 'Significant', 'Num_Isolates', 'Total_Isolates', 'TP', 'FP', 'TN', 'FN', 'PPV', 'NPV', 'Sens', 'Spec',
        'LR+', 'LR-', 'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB',
        'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
-       ]].to_csv(os.path.join(model_path, f"model_analysis_with_stats{model_suffix}.csv"), index=False)  
+       ]].to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)  
 
     
     
@@ -152,10 +152,10 @@ def add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
 
     # no odds ratios, save coefficients. For both, drop principal components when saving the new dataframe
     if "MIC" in model_path:
-        res_df.query("~mutation.str.contains('PC')")[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'pval', 'BH_pval', 'Bonferroni_pval', 'Significant']].sort_values("coef", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis_with_stats{model_suffix}.csv"), index=False)
+        res_df.query("~mutation.str.contains('PC')")[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'pval', 'BH_pval', 'Bonferroni_pval', 'Significant']].sort_values("coef", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)
     # save odds ratios
     else:
-        res_df.query("~mutation.str.contains('PC')")[['mutation', 'predicted_effect', 'position', 'confidence', 'Odds_Ratio', 'pval', 'BH_pval','Bonferroni_pval', 'Significant']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis_with_stats{model_suffix}.csv"), index=False)
+        res_df.query("~mutation.str.contains('PC')")[['mutation', 'predicted_effect', 'position', 'confidence', 'Odds_Ratio', 'pval', 'BH_pval','Bonferroni_pval', 'Significant']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)
 
     
 

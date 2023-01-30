@@ -6,7 +6,7 @@ import sklearn.metrics
 import statsmodels.stats.api as sm
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV, LinearRegression
 import tracemalloc, pickle
 
 
@@ -14,18 +14,20 @@ scaler = StandardScaler()
 
 
 
-def get_binary_metrics_from_model(model, X, y):
+def get_binary_metrics_from_model(model, X, y, return_idx):
         
     # get positive class probabilities and predicted classes after determining the binarization threshold
     y_prob = model.predict_proba(X)[:, 1]
     y_pred = get_threshold_val_and_classes(y_prob, y)
     tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y, y_pred=y_pred).ravel()
     
-    return np.array([sklearn.metrics.roc_auc_score(y_true=y, y_score=y_prob),
-                    tp / (tp + fn),
-                    tn / (tn + fp),
-                    sklearn.metrics.accuracy_score(y_true=y, y_pred=y_pred),
-                   ])
+    results = np.array([sklearn.metrics.roc_auc_score(y_true=y, y_score=y_prob),
+                        tp / (tp + fn),
+                        tn / (tn + fp),
+                        sklearn.metrics.accuracy_score(y_true=y, y_pred=y_pred),
+                       ])
+    
+    return results[return_idx]
 
 
 
@@ -95,9 +97,15 @@ def perform_bootstrapping(model, X, y, num_bootstrap, binary=True, save_summary_
         y_bs = y[sample_idx]
 
         if binary:
-            bs_model = LogisticRegression(C=reg_param, penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
+            if reg_param == 0:
+                bs_model = LogisticRegression(penalty='none', max_iter=10000, multi_class='ovr', class_weight='balanced')
+            else:
+                bs_model = LogisticRegression(C=reg_param, penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
         else:
-            bs_model = Ridge(alpha=reg_param, max_iter=10000)
+            if reg_param == 0:
+                bs_model = LinearRegression()
+            else:
+                bs_model = Ridge(alpha=reg_param, max_iter=10000)
         
         bs_model.fit(X_bs, y_bs)
         coefs.append(np.squeeze(bs_model.coef_))
@@ -143,15 +151,65 @@ def perform_permutation_test(model, X, y, num_reps, binary=True):
         np.random.shuffle(y_permute)
 
         if binary:
-            rep_model = LogisticRegression(C=reg_param, penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
+            if reg_param == 0:
+                rep_model = LogisticRegression(penalty='none', max_iter=10000, multi_class='ovr', class_weight='balanced')
+            else:
+                rep_model = LogisticRegression(C=reg_param, penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
         else:
-            rep_model = Ridge(alpha=reg_param, max_iter=10000)
+            if reg_param == 0:
+                rep_model = LinearRegression()
+            else:
+                rep_model = Ridge(alpha=reg_param, max_iter=10000)
         
         rep_model.fit(X, y_permute)
         coefs.append(np.squeeze(rep_model.coef_))
         
     return pd.DataFrame(coefs)
 
+
+
+
+
+def get_coef_and_confidence_intervals(alpha, binary, who_variants_combined, drug_WHO_abbr, coef_df, permute_df, bootstrap_df):
+    
+    # get dataframe of 2021 WHO confidence gradings
+    who_variants_single_drug = who_variants_combined.query("drug==@drug_WHO_abbr")
+    del who_variants_single_drug["drug"]
+    del who_variants_combined
+
+    # add confidence intervals for the coefficients for all mutation. first check ordering of mutations
+    ci = (1-alpha)*100
+    diff = (100-ci)/2
+    assert sum(coef_df["mutation"].values != bootstrap_df.columns) == 0
+    lower, upper = np.percentile(bootstrap_df, axis=0, q=(diff, 100-diff))
+    coef_df["coef_LB"] = lower
+    coef_df["coef_UB"] = upper
+
+    # assess significance using the results of the permutation test
+    for i, row in coef_df.iterrows():
+        # p-value is the proportion of permutation coefficients that are AT LEAST AS EXTREME as the test statistic
+        if row["coef"] > 0:
+            coef_df.loc[i, "pval"] = np.mean(permute_df[row["mutation"]] >= row["coef"])
+        else:
+            coef_df.loc[i, "pval"] = np.mean(permute_df[row["mutation"]] <= row["coef"])
+
+    # Benjamini-Hochberg and Bonferroni corrections
+    coef_df = add_pval_corrections(coef_df)
+
+    # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
+    assert len(coef_df.query("pval > BH_pval")) == 0
+    assert len(coef_df.query("pval > Bonferroni_pval")) == 0
+
+    # convert to odds ratios
+    if binary:
+        coef_df["Odds_Ratio"] = np.exp(coef_df["coef"])
+        coef_df["OR_LB"] = np.exp(coef_df["coef_LB"])
+        coef_df["OR_UB"] = np.exp(coef_df["coef_UB"])
+
+    # add in the WHO 2021 catalog confidence levels, using the dataframe with 2021 to 2022 mapping and save
+    final_df = coef_df.merge(who_variants_single_drug, on="mutation", how="left")
+    assert len(final_df) == len(coef_df)
+    return final_df
     
 
 
@@ -305,21 +363,6 @@ def get_model_inputs_exclude_cooccur(variant, exclude_variants_dict, samples_hig
         y = df_phenos.loc[matrix.index]["phenotype"].values
     
     return matrix, y
-
-
-
-
-def get_tier2_mutations_of_interest(analysis_dir, drug, phenos_name):
-    
-    
-    # get all mutations from the Tiers 1+2 model with positive coefficients and significant p-values
-    model_tiers12 = pd.read_csv(f"{analysis_dir}/{drug}/BINARY/tiers=1+2/phenos={phenos_name}/dropAF_noSyn_unpooled/model_analysis.csv").query("coef > 0 & BH_pval < 0.01")
-    model_tier1 = pd.read_csv(f"{analysis_dir}/{drug}/BINARY/tiers=1/phenos={phenos_name}/dropAF_noSyn_unpooled/model_analysis.csv")
-
-    # drop mutations that are in the Tier 1 model, only want to consider Tier 2 mutations
-    tier2_mutations_of_interest = list(set(model_tiers12["mutation"]) - set(model_tier1["mutation"]))
-    print(f"{len(tier2_mutations_of_interest)} significant tier 2 mutations associated with {phenos_name} resistance")
-    return tier2_mutations_of_interest
 
 
 

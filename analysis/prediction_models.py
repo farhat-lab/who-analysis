@@ -144,7 +144,7 @@ del AND_matrix
 del AND_phenos
 
 OR_matrix, OR_phenos = prepare_model_inputs(df_model, df_phenos, OR_mutations)
-fit_model_save_results(AOR_matrix, OR_phenos, "OR")
+fit_model_save_results(OR_matrix, OR_phenos, "OR")
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
