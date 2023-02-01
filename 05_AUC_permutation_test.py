@@ -19,7 +19,7 @@ from stats_utils import *
 # starting the memory monitoring
 tracemalloc.start()
 
-_, config_file, drug = sys.argv
+_, config_file, drug, _ = sys.argv
 
 kwargs = yaml.safe_load(open(config_file))
 

@@ -165,7 +165,7 @@ if len(y) != X.shape[0]:
 print(f"{X.shape[0]} samples and {X.shape[1]} variables in the model")
 
 
-########################## STEP 3: FIT L2-PENALIZED REGRESSION ##########################
+######################### STEP 3: FIT L2-PENALIZED REGRESSION ##########################
 
 
 if binary:
