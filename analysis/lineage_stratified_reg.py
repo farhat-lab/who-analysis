@@ -92,7 +92,8 @@ else:
     lineage_samples = []
 
     for i, row in lineages.iterrows():
-        if lineage in row["Lineage"].split(","):
+        # if lineage in row["Lineage"].split(","):
+        if "2.2.1" in row["Lineage"].split(",") or "2.2.1.1" in row["Lineage"].split(",") or "2.2.1.2" in row["Lineage"].split(","):
             lineage_samples.append(row["Sample_ID"])
     lineage_samples = np.unique(lineage_samples)
         
@@ -110,27 +111,21 @@ y = df_phenos["phenotype"].values
 assert len(np.unique(y)) == 2
 print(f"{X.shape[0]} samples and {X.shape[1]} variables in the L{lineage} model")
 
-if not os.path.isfile(os.path.join(out_dir, "model.sav")):
-    model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
-                                 cv=5,
-                                 penalty='l2',
-                                 max_iter=10000, 
-                                 multi_class='ovr',
-                                 scoring='neg_log_loss',
-                                 class_weight='balanced'
-                                )
+model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
+                             cv=5,
+                             penalty='l2',
+                             max_iter=10000, 
+                             multi_class='ovr',
+                             scoring='neg_log_loss',
+                             class_weight='balanced'
+                            )
 
-    model.fit(X, y)
-    print(f"Regularization parameter: {model.C_[0]}")
+model.fit(X, y)
+print(f"Regularization parameter: {model.C_[0]}")
 
-    # save coefficients
-    pickle.dump(model, open(os.path.join(out_dir, "model.sav"), "wb"))
-    coef_df = pd.DataFrame({"mutation": matrix.columns, "coef": np.squeeze(model.coef_)})
-    coef_df.to_csv(os.path.join(out_dir, "regression_coef.csv"), index=False)
-else:
-    model = pickle.load(open(os.path.join(out_dir, "model.sav"), "rb"))
-    coef_df = pd.read_csv(os.path.join(out_dir, "regression_coef.csv"))
-    
+# save coefficients
+coef_df = pd.DataFrame({"mutation": matrix.columns, "coef": np.squeeze(model.coef_)})
+coef_df.to_csv(os.path.join(out_dir, "regression_coef.csv"), index=False)
     
 print(f"Peforming permutation test with {num_bootstrap} replicates")
 permute_df = perform_permutation_test(model, X, y, num_bootstrap, binary=binary)

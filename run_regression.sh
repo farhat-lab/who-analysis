@@ -1,8 +1,8 @@
 #!/bin/bash 
-#SBATCH -c 10
-#SBATCH -t 0-11:59
-#SBATCH -p short 
-#SBATCH --mem=10G 
+#SBATCH -c 4
+#SBATCH -t 1-00:00
+#SBATCH -p medium 
+#SBATCH --mem=50G 
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
@@ -38,4 +38,4 @@ done
 
 # get the folder name (basename, then split on "_" and get the first word, and make it uppercase)
 folder=$(basename "${config_array[0]}" | cut -d "_" -f 1 | tr '[:lower:]' '[:upper:]')
-python3 -u 03_compute_univariate_stats.py "$drug" "${folder}" "$3"
+python3 -u 03_compute_univariate_stats.py "$1" "${folder}" "$3"

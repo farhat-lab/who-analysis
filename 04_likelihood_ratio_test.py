@@ -56,6 +56,12 @@ if binary:
         out_dir = os.path.join(analysis_dir, drug, "BINARY", f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)
         model_suffix = ""
 
+print(f"Saving results to {out_dir}")
+    
+if os.path.isfile(os.path.join(out_dir, "LRT_results.csv")):
+    print("LRT was already performed for this model")
+    exit()
+       
 
 ############# STEP 1: READ IN THE ORIGINAL DATA: MODEL_MATRIX PICKLE FILE FOR A GIVEN MODEL #############
 
@@ -66,6 +72,7 @@ df_phenos = pd.read_csv(phenos_file).set_index("sample_id")
 # different matrices, depending on the phenotypes. Get all mutations 
 # no model (basically just for Pretomanid because there are no WHO phenotypes, so some models don't exist)
 if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+    print("There is no model for this LRT")
     exit()
 else:
     matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))

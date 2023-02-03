@@ -30,8 +30,8 @@ def get_lineages(vcf_dirs_files):
             proc = subprocess.Popen(f"fast-lineage-caller {fName} --noheader --count", shell=True, encoding='utf8', stdout=subprocess.PIPE)
             output = proc.communicate()[0]
 
-            # the second value is the Freschi et al lineage
-            lineages.append(output.split("\t")[1].replace("lineage", ""))
+            # the third value is the Freschi et al lineage. Isolate, Coll 2014, Freschi 2020, etc.  
+            lineages.append(output.split("\t")[2].replace("lineage", ""))
             
         if i % 1000 == 0:
             print(i)

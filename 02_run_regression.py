@@ -80,6 +80,11 @@ else:
     out_dir = os.path.join(analysis_dir, drug, "MIC", f"tiers={'+'.join(tiers_lst)}", model_prefix)
     model_suffix = ""
     
+# model_analysis file was already made, so skip
+if os.path.isfile(os.path.join(out_dir, f"model_analysis{model_suffix}.csv")):
+    print("Regression was already fit. Skipping this analysis")
+    exit()
+    
 
 ########################## STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES ##########################
 
@@ -98,7 +103,7 @@ if binary:
 else:
     phenos_file = os.path.join(analysis_dir, drug, "phenos_mic.csv")
 
-df_phenos = pd.read_csv(phenos_file).set_index("sample_id")
+df_phenos = pd.read_csv(phenos_file)
 
 # replace - with _ for file naming later
 if atu_analysis:
@@ -142,7 +147,8 @@ if num_PCs > 0:
     eigenvec_df = eigenvec_df.loc[matrix.index]
     matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
 
-# keep only samples (rows) that are in matrix
+# keep only samples (rows) that are in matrix and use loc with indices to ensure they are in the same order
+df_phenos = df_phenos.set_index("sample_id")
 df_phenos = df_phenos.loc[matrix.index]
 
 # check that the sample ordering is the same in the genotype and phenotype matrices

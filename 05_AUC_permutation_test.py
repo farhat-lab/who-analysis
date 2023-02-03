@@ -42,6 +42,18 @@ else:
 scaler = StandardScaler()
 
 out_dir = os.path.join(analysis_dir, drug, "BINARY", f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)        
+print(f"Saving results to {out_dir}")
+
+if os.path.isfile(os.path.join(out_dir, "AUC_test_results.csv")):
+    print("AUC test was already performed for this model")
+    exit()
+    
+# no model (basically just for Pretomanid because there are no WHO phenotypes, so some models don't exist)
+if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+    print("There is no model for this AUC test")
+    exit()
+else:
+    matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
      
 # for a tier 1 + 2 model, ridge_results will contain tier 1 results too, but LRT_results will only contain the tier 2 mutations
 LRT_results = pd.read_csv(os.path.join(out_dir, "LRT_results.csv")).iloc[1:, :]
@@ -63,17 +75,15 @@ resistance_assoc = ridge_results.query("OR_LB > 1")["mutation"].values
 # get all mutations that are resistance-associated and significant in BOTH the permutation test AND the LRT
 mutations_lst = list(set(ridge_results.query("mutation in @resistance_assoc & BH_pval < @thresh")["mutation"]).union(LRT_results.query("mutation in @resistance_assoc & BH_pval < @thresh")["mutation"]))    
 
+if len(mutations_lst) == 0:
+    print(f"There are no tier {tiers_lst[-1]} mutations that are significant in Ridge regression or LRT")
+    exit()
+    
+
 ############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES #############
 
 
 df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv")).set_index("sample_id")
-
-# get the input matrix
-# no model (basically just for Pretomanid because there are no WHO phenotypes, so some models don't exist)
-if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
-    exit()
-else:
-    matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
     
 # if this is for a tier 1 + 2 model, only compute LRT for tier 2 mutations because the script takes a while to run, so remove the tier 1 mutations
 if len(tiers_lst) == 2:
