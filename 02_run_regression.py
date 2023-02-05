@@ -174,50 +174,61 @@ print(f"{X.shape[0]} samples and {X.shape[1]} variables in the model")
 ######################### STEP 3: FIT L2-PENALIZED REGRESSION ##########################
 
 
-if binary:
-    model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
-                                 cv=5,
-                                 penalty='l2',
-                                 max_iter=10000, 
-                                 multi_class='ovr',
-                                 scoring='neg_log_loss',
-                                 class_weight='balanced'
-                                )
-    
-    
-else:
-    model = RidgeCV(alphas=np.logspace(-6, 6, 13),
-                    cv=5,
-                    scoring='neg_root_mean_squared_error'
-                   )
-model.fit(X, y)
+if not os.path.isfile(os.path.join(out_dir, "model.sav")):
+    if binary:
+        model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
+                                     cv=5,
+                                     penalty='l2',
+                                     max_iter=10000, 
+                                     multi_class='ovr',
+                                     scoring='neg_log_loss',
+                                     class_weight='balanced'
+                                    )
 
-# save model because the regularization parameter will be used subsequently
-if not atu_analysis:
-    pickle.dump(model, open(os.path.join(out_dir, "model.sav"), "wb"))
+
+    else:
+        model = RidgeCV(alphas=np.logspace(-6, 6, 13),
+                        cv=5,
+                        scoring='neg_root_mean_squared_error'
+                       )
+    model.fit(X, y)
+
+    # save model because the regularization parameter will be used subsequently
+    if not atu_analysis:
+        pickle.dump(model, open(os.path.join(out_dir, "model.sav"), "wb"))
+        
+    # save coefficients
+    coef_df = pd.DataFrame({"mutation": matrix.columns, "coef": np.squeeze(model.coef_)})
+    coef_df.to_csv(os.path.join(out_dir, f"regression_coef{model_suffix}.csv"), index=False)
+else:
+    model = pickle.load(open(os.path.join(out_dir, "model.sav"), "rb"))
+    coef_df = pd.read_csv(os.path.join(out_dir, f"regression_coef{model_suffix}.csv"))
 
 if binary:
     print(f"Regularization parameter: {model.C_[0]}")
 else:
     print(f"Regularization parameter: {model.alpha_}")
     
-# save coefficients
-coef_df = pd.DataFrame({"mutation": matrix.columns, "coef": np.squeeze(model.coef_)})
-coef_df.to_csv(os.path.join(out_dir, f"regression_coef{model_suffix}.csv"), index=False)
-   
     
 ########################## STEP 4: PERFORM PERMUTATION TEST TO GET SIGNIFICANCE AND BOOTSTRAPPING TO GET ODDS RATIO CONFIDENCE INTERVALS ##########################
 
 
-print(f"Peforming permutation test with {num_bootstrap} replicates")
-permute_df = perform_permutation_test(model, X, y, num_bootstrap, binary=binary)
-permute_df.columns = matrix.columns
-permute_df.to_csv(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv"), index=False)
+if not os.path.isfile(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv")):
+    print(f"Peforming permutation test with {num_bootstrap} replicates")
+    permute_df = perform_permutation_test(model, X, y, num_bootstrap, binary=binary)
+    permute_df.columns = matrix.columns
+    permute_df.to_csv(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv"), index=False)
+else:
+    permute_df = pd.read_csv(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv"))
+    
 
-print(f"Peforming bootstrapping with {num_bootstrap} replicates")
-bootstrap_df = perform_bootstrapping(model, X, y, num_bootstrap, binary=binary, save_summary_stats=False)
-bootstrap_df.columns = matrix.columns
-bootstrap_df.to_csv(os.path.join(out_dir, f"coef_bootstrapping{model_suffix}.csv"), index=False)
+if not os.path.isfile(os.path.join(out_dir, f"coef_bootstrapping{model_suffix}.csv")):
+    print(f"Peforming bootstrapping with {num_bootstrap} replicates")
+    bootstrap_df = perform_bootstrapping(model, X, y, num_bootstrap, binary=binary, save_summary_stats=False)
+    bootstrap_df.columns = matrix.columns
+    bootstrap_df.to_csv(os.path.join(out_dir, f"coef_bootstrapping{model_suffix}.csv"), index=False)
+else:
+    bootstrap_df = pd.read_csv(os.path.join(out_dir, f"coef_bootstrapping{model_suffix}.csv"))
 
     
 ########################## STEP 4: ADD PERMUTATION TEST P-VALUES TO THE MAIN COEF DATAFRAME ##########################

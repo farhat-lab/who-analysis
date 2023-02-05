@@ -43,10 +43,6 @@ scaler = StandardScaler()
 
 out_dir = os.path.join(analysis_dir, drug, "BINARY", f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}", model_prefix)        
 print(f"Saving results to {out_dir}")
-
-if os.path.isfile(os.path.join(out_dir, "AUC_test_results.csv")):
-    print("AUC test was already performed for this model")
-    exit()
     
 # no model (basically just for Pretomanid because there are no WHO phenotypes, so some models don't exist)
 if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
@@ -78,6 +74,12 @@ mutations_lst = list(set(ridge_results.query("mutation in @resistance_assoc & BH
 if len(mutations_lst) == 0:
     print(f"There are no tier {tiers_lst[-1]} mutations that are significant in Ridge regression or LRT")
     exit()
+    
+if os.path.isfile(os.path.join(out_dir, "AUC_test_results.csv")):
+    df_auc = pd.read_csv(os.path.join(out_dir, "AUC_test_results.csv"))
+    if len(df_auc) == len(mutations_lst):
+        print("AUC test was already performed for this model")
+        exit()
     
 
 ############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES #############
@@ -165,16 +167,25 @@ def logReg_permutation_difference(matrix, y, mutation, num_bootstrap, reg_param)
         
 num_bootstrap = 100
 print(f"Performing permutation test on {len(mutations_lst)} mutations with {num_bootstrap} replicates\n")
-diff_df = pd.DataFrame(columns=["mutation", "AUC_diff", "pval"])
+
+if os.path.isfile(os.path.join(out_dir, "AUC_test_results.csv")):
+    diff_df = pd.read_csv(os.path.join(out_dir, "AUC_test_results.csv"))
+else:    
+    diff_df = pd.DataFrame(columns=["mutation", "AUC_diff", "pval"])
 
 for i, mutation in enumerate(mutations_lst):
-        
-    print(f"Working on {mutation}")
-    diff, pval = logReg_permutation_difference(matrix, y, mutation, num_bootstrap, reg_param)
-    diff_df.loc[i, :] = [mutation, diff, pval]
     
-    if i % 10 == 0:
-        diff_df.to_csv(os.path.join(out_dir, "AUC_test_results.csv"), index=False)
+    if mutation not in diff_df.mutation.values:
+        
+        print(f"Working on {mutation}")
+        diff, pval = logReg_permutation_difference(matrix, y, mutation, num_bootstrap, reg_param)
+        #diff_df.loc[i, :] = [mutation, diff, pval]
+        diff_df = pd.concat([diff_df, 
+                             pd.DataFrame({"mutation": mutation, "AUC_diff": diff, "pval": pval}, index=[-1])
+                            ], axis=0)
+
+        if i % 10 == 0:
+            diff_df.to_csv(os.path.join(out_dir, "AUC_test_results.csv"), index=False)
         
 diff_df = add_pval_corrections(diff_df)
 diff_df.to_csv(os.path.join(out_dir, "AUC_test_results.csv"), index=False)

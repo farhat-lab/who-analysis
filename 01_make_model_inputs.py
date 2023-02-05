@@ -92,10 +92,10 @@ else:
     pheno_col = "mic_value"
 
     
-# this is mainly for the CC vs. CC-ATU analysis, which use the same genotype dataframes. Only the phenotypes are different
-if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
-    print("Model matrix already exists. Proceeding with modeling")
-    exit()
+# # this is mainly for the CC vs. CC-ATU analysis, which use the same genotype dataframes. Only the phenotypes are different
+# if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+#     print("Model matrix already exists. Proceeding with modeling")
+#     exit()
 
                 
 def remove_features_save_list(matrix, fName, dropNA=False):
@@ -116,7 +116,7 @@ def remove_features_save_list(matrix, fName, dropNA=False):
     matrix = matrix[matrix.columns[~((matrix == 0).all())]]
 
     # get the dropped features = features in 1 that are not in 2
-    dropped_feat = list(set(matrix.columns) - set(matrix_features))
+    dropped_feat = list(set(matrix_features) - set(matrix.columns))
     num_dropped_samples = num_samples - len(matrix)
     
     if len(dropped_feat) > 0:
@@ -126,9 +126,9 @@ def remove_features_save_list(matrix, fName, dropNA=False):
                 
     # if no samples with NaNs were dropped, then the number of samples should not have changed
     if dropNA:
-        print(f"    Dropped {num_dropped_samples}/{num_samples} samples with any missingness and {len(matrix_features) - len(matrix.columns)} associated features")
+        print(f"    Dropped {num_dropped_samples}/{num_samples} samples with any missingness and {len(dropped_feat)} associated features")
     else:
-        print(f"    Dropped {len(matrix_features)-matrix.shape[1]} features that are not present in any sample")
+        print(f"    Dropped {len(dropped_feat)} features that are not present in any sample")
         assert num_dropped_samples == 0
     
     return matrix
