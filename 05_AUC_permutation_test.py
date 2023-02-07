@@ -51,25 +51,18 @@ if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
 else:
     matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
      
-# for a tier 1 + 2 model, ridge_results will contain tier 1 results too, but LRT_results will only contain the tier 2 mutations
+ridge_results = pd.read_csv(os.path.join(out_dir, "model_analysis.csv"))
 LRT_results = pd.read_csv(os.path.join(out_dir, "LRT_results.csv")).iloc[1:, :]
 LRT_results.rename(columns={LRT_results.columns[0]: "mutation"}, inplace=True)
 LRT_results = add_pval_corrections(LRT_results)
-
-ridge_results = pd.read_csv(os.path.join(out_dir, "model_analysis.csv"))
-ridge_results = ridge_results.loc[ridge_results["mutation"].isin(LRT_results.mutation.values)]
 
 if len(tiers_lst) == 1:
     thresh = 0.05
 else:
     thresh = 0.01
     
-    
-# get all variants significantly associated with resistance
-resistance_assoc = ridge_results.query("OR_LB > 1")["mutation"].values
-
-# get all mutations that are resistance-associated and significant in BOTH the permutation test AND the LRT
-mutations_lst = list(set(ridge_results.query("mutation in @resistance_assoc & BH_pval < @thresh")["mutation"]).union(LRT_results.query("mutation in @resistance_assoc & BH_pval < @thresh")["mutation"]))    
+# get all mutations that are significant in either of the previous tests
+mutations_lst = list(set(ridge_results.query("~mutation.str.contains('PC') & BH_pval < @thresh")["mutation"]).union(LRT_results.query("~mutation.str.contains('PC') & BH_pval < @thresh")["mutation"]))
 
 if len(mutations_lst) == 0:
     print(f"There are no tier {tiers_lst[-1]} mutations that are significant in Ridge regression or LRT")
@@ -77,7 +70,7 @@ if len(mutations_lst) == 0:
     
 if os.path.isfile(os.path.join(out_dir, "AUC_test_results.csv")):
     df_auc = pd.read_csv(os.path.join(out_dir, "AUC_test_results.csv"))
-    if len(df_auc) == len(mutations_lst):
+    if len(set(df_auc["mutation"]).symmetric_difference(mutations_lst)) == 0:
         print("AUC test was already performed for this model")
         exit()
     
@@ -99,10 +92,7 @@ eigenvec_df = pd.read_csv("data/eigenvec_10PC.csv", index_col=[0]).iloc[:, :num_
 matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
 df_phenos = df_phenos.loc[matrix.index]
 assert sum(matrix.index != df_phenos.index.values) == 0
-
 y = df_phenos["phenotype"].values
-print(f"{matrix.shape[0]} samples and {matrix.shape[1]} variables in the models")
-
 
 ############# STEP 2: READ IN THE ORIGINAL DATA: MODEL_MATRIX PICKLE FILE FOR A GIVEN MODEL #############
 
@@ -163,7 +153,7 @@ def logReg_permutation_difference(matrix, y, mutation, num_bootstrap, reg_param)
         return true_diff, np.mean(np.array(diff_auc) >= true_diff)
     else:
         return true_diff, np.mean(np.array(diff_auc) <= true_diff)
-        
+            
         
 num_bootstrap = 100
 print(f"Performing permutation test on {len(mutations_lst)} mutations with {num_bootstrap} replicates\n")
@@ -175,17 +165,16 @@ else:
 
 for i, mutation in enumerate(mutations_lst):
     
-    if mutation not in diff_df.mutation.values:
-        
-        print(f"Working on {mutation}")
+    if mutation not in diff_df["mutation"].values:
         diff, pval = logReg_permutation_difference(matrix, y, mutation, num_bootstrap, reg_param)
-        #diff_df.loc[i, :] = [mutation, diff, pval]
         diff_df = pd.concat([diff_df, 
                              pd.DataFrame({"mutation": mutation, "AUC_diff": diff, "pval": pval}, index=[-1])
                             ], axis=0)
 
         if i % 10 == 0:
             diff_df.to_csv(os.path.join(out_dir, "AUC_test_results.csv"), index=False)
+    
+    print(f"Finished {mutation}")
         
 diff_df = add_pval_corrections(diff_df)
 diff_df.to_csv(os.path.join(out_dir, "AUC_test_results.csv"), index=False)

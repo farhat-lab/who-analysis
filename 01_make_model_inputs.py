@@ -92,10 +92,10 @@ else:
     pheno_col = "mic_value"
 
     
-# # this is mainly for the CC vs. CC-ATU analysis, which use the same genotype dataframes. Only the phenotypes are different
-# if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
-#     print("Model matrix already exists. Proceeding with modeling")
-#     exit()
+# this is mainly for the CC vs. CC-ATU analysis, which use the same genotype dataframes. Only the phenotypes are different
+if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+    print("Model matrix already exists. Proceeding with modeling")
+    exit()
 
                 
 def remove_features_save_list(matrix, fName, dropNA=False):

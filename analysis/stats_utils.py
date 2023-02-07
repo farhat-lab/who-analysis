@@ -25,6 +25,7 @@ def get_binary_metrics_from_model(model, X, y, return_idx):
                         tp / (tp + fn),
                         tn / (tn + fp),
                         sklearn.metrics.accuracy_score(y_true=y, y_pred=y_pred),
+                        sklearn.metrics.balanced_accuracy_score(y_true=y, y_pred=y_pred),
                        ])
     
     return results[return_idx]

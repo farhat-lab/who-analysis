@@ -10,7 +10,7 @@ Add required channels, then build the environment from the `environment_reqs.txt
 
 <code>conda create --name env_name --file environment_reqs.txt</code>
     
-If <code>fast-lineage-caller</code> does not install properly from the environment requirements file, install it with <code>pip install fast-lineage-caller</code>. I have had issues in the past installing it with conda. 
+If <code>fast-lineage-caller</code> can only be installed with pip, so next run <code>pip install fast-lineage-caller</code>.
     
 <!-- ## Genotype Annotations
 
@@ -55,10 +55,11 @@ If <code>fast-lineage-caller</code> does not install properly from the environme
 1. <code>drug_CC.csv</code>: Critical concentrations for each drug used for binarization of MIC data.
 2. <code>drug_gene_mapping.csv</code>: Names of genes and tiers used to build models for each drug.
 3. <code>drugs_loci.csv</code>: Dataframe of resistance loci and their coordinates in H37Rv. The Start column is 0-indexed, and the End column is 1-indexed.
-4. <code>minor_allele_counts.npz</code>: Minor allele counts from the SNP matrices: 1 for a minor allele, 0 for a major allele. The genetic relatedness matrix is computed from this.
+4. <code>eigenvec_10PC.csv</code>: Eigenvector coordinates for the first 10 principal components of the genetic relatedness matrix. There are ~52,000 samples in this file, which is the full set of samples that passed genotypic and phenotypic QC. 
 5. <code>overview_MIC_data.xlsx</code>: Overviews of MIC data, counts, sources, number resistant vs. susceptible, etc.
-6. <code>samples_summary.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, binary phenotypes, SNP counts, MICs, lineages, and the numbers of (sample, gene) pairs with LOF and inframe mutations (to see how many get pooled).
-7. <code>v1_to_v2_variants_mapping.csv</code>: File mapping the variant names between the 2021 and 2022 iterations of the catalog.
+6. <code>pca_explained_var.npy</code>: Array of explained variance ratios of the first 10 principal components.
+7. <code>samples_summary.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, binary phenotypes, SNP counts, MICs, lineages, and the numbers of (sample, gene) pairs with LOF and inframe mutations (to see how many get pooled).
+8. <code>v1_to_v2_variants_mapping.csv</code>: File mapping the variant names between the 2021 and 2022 iterations of the catalog.
 
 ## Running the Analysis
         
@@ -75,17 +76,21 @@ If <code>fast-lineage-caller</code> does not install properly from the environme
     
 ### Model Scripts
 
-Before building any models, run <code>00_samples_summary_minor_allele_counts.py</code> and <code>make_gene_drug_mapping.py</code>.
+Before building any models, run <code>00_samples_summary_andPCA.py</code>.
 
-The first script generates the dataframe of minor allele counts (<code>data/minor_allele_counts.npz</code>) from the SNP data directory. We compute the genetic relatedness matrix for population structure correction from this matrix. The script also creates the <code>data/samples_summary.csv</code> file to see how many samples there are for each drug (this was primarily used for debugging).
+The first script generates the eigenvectors for population structure correction and stores the coordinates of every sample in <code>data/eigenvec_10PC.csv</code>. 10 principal coordinates were saved, but only 5 were used in the models. Intermediate files that this script creates are a dataframe of minor allele counts (<code>data/minor_allele_counts.npz</code>) and an array of the explained variance ratios of each of the 10 principal components (<code>data/pca_explained_var.npy</code>). The script also creates the <code>data/samples_summary.csv</code> file to see how many samples there are for each drug (this was primarily used for debugging).
 
-The second script generates a dataframe mapping every gene to the drug it is hypothesized or known to be relevant for and the tier. This dataframe is used to select variants to pass into the model from the master <code>genos.csv.gz</code> file for each drug. 
 
-For every drug, run the following numbered scripts in order, with `config.yaml`, the full drug name, and the 3-letter abbreviation used in the 2021 WHO catalog. For example, for isoniazid, the arguments after the script name would be `config.yaml Isoniazid INH`. 
+For every drug, run the bash script <code>run_regression.sh</code> with the following command line arguments: full drug name, the 3-letter abbreviation used in the 2021 WHO catalog, and the directory to which output files should be written. For example, for isoniazid, the arguments after the script name would be `run_regression.sh Isoniazid INH /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue`. This bash script runs the following scripts:
   
 1. <code>01_make_model_inputs.py</code>: create input matrices to fit a regression model.
-2. <code>02_regression_with_bootstrap.py</code> performs a Ridge (L2-penalized) regression. 
-3. <code>03_model_analysis.py</code> computes p-values (including false discovery rate-corrected p-values) and confidence intervals for the coefficients/odds ratios for each mutation in the model. It creates a summary file called `model_analysis.csv` in every model output directory.
+2. <code>02_run_regression.py</code> performs a Ridge (L2-penalized) regression, bootstrapping to get coefficient confidence intervals, and a permutation test to assess coefficient significance. 
+3. <code>03_compute_univariate_statistics.py</code> 
+
+After the above scripts are finished, run <code>run_unpooled_tests.sh</code> with only the full drug name and the 3-letter abbreviation used in the 2021 WHO catalog as additional command line arguments. These scripts run the LRT and AUC test. 
+
+4. <code>04_likelihood_ratio_test.py</code>: Performs LRT for all mutations in the unpooled models.
+5. <code>05_AUC_permutation_test.py</code>: Performs a test of how much a mutation contributes to AUC using a permutation test. 
     
 Parameters in the yaml file:
     
@@ -130,22 +135,14 @@ Some of the parameters above were kept constant throughout all analyses, but the
 14. <b>Tier 1+2, ALL</b>, no synonymous, DROP Hets, <b>pool LOF and inframe mutations TOGETHER</b>
 15. <b>Tier 1+2, ALL</b>, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
 16. <b>Tier 1+2, ALL</b>, <b>with synonymous</b>, DROP Hets, pool LOF and inframe mutations SEPARATELY
-17. Tier 1, WHO, no synonymous, <b>encode AF</b>, pool LOF and inframe mutations SEPARATELY
+<!-- 17. Tier 1, WHO, no synonymous, <b>encode AF</b>, pool LOF and inframe mutations SEPARATELY
 18. <b>Tier 1+2</b>, WHO, no synonymous, <b>encode AF</b>, pool LOF and inframe mutations SEPARATELY
 19. Tier 1, <b>ALL</b>, no synonymous, <b>encode AF</b>, pool LOF and inframe mutations SEPARATELY
-20. <b>Tier 1+2, ALL</b>, no synonymous, <b>encode AF</b>, pool LOF and inframe mutations SEPARATELY
+20. <b>Tier 1+2, ALL</b>, no synonymous, <b>encode AF</b>, pool LOF and inframe mutations SEPARATELY -->
 
 ### Final Analysis
 
-After all 20 models above have been run, run <code>04_compute_univariate_stats.py</code> to compute univariate statistics, 95% binomial confidence intervals, and add some other annotations for the mutations in all models. This script requires the following arguments:
-
-<ul>
-    <li><code>drug</code> (same as the previous scripts)</li>
-    <li><code>folder</code> (should be one of "BINARY", "ATU", or "MIC", depending on the analysis</li>
-    <li><code>input_dir</code> (same as the previous scripts)</li>
-</ul>
-    
-Finally, run the top cells in the Jupyter notebook `analysis/analysis.ipynb` to write all model analyses to individual Excel files (one for each drug) and generate a summary Excel file for all drugs.
+TODO
 
 ### Intermediate Allele Frequencies
 
@@ -161,9 +158,11 @@ Currently, we are using the top 2 modes. In the code, they are referred to as <b
 
 ### Missing Data
 
-Isolates with a lot of missingness are far more common than features with a lot of missingness because most of the sequenced regions have high mappability, except the ribosomal regions. 
+All samples with any missing data are excluded from models. This is done at the model-level, so a sample can be exluded from one model but not another for the same drug. <code>scikit-learn</code> can not fit models with NaNs, and imputation can introduce biases, so we decided to drop all samples with missingness.
+
+<!-- Isolates with a lot of missingness are far more common than features with a lot of missingness because most of the sequenced regions have high mappability, except the ribosomal regions. 
     
 A threshold of <b>1%</b> is used to drop isolates, i.e. if more than 1% of an isolate's features for a given analysis are NA, then drop the isolate. 
 Similarly, if more than <b>25%</b> of the isolates in a given analysis are missing that feature, then drop the feature. 
 
-Then, all remaining features with anything missing are dropped. Imputation can be done instead by setting the argument `impute` to True. This will impute every element in the matrix that is missing by averaging the feature, stratified by resistance phenotype. 
+Then, all remaining features with anything missing are dropped. Imputation can be done instead by setting the argument `impute` to True. This will impute every element in the matrix that is missing by averaging the feature, stratified by resistance phenotype.  -->
