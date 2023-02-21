@@ -295,25 +295,25 @@ def compute_exact_confidence_intervals(res_df, alpha):
     for i, row in res_df.iterrows():
         
         # will be null for the principal components, so skip them
-        if not pd.isnull(row["TP"]):
+        if not pd.isnull(row["Mut_R"]):
             
             # binomtest requires the numbers to be integers
-            row[["TP", "FP", "TN", "FN"]] = row[["TP", "FP", "TN", "FN"]].astype(int)
+            row[["Mut_R", "Mut_S", "NoMut_S", "NoMut_R"]] = row[["Mut_R", "Mut_S", "NoMut_S", "NoMut_R"]].astype(int)
         
             # PPV
-            ci = st.binomtest(k=row["TP"], n=row["TP"] + row["FP"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
+            ci = st.binomtest(k=row["Mut_R"], n=row["Mut_R"] + row["Mut_S"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
             res_df.loc[i, ["PPV_LB", "PPV_UB"]] = [ci.low, ci.high]
             
             # NPV
-            ci = st.binomtest(k=row["TN"], n=row["TN"] + row["FN"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
+            ci = st.binomtest(k=row["NoMut_S"], n=row["NoMut_S"] + row["NoMut_R"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
             res_df.loc[i, ["NPV_LB", "NPV_UB"]] = [ci.low, ci.high]
             
             # Sensitivity
-            ci = st.binomtest(k=row["TP"], n=row["TP"] + row["FN"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
+            ci = st.binomtest(k=row["Mut_R"], n=row["Mut_R"] + row["NoMut_R"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
             res_df.loc[i, ["Sens_LB", "Sens_UB"]] = [ci.low, ci.high]
             
             # Specificity
-            ci = st.binomtest(k=row["TN"], n=row["TN"] + row["FP"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
+            ci = st.binomtest(k=row["NoMut_S"], n=row["NoMut_S"] + row["Mut_S"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
             res_df.loc[i, ["Spec_LB", "Spec_UB"]] = [ci.low, ci.high]
     
     return res_df
@@ -324,8 +324,8 @@ def compute_likelihood_ratio_confidence_intervals(res_df, alpha):
     
     z = np.abs(st.norm.ppf(q=alpha/2))
     
-    LRpos_error = np.exp(z * np.sqrt(1/res_df["TP"] - 1/(res_df["TP"] + res_df["FN"]) + 1/res_df["FP"] - 1/(res_df["FP"] + res_df["TN"])))
-    LRneg_error = np.exp(z * np.sqrt(1/res_df["FN"] - 1/(res_df["TP"] + res_df["FN"]) + 1/res_df["TN"] - 1/(res_df["FP"] + res_df["TN"])))
+    LRpos_error = np.exp(z * np.sqrt(1/res_df["Mut_R"] - 1/(res_df["Mut_R"] + res_df["NoMut_R"]) + 1/res_df["Mut_S"] - 1/(res_df["Mut_S"] + res_df["NoMut_S"])))
+    LRneg_error = np.exp(z * np.sqrt(1/res_df["NoMut_R"] - 1/(res_df["Mut_R"] + res_df["NoMut_R"]) + 1/res_df["NoMut_S"] - 1/(res_df["Mut_S"] + res_df["NoMut_S"])))
     
     res_df["LR+_LB"] = res_df["LR+"] / LRpos_error
     res_df["LR+_UB"] = res_df["LR+"] * LRpos_error

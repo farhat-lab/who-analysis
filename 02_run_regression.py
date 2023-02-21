@@ -89,11 +89,11 @@ else:
 ########################## STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES ##########################
 
 
-# no model (basically just for Pretomanid because there are no WHO phenotypes, so some models don't exist)
-if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
-    exit()
-else:
-    matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
+# # no model (basically just for Pretomanid because there are no WHO phenotypes, so some models don't exist)
+# if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+#     exit()
+# else:
+#     matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
 
 matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix_L2.2.1.pkl"))
 model_suffix = "_L2.2.1"
@@ -124,7 +124,7 @@ if not binary:
 
 
 # read in eigenvectors files, which was previously computed, and keep only the desired number of PCs
-eigenvec_df = pd.read_csv("data/eigenvec_50PC.csv", index_col=[0])
+eigenvec_df = pd.read_csv("data/eigenvec_100PC.csv", index_col=[0])
 keep_PCs = select_PCs_for_model(analysis_dir, drug, pheno_category_lst, eigenvec_df, thresh=0.01)
 eigenvec_df = eigenvec_df[keep_PCs]
 
