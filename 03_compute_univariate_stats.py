@@ -5,7 +5,7 @@ from scipy.stats import binomtest
 import sys, glob, os, yaml, tracemalloc, warnings
 warnings.filterwarnings("ignore")
 
-# analysis utils is in the analysis folder
+# stats_utils is in the analysis folder
 sys.path.append(os.path.join(os.getcwd(), "analysis"))
 from stats_utils import *
 
@@ -45,7 +45,7 @@ def compute_statistics_single_model(model_path, model_suffix, df_phenos, annotat
     if "Sens_LB" not in res_df.columns:
     
         # add sample IDs and phenotypes to the matrix
-        matrix = matrix.merge(df_phenos[["sample_id", "phenotype"]], left_index=True, right_on="sample_id", how="left").reset_index(drop=True)
+        matrix = matrix.merge(df_phenos[["sample_id", "phenotype"]], left_index=True, right_on="sample_id", how="inner").reset_index(drop=True)
 
         # coefficient dictionary to keep track of which variants have positive and negative coefficients
         variant_coef_dict = dict(zip(res_df["mutation"], res_df["coef"]))
@@ -84,10 +84,6 @@ def compute_statistics_single_model(model_path, model_suffix, df_phenos, annotat
         res_df.loc[(res_df["mutation"].str.contains("lof")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "lof"
         res_df.loc[(res_df["mutation"].str.contains("inframe")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "inframe"
         res_df.loc[res_df["mutation"].str.contains("all"), "predicted_effect"] = "lof_all"
-
-        # check that every mutation is present in at least 1 isolate
-        if res_df.Num_Isolates.min() < 1:
-            print("Some total numbers of isolates are less than 1")
 
         # predicted effect should only be NaN for PCs. position is NaN only for the pooled mutations and PCs
         assert len(res_df.loc[(pd.isnull(res_df["predicted_effect"])) & (~res_df["mutation"].str.contains("|".join(["PC"])))]) == 0
@@ -128,7 +124,7 @@ def compute_statistics_single_model(model_path, model_suffix, df_phenos, annotat
 
 def add_significance_predicted_effect(model_path, annotated_genos, model_suffix):
     '''
-    Use this function for models without binary inputs and outputs. This function just adds significance and predicted effect and saves the dataframe. 
+    Use this function for models without both binary inputs and outputs. This function just adds significance and predicted effect and saves the dataframe. 
     '''
     
     # get coefficient dataframe and add mutation predicted effects
@@ -189,33 +185,28 @@ annotated_genos = get_annotated_genos(analysis_dir, drug)
 
     
 if folder == "BINARY":
-    print(f"Computing univariate statistics for {len(analysis_paths)} BINARY models")
     model_suffix = ""
-
     for model_path in analysis_paths:
-        print(model_path)
-        if "dropAF" in model_path:
+        if "dropAF" in model_path and "unpooled" in model_path:
             compute_statistics_single_model(model_path, model_suffix, df_phenos, annotated_genos, alpha=0.05)
         else:
             add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
-
+            
 
 elif folder == "ATU":
-    print(f"Computing univariate statistics for {len(analysis_paths)*2} CC and CC-ATU models")
-
     for model_path in analysis_paths:  
         for model_suffix in ["_CC", "_CC_ATU"]:
+            print(model_path)
             if "dropAF" in model_path:
                 compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
             else:
                 add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
 
 else:
-    print(f"Computing univariate statistics for {len(analysis_paths)} MIC models")
     model_suffix = ""
-
     # just add predicted effect and Significance to these because there are no positive or negative outputs (output is continuous MIC)
     for model_path in analysis_paths:
+        print(model_path)
         add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
 
         

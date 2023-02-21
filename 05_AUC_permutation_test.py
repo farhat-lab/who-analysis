@@ -19,7 +19,7 @@ from stats_utils import *
 # starting the memory monitoring
 tracemalloc.start()
 
-_, config_file, drug, _ = sys.argv
+_, config_file, drug = sys.argv
 
 kwargs = yaml.safe_load(open(config_file))
 
@@ -50,40 +50,58 @@ if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
     exit()
 else:
     matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
+    
+    
+# set tier-based threshold. Also, if it's a tier 1 + 2 model, only performing the AUC test for the tier 2 mutations, so remove tier 1
+if len(tiers_lst) == 1:
+    thresh = 0.05
+    tier1_mutations = []
+else:
+    tier1_mutations = pd.read_pickle(os.path.join(out_dir.replace("tiers=1+2", "tiers=1"), "model_matrix.pkl")).columns
+    thresh = 0.01
      
+# keep only significant mutations in Ridge regression
 ridge_results = pd.read_csv(os.path.join(out_dir, "model_analysis.csv"))
+
+# the LRT dataframe does not contain principal components or tier 1 mutations, so they don't need to be removed
 LRT_results = pd.read_csv(os.path.join(out_dir, "LRT_results.csv")).iloc[1:, :]
 LRT_results.rename(columns={LRT_results.columns[0]: "mutation"}, inplace=True)
 LRT_results = add_pval_corrections(LRT_results)
 
-if len(tiers_lst) == 1:
-    thresh = 0.05
-else:
-    thresh = 0.01
-    
-# get all mutations that are significant in either of the previous tests
-mutations_lst = list(set(ridge_results.query("~mutation.str.contains('PC') & BH_pval < @thresh")["mutation"]).union(LRT_results.query("~mutation.str.contains('PC') & BH_pval < @thresh")["mutation"]))
+# get all mutations that have significant p-values in BOTH Ridge or LRT. Ridge is a criteria for Assoc, LRT is for Assoc - strict, so both must be satisfied
+mutations_lst = list(set(ridge_results.query("~mutation.str.contains('PC') & mutation not in @tier1_mutations & BH_pval < @thresh")["mutation"]).intersection(LRT_results.query("BH_pval < @thresh")["mutation"]))
+
+del ridge_results
+del LRT_results
 
 if len(mutations_lst) == 0:
-    print(f"There are no tier {tiers_lst[-1]} mutations that are significant in Ridge regression or LRT")
+    print(f"There are no significant tier {tiers_lst[-1]} mutations to run the AUC test on")
+    
+    ###################################### REMOVE THIS SOON ######################################
+    if os.path.isfile(os.path.join(out_dir, "AUC_test_results.csv")):
+        os.remove(os.path.join(out_dir, "AUC_test_results.csv"))
+    ###################################### REMOVE THIS SOON ######################################
     exit()
     
+# mutations_lst = list(set(ridge_results.query("~mutation.str.contains('PC') & BH_pval < @thresh")["mutation"]).union(LRT_results.query("~mutation.str.contains('PC') & BH_pval < @thresh")["mutation"]))
+
+# get all mutations that have significant odds ratios and with confidence intervals significantly above or below 1
+# mutations_lst = ridge_results.query("~mutation.str.contains('PC') & BH_pval < @thresh & (OR_LB > 1 | OR_UB < 1)")["mutation"].values
+
 if os.path.isfile(os.path.join(out_dir, "AUC_test_results.csv")):
     df_auc = pd.read_csv(os.path.join(out_dir, "AUC_test_results.csv"))
-    if len(set(df_auc["mutation"]).symmetric_difference(mutations_lst)) == 0:
+    
+    if len(set(mutations_lst) - set(df_auc["mutation"])) == 0:
         print("AUC test was already performed for this model")
+        df_auc = df_auc.query("mutation in @mutations_lst")
+        df_auc.to_csv(os.path.join(out_dir, "AUC_test_results.csv"), index=False)
         exit()
     
 
-############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES #############
+############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES FOR MODEL FITTING #############
 
 
 df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv")).set_index("sample_id")
-    
-# if this is for a tier 1 + 2 model, only compute LRT for tier 2 mutations because the script takes a while to run, so remove the tier 1 mutations
-if len(tiers_lst) == 2:
-    tier1_mutations = pd.read_pickle(os.path.join(out_dir.replace("tiers=1+2", "tiers=1"), "model_matrix.pkl")).columns
-    mutations_lst = list(set(mutations_lst) - set(tier1_mutations))
     
 # Read in the PC coordinates dataframe, then keep only the desired number of principal components
 eigenvec_df = pd.read_csv("data/eigenvec_10PC.csv", index_col=[0]).iloc[:, :num_PCs]
@@ -93,6 +111,7 @@ matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True, how="inner
 df_phenos = df_phenos.loc[matrix.index]
 assert sum(matrix.index != df_phenos.index.values) == 0
 y = df_phenos["phenotype"].values
+
 
 ############# STEP 2: READ IN THE ORIGINAL DATA: MODEL_MATRIX PICKLE FILE FOR A GIVEN MODEL #############
 
@@ -156,10 +175,11 @@ def logReg_permutation_difference(matrix, y, mutation, num_bootstrap, reg_param)
             
         
 num_bootstrap = 100
-print(f"Performing permutation test on {len(mutations_lst)} mutations with {num_bootstrap} replicates\n")
+print(f"\nPerforming AUC permutation test on {len(mutations_lst)} mutations with {num_bootstrap} replicates")
 
 if os.path.isfile(os.path.join(out_dir, "AUC_test_results.csv")):
     diff_df = pd.read_csv(os.path.join(out_dir, "AUC_test_results.csv"))
+    print(f"Already completed {len(diff_df)}/{len(mutations_lst)} mutations")
 else:    
     diff_df = pd.DataFrame(columns=["mutation", "AUC_diff", "pval"])
 
@@ -171,11 +191,11 @@ for i, mutation in enumerate(mutations_lst):
                              pd.DataFrame({"mutation": mutation, "AUC_diff": diff, "pval": pval}, index=[-1])
                             ], axis=0)
 
-        if i % 10 == 0:
-            diff_df.to_csv(os.path.join(out_dir, "AUC_test_results.csv"), index=False)
+    if i % 10 == 0:
+        diff_df.to_csv(os.path.join(out_dir, "AUC_test_results.csv"), index=False)
+        print(i)
+      
     
-    print(f"Finished {mutation}")
-        
 diff_df = add_pval_corrections(diff_df)
 diff_df.to_csv(os.path.join(out_dir, "AUC_test_results.csv"), index=False)
 

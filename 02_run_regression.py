@@ -63,7 +63,6 @@ else:
     phenos_name = "WHO"
         
 model_prefix = kwargs["model_prefix"]
-num_PCs = kwargs["num_PCs"]
 num_bootstrap = kwargs["num_bootstrap"]
 
 if binary:
@@ -79,11 +78,12 @@ if binary:
 else:
     out_dir = os.path.join(analysis_dir, drug, "MIC", f"tiers={'+'.join(tiers_lst)}", model_prefix)
     model_suffix = ""
+
     
-# model_analysis file was already made, so skip
-if os.path.isfile(os.path.join(out_dir, f"model_analysis{model_suffix}.csv")):
-    print("Regression was already fit. Skipping this analysis")
-    exit()
+# # model_analysis file was already made, so skip
+# if os.path.isfile(os.path.join(out_dir, f"model_analysis{model_suffix}.csv")):
+#     print("Regression was already fit. Skipping this analysis")
+#     exit()
     
 
 ########################## STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES ##########################
@@ -94,6 +94,10 @@ if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
     exit()
 else:
     matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
+
+matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix_L2.2.1.pkl"))
+model_suffix = "_L2.2.1"
+print(matrix.shape)
     
 if binary:
     if atu_analysis:
@@ -111,43 +115,21 @@ if atu_analysis:
     print(f"Running model on {model_suffix} phenotypes")
     model_suffix = "_" + model_suffix.replace('-', '_')
     
-    
-########################## STEP 1.1: MAKE SURE THAT EVERY SAMPLE ONLY HAS A SINGLE MIC ##########################
-    
-    
 # keep only unique MICs. Many samples have MICs tested in different media, so prioritize them according to the model hierarchy and
 if not binary:
-    # general hierarchy: solid > liquid > plates
-    # MABA, Frozen Broth Microdilution Plate (PMID31969421), UKMYC5, UKMYC6, and REMA are plates
-    # 7H9 is a liquid media
-    media_lst = ["7H10", "LJ", "7H11", "MGIT", "MODS", "BACTEC", "7H9", "Frozen Broth Microdilution Plate (PMID31969421)", "UKMYC6", "UKMYC5", 
-                 "REMA", "MYCOTB", "MABA", "MABA24", "MABA48", "non-colourmetric", "M24 BMD"]
-
-    media_hierarchy = dict(zip(media_lst, np.arange(len(media_lst))+1))
-    
-    # check that no media are missing from either
-    if len(set(df_phenos.medium.values) - set(media_hierarchy.keys())) > 0:
-        raise ValueError(f"{set(df_phenos.medium.values).symmetric_difference(set(media_hierarchy.keys()))} media are different between df_phenos and media_hierarchy")
-    # add media hierarchy to dataframe, sort so that the highest (1) positions come first, then drop duplicates so that every sample has a single MIC
-    else:
-        df_phenos["media_hierarchy_pos"] = df_phenos["medium"].map(media_hierarchy)
-        df_phenos = df_phenos.sort_values("media_hierarchy_pos", ascending=True).drop_duplicates(["sample_id", "mic_value"], keep="first").reset_index(drop=True)
-        del df_phenos["media_hierarchy_pos"]
-        assert len(df_phenos) == len(df_phenos["sample_id"].unique())
+    df_phenos = process_multiple_MICs(df_phenos)
     
 
 ############# STEP 2: GET THE MATRIX ON WHICH TO FIT THE DATA +/- EIGENVECTOR COORDINATES, DEPENDING ON THE PARAM #############
 
 
-if num_PCs > 0:
-    # read in eigenvectors files, which was previously computed, and keep only the desired number of PCs
-    eigenvec_df = pd.read_csv("data/eigenvec_10PC.csv", index_col=[0]).iloc[:, :num_PCs]
-    
-    # keep only the samples that are in this model, then concatenate the eigenvectors to the matrix
-    eigenvec_df = eigenvec_df.loc[matrix.index]
-    matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
+# read in eigenvectors files, which was previously computed, and keep only the desired number of PCs
+eigenvec_df = pd.read_csv("data/eigenvec_50PC.csv", index_col=[0])
+keep_PCs = select_PCs_for_model(analysis_dir, drug, pheno_category_lst, eigenvec_df, thresh=0.01)
+eigenvec_df = eigenvec_df[keep_PCs]
 
 # keep only samples (rows) that are in matrix and use loc with indices to ensure they are in the same order
+matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
 df_phenos = df_phenos.set_index("sample_id")
 df_phenos = df_phenos.loc[matrix.index]
 
@@ -174,7 +156,7 @@ print(f"{X.shape[0]} samples and {X.shape[1]} variables in the model")
 ######################### STEP 3: FIT L2-PENALIZED REGRESSION ##########################
 
 
-if not os.path.isfile(os.path.join(out_dir, "model.sav")):
+if not os.path.isfile(os.path.join(out_dir, f"model{model_suffix}.sav")):
     if binary:
         model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
                                      cv=5,
@@ -195,13 +177,13 @@ if not os.path.isfile(os.path.join(out_dir, "model.sav")):
 
     # save model because the regularization parameter will be used subsequently
     if not atu_analysis:
-        pickle.dump(model, open(os.path.join(out_dir, "model.sav"), "wb"))
+        pickle.dump(model, open(os.path.join(out_dir, f"model{model_suffix}.sav"), "wb"))
         
     # save coefficients
     coef_df = pd.DataFrame({"mutation": matrix.columns, "coef": np.squeeze(model.coef_)})
     coef_df.to_csv(os.path.join(out_dir, f"regression_coef{model_suffix}.csv"), index=False)
 else:
-    model = pickle.load(open(os.path.join(out_dir, "model.sav"), "rb"))
+    model = pickle.load(open(os.path.join(out_dir, f"model{model_suffix}.sav"), "rb"))
     coef_df = pd.read_csv(os.path.join(out_dir, f"regression_coef{model_suffix}.csv"))
 
 if binary:

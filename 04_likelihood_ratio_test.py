@@ -20,7 +20,7 @@ from stats_utils import *
 # starting the memory monitoring
 tracemalloc.start()
 
-_, config_file, drug, _ = sys.argv
+_, config_file, drug = sys.argv
 
 kwargs = yaml.safe_load(open(config_file))    
 binary = kwargs["binary"]
@@ -134,6 +134,9 @@ def run_regression_for_LRT(matrix, y, results_df, mutation, reg_param):
     # log-likelihood is the negative of the log-loss. Y_PRED MUST BE THE PROBABILITIES. set normalize=False to get sum of the log-likelihoods
     log_like = -sklearn.metrics.log_loss(y_true=y, y_pred=y_prob, normalize=False)
     
+    # null hypothesis is that full model log-like > alt model log-like. Larger log-like is a better model
+    # positive chi_stat: mutation increases AUC. so removing it from the model DECREASES log_like from the FULL log-like
+    # negative chi_stat: mutation decreases AUC, so removing it from the model INCREASES log_like over the FULL log-like
     chi_stat = 2 * (results_df.loc["FULL", "log_like"] - log_like)
     pval = 1 - st.chi2.cdf(x=chi_stat, df=1)
     tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y, y_pred=y_pred).ravel()
