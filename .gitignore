@@ -2,7 +2,7 @@
 __pycache__/
 
 # scratch notebook
-sandbox.ipynb
+sandbox*.ipynb
 
 # config_files -- they keep getting updated as models are run, so can cause merge conflicts
 config_files/
