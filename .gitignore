@@ -12,5 +12,9 @@ data/sample_ids_mapping.csv
 data/lineages.csv
 data/combined_lineage_sample_IDs.pkl
 
+# files got too big
+data/minor_allele_counts.pkl
+data/eigenvec_50PC.csv
+
 # extra semi-duplicate files used for testing
 bash_scripts/dup*.sh
