@@ -204,10 +204,6 @@ def get_coef_and_confidence_intervals(alpha, binary, who_variants_combined, drug
             coef_df.loc[i, "pval"] = np.mean(permute_df[row["mutation"]] >= row["coef"])
         else:
             coef_df.loc[i, "pval"] = np.mean(permute_df[row["mutation"]] <= row["coef"])
-            
-        # add p-value testing whether a mutation is neutral: computes the proportion of permuted coefficients that have smaller magnitude (are closer to 0) than the test stat
-        # TWO-SIDED because a mutation can be neutral if its coef is slightly above or below 0
-        coef_df.loc[i, "neutral_pval"] = np.mean(np.abs(permute_df[row["mutation"]]) < np.abs(row["coef"]))
 
     # Benjamini-Hochberg and Bonferroni corrections
     coef_df = add_pval_corrections(coef_df)
@@ -273,7 +269,7 @@ def compute_univariate_stats(combined_df):
         
     # LR+ ranges from 1 to infinity. LR- ranges from 0 to 1
     final["Num_Isolates"] = final["Mut_R"] + final["Mut_S"]
-    final["Total_Isolates"] = final[["Mut_R", "Mut_S", "NoMut_S", "NoMut_R"]].sum(axis=1)
+    # final["Total_Isolates"] = final[["Mut_R", "Mut_S", "NoMut_S", "NoMut_R"]].sum(axis=1)
     
     final["PPV"] = final["Mut_R"] / (final["Mut_R"] + final["Mut_S"])
     final["NPV"] = final["NoMut_S"] / (final["NoMut_S"] + final["NoMut_R"])
@@ -283,7 +279,7 @@ def compute_univariate_stats(combined_df):
     final["LR+"] = final["Sens"] / (1 - final["Spec"])
     final["LR-"] = (1 - final["Sens"]) / final["Spec"]
     
-    return final[["mutation", "Num_Isolates", "Total_Isolates", "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", "PPV", "NPV", "Sens", "Spec", "LR+", "LR-"]]
+    return final[["mutation", "Num_Isolates", "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", "PPV", "NPV", "Sens", "Spec", "LR+", "LR-"]]
     
 
 

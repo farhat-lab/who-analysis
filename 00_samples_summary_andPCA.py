@@ -37,55 +37,61 @@ mic_drugs = os.listdir(mic_dir)
 drugs_for_analysis = list(set(geno_drugs).intersection(set(pheno_drugs)).intersection(set(mic_drugs)))
 print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
 
-print("Creating matrix of minor allele counts")
-snp_files = [pd.read_csv(os.path.join(snp_dir, fName)) for fName in os.listdir(snp_dir)]
-print(f"{len(snp_files)} SNP files to read from")
+if not os.path.isfile("data/minor_allele_counts.pkl"):
+    print("Creating matrix of minor allele counts")
+    snp_files = [pd.read_csv(os.path.join(snp_dir, fName)) for fName in os.listdir(snp_dir)]
+    print(f"{len(snp_files)} SNP files to read from")
 
-snp_combined = pd.concat(snp_files, axis=0)
-snp_combined.columns = ["sample_id", "position", "nucleotide", "dp"]
-snp_combined = snp_combined.drop_duplicates()
+    snp_combined = pd.concat(snp_files, axis=0)
+    snp_combined.columns = ["sample_id", "position", "nucleotide", "dp"]
+    snp_combined = snp_combined.drop_duplicates()
 
-# drop sites that are in drug resistance loci. This is a little strict because it removes entire genes, but works fine.
-drugs_loci = pd.read_csv("data/drugs_loci.csv")
+    # drop sites that are in drug resistance loci. This is a little strict because it removes entire genes, but works fine.
+    drugs_loci = pd.read_csv("data/drugs_loci.csv")
 
-# add 1 to the start because it's 0-indexed
-drugs_loci["Start"] += 1
-assert sum(drugs_loci["End"] <= drugs_loci["Start"]) == 0
+    # add 1 to the start because it's 0-indexed
+    drugs_loci["Start"] += 1
+    assert sum(drugs_loci["End"] <= drugs_loci["Start"]) == 0
 
-# get all positions in resistance loci
-remove_pos = [list(range(int(row["Start"]), int(row["End"])+1)) for _, row in drugs_loci.iterrows()]
-remove_pos = list(itertools.chain.from_iterable(remove_pos))
-print(len(remove_pos))
-remove_pos = set(remove_pos) - set(coll2014["position"].values.astype(int))
-print(len(remove_pos))
+    # get all positions in resistance loci
+    remove_pos = [list(range(int(row["Start"]), int(row["End"])+1)) for _, row in drugs_loci.iterrows()]
+    remove_pos = list(itertools.chain.from_iterable(remove_pos))
+    print(len(remove_pos))
+    remove_pos = set(remove_pos) - set(coll2014["position"].values.astype(int))
+    print(len(remove_pos))
 
-num_pos = len(snp_combined.position.unique())
-snp_combined = snp_combined.query("position not in @remove_pos")
-print(f"Dropped {num_pos-len(snp_combined.position.unique())} positions in resistance-determining regions")
+    num_pos = len(snp_combined.position.unique())
+    snp_combined = snp_combined.query("position not in @remove_pos")
+    print(f"Dropped {num_pos-len(snp_combined.position.unique())} positions in resistance-determining regions")
 
-# pivot to matrix. There should not be any NaNs because the data is complete (i.e. reference alleles are included), then get the major allele at every site.
-print("Pivoting to a matrix")
-matrix = snp_combined.pivot(index="sample_id", columns="position", values="nucleotide")
-assert np.nan not in matrix.values
-major_alleles = matrix.mode(axis=0)
+    # pivot to matrix. There should not be any NaNs because the data is complete (i.e. reference alleles are included), then get the major allele at every site.
+    print("Pivoting to a matrix")
+    matrix = snp_combined.pivot(index="sample_id", columns="position", values="nucleotide")
+    assert np.nan not in matrix.values
+    major_alleles = matrix.mode(axis=0)
 
-# put into dataframe to compare with the SNP dataframe. Most efficient way is to make a dataframe of major alleles where every row is the same. 
-major_alleles_df = pd.concat([major_alleles]*len(matrix), ignore_index=True)
-major_alleles_df.index = matrix.index.values
+    # put into dataframe to compare with the SNP dataframe. Most efficient way is to make a dataframe of major alleles where every row is the same. 
+    major_alleles_df = pd.concat([major_alleles]*len(matrix), ignore_index=True)
+    major_alleles_df.index = matrix.index.values
 
-assert matrix.shape == major_alleles_df.shape
-minor_allele_counts = (matrix != major_alleles_df).astype(int)
-del matrix
+    assert matrix.shape == major_alleles_df.shape
+    minor_allele_counts = (matrix != major_alleles_df).astype(int)
+    del matrix
 
-# drop any columns that are 0 (major allele everywhere)
-minor_allele_counts = minor_allele_counts[minor_allele_counts.columns[~((minor_allele_counts == 0).all())]]
-minor_allele_counts.to_pickle("data/minor_allele_counts.pkl")
+    # drop any columns that are 0 (major allele everywhere)
+    minor_allele_counts = minor_allele_counts[minor_allele_counts.columns[~((minor_allele_counts == 0).all())]]
+    minor_allele_counts.to_pickle("data/minor_allele_counts.pkl")
+else:
+    minor_allele_counts = pd.read_pickle("data/minor_allele_counts.pkl")
+
+print(f"Minor Allele Counts shape: {minor_allele_counts.shape}")
 
 
 ###### STEP 2: COMPUTE THE GENETIC RELATEDNESS MATRIX, WHICH IS THE COVARIANCE OF THE MINOR ALLELE COUNTS DATAFRAME. SAVE EIGENVECTORS ######
 
 
 # rows are samples, columns are sites
+scaler = StandardScaler()
 grm = np.cov(scaler.fit_transform(minor_allele_counts.values))
 grm = pd.DataFrame(grm)
 print(f"GRM shape: {grm.shape}")
@@ -96,7 +102,6 @@ del minor_allele_counts
 # scale before transforming
 num_PCs = 100
 pca = PCA(n_components=num_PCs)
-scaler = StandardScaler()
 pca.fit(scaler.fit_transform(grm))
 del grm
 

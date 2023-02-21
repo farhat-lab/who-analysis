@@ -7,8 +7,9 @@ from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge
 import tracemalloc, pickle
 who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
 
-# analysis utils is in the analysis folder
-sys.path.append(os.path.join(os.getcwd(), "analysis"))
+# utils files
+sys.path.append("utils_files")
+from data_utils import *
 from stats_utils import *
 
 
@@ -89,14 +90,14 @@ else:
 ########################## STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES ##########################
 
 
-# # no model (basically just for Pretomanid because there are no WHO phenotypes, so some models don't exist)
-# if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
-#     exit()
-# else:
-#     matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
+# no model (basically just for Pretomanid because there are no WHO phenotypes, so some models don't exist)
+if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+    exit()
+else:
+    matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
 
-matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix_L2.2.1.pkl"))
-model_suffix = "_L2.2.1"
+# matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix_L2.2.1.pkl"))
+# model_suffix = "_L2.2.1"
 print(matrix.shape)
     
 if binary:

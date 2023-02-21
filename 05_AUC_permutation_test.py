@@ -8,8 +8,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import tracemalloc, pickle
 
-# analysis utils is in the analysis folder
-sys.path.append(os.path.join(os.getcwd(), "analysis"))
+# utils files
+sys.path.append("utils_files")
 from stats_utils import *
 
 

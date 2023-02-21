@@ -9,8 +9,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import tracemalloc, pickle
 
-# analysis utils is in the analysis folder
-sys.path.append(os.path.join(os.getcwd(), "analysis"))
+# utils files
+sys.path.append("utils_files")
 from stats_utils import *
 
 
@@ -135,13 +135,12 @@ def run_regression_for_LRT(matrix, y, results_df, mutation, reg_param):
     log_like = -sklearn.metrics.log_loss(y_true=y, y_pred=y_prob, normalize=False)
     
     # null hypothesis is that full model log-like > alt model log-like. Larger log-like is a better model
-    # positive chi_stat: mutation increases AUC. so removing it from the model DECREASES log_like from the FULL log-like
-    # negative chi_stat: mutation decreases AUC, so removing it from the model INCREASES log_like over the FULL log-like
     chi_stat = 2 * (results_df.loc["FULL", "log_like"] - log_like)
-    pval = 1 - st.chi2.cdf(x=chi_stat, df=1)
     tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y, y_pred=y_pred).ravel()
      
-    results_df.loc[mutation, :] = [log_like, chi_stat, pval,
+    results_df.loc[mutation, :] = [log_like, chi_stat, 
+                                   st.chi2.sf(x=chi_stat, df=1), # p-value. p-value + neutral p-value = 1
+                                   st.chi2.cdf(x=chi_stat, df=1), # neutral p-value testing the hypothesis that a mutation is NOT relevant
                                    sklearn.metrics.roc_auc_score(y_true=y, y_score=y_prob),
                                    tp / (tp + fn),
                                    tn / (tn + fp),
@@ -163,7 +162,7 @@ log_like = -sklearn.metrics.log_loss(y_true=y, y_pred=y_prob, normalize=False)
 tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y, y_pred=y_pred).ravel()
         
 # add the results for the full model
-results_df = pd.DataFrame(columns=["log_like", "chi_stat", "pval", "AUC", "Sens", "Spec", "accuracy"])
+results_df = pd.DataFrame(columns=["log_like", "chi_stat", "pval", "neutral_pval", "AUC", "Sens", "Spec", "accuracy"])
 results_df.loc["FULL", :] = [log_like, np.nan, np.nan,
                                sklearn.metrics.roc_auc_score(y_true=y, y_score=y_prob),
                                tp / (tp + fn),

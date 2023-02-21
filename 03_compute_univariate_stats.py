@@ -13,7 +13,7 @@ from stats_utils import *
 
 def get_annotated_genos(analysis_dir, drug):
     '''
-    This function gets the phenotype and genotype dataframes for a given drug. These are the same across models of the same type (i.e. all BINARY with WHO phenotypes, or all ATU models). 
+    This function gets annotations (predicted effect and position) for mutations to merge them into the final analysis dataframes
     '''
  
     genos_files = glob.glob(os.path.join(analysis_dir, drug, "genos*.csv.gz"))
@@ -93,7 +93,7 @@ def compute_statistics_single_model(model_path, model_suffix, df_phenos, annotat
         assert res_df.Num_Isolates.min() > 0
 
         # check that there are no NaNs in the univariate statistics. Don't include LR+ upper and lower bounds because they can be NaN if LR+ = inf
-        assert len(res_df.loc[~res_df["mutation"].str.contains("PC")][pd.isnull(res_df[['Num_Isolates', 'Total_Isolates', 'TP', 'FP', 'TN', 'FN', 'PPV', 'NPV', 'Sens', 'Spec', 'LR+', 'LR-',
+        assert len(res_df.loc[~res_df["mutation"].str.contains("PC")][pd.isnull(res_df[['Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'PPV', 'NPV', 'Sens', 'Spec', 'LR+', 'LR-',
                                        'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB', 'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR-_LB', 'LR-_UB']]).any(axis=1)]) == 0
 
         # check confidence intervals. LB ≤ var ≤ UB, and no confidence intervals have width 0. When the probability is 0 or 1, there are numerical precision issues
@@ -108,12 +108,8 @@ def compute_statistics_single_model(model_path, model_suffix, df_phenos, annotat
         res_df = res_df.sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first")
         del matrix
 
-        # # remove principal components, then convert the columns to int
-        # res_df = res_df.query("~mutation.str.contains('PC')")
-        # res_df[['Num_Isolates', 'Total_Isolates', 'TP', 'FP', 'TN', 'FN']] = res_df[['Num_Isolates', 'Total_Isolates', 'TP', 'FP', 'TN', 'FN']].astype(int)
-
         res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'coef_LB', 'coef_UB', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval',
-           'Bonferroni_pval', 'Num_Isolates', 'Total_Isolates', 'TP', 'FP', 'TN', 'FN', 'PPV', 'NPV', 'Sens', 'Spec',
+           'Bonferroni_pval', 'Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'PPV', 'NPV', 'Sens', 'Spec',
            'LR+', 'LR-', 'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB',
            'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
            ]].to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)  

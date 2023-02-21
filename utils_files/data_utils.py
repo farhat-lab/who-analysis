@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV, LinearRegression
 import tracemalloc, pickle
 
-
+from stats_utils import *
 scaler = StandardScaler()
 
 
@@ -46,7 +46,6 @@ def select_PCs_for_model(analysis_dir, drug, pheno_category_lst, eigenvec_df, th
     
     df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv")).set_index("sample_id").query("phenotypic_category in @pheno_category_lst")
     eigenvec_single_model = eigenvec_df.loc[df_phenos.index]
-    print(eigenvec_single_model.shape)
     
     X = scaler.fit_transform(eigenvec_single_model.values)
     y = df_phenos["phenotype"].values
@@ -73,6 +72,8 @@ def select_PCs_for_model(analysis_dir, drug, pheno_category_lst, eigenvec_df, th
     _, bh_pvals, _, _ = sm.multipletests(coef_df["pval"], method='fdr_bh', is_sorted=False, returnsorted=False)
     coef_df["BH_pval"] = bh_pvals
     
+    significant = coef_df.query("BH_pval < @thresh")
+    print(f"Kept {len(significant)}/{len(coef_df)} PCs for model fitting")
     return coef_df.query("BH_pval < @thresh")["PC"].values
 
 

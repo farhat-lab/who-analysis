@@ -14,7 +14,7 @@ def get_lineages(vcf_dirs_files):
     # keep track of failures
     problem_dirs = []
     
-    lineages = []
+    lineages_df = pd.DataFrame(columns="VCF_Dir", "File_Name", "Lineage")
     
     for i, single_dir in enumerate(vcf_dirs_files):
         
@@ -27,25 +27,25 @@ def get_lineages(vcf_dirs_files):
         if not os.path.isfile(fName):
             raise ValueError(f"{fName} is not a file")
         else:
-            proc = subprocess.Popen(f"fast-lineage-caller {fName} --noheader --count", shell=True, encoding='utf8', stdout=subprocess.PIPE)
+            proc = subprocess.Popen(f"fast-lineage-caller {fName} --noheader --count --pass", shell=True, encoding='utf8', stdout=subprocess.PIPE)
             output = proc.communicate()[0]
-
-            # the third value is the Freschi et al lineage. Isolate, Coll 2014, Freschi 2020, etc.  
-            lineages.append(output.split("\t")[2].replace("lineage", ""))
+            
+            # third value is Coll 2014 lineage
+            lineages_df.loc[i, :] = [vcf_dirs_files[i], os.path.basename(fName), output.split("\t")[2].replace("lineage", "")]
             
         if i % 1000 == 0:
             print(i)
         
-    return pd.DataFrame({"VCF_Dir": vcf_dirs_files, "Lineage": lineages}), problem_dirs
+    return lineages_df, problem_dirs
 
 
-lineages, problem_dirs = get_lineages(vcf_dirs_files)
-print(f"{len(lineages)}/{len(vcf_dirs_files)}")
+lineages_df, problem_dirs = get_lineages(vcf_dirs_files)
+print(f"{len(lineages_df)}/{len(vcf_dirs_files)}")
 print(len(problem_dirs), "directories contain multiple files:\n")
 print(problem_dirs)
 
 # split multiple lineages per isolate
-split_lineages = lineages["Lineage"].str.split(",", expand=True)
+split_lineages = lineages_df["Lineage"].str.split(",", expand=True)
 split_lineages.columns = [f"Lineage_{num}" for num in np.arange(len(split_lineages.columns))+1]
 
 # separate lineage and SNP count for each one
@@ -55,8 +55,5 @@ for col in split_lineages:
     split_lineages[count_col] = split_lineages[count_col].str.strip(")")
 
 # save
-lineages = pd.concat([lineages, split_lineages], axis=1)
-
-# multiple directories contain the same VCF files?
-#lineages = lineages.drop_duplicates(subset=["Sample Name", "Sample ID", "Lineage"])
-lineages.to_csv("data/lineages.csv", index=False)
+lineages_df = pd.concat([lineages_df, split_lineages], axis=1)
+lineages_df.to_csv("data/lineages.csv", index=False)
