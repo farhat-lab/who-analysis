@@ -13,7 +13,7 @@ data/lineages.csv
 data/combined_lineage_sample_IDs.pkl
 
 # files got too big
-data/minor_allele_counts.pkl
+data/*.pkl
 data/eigenvec_*.csv
 data/lineages*.csv
 
