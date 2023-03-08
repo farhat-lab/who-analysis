@@ -19,6 +19,7 @@ data/lineages*.csv
 
 # extra semi-duplicate files used for testing
 bash_scripts/dup*.sh
+temp/
 
 # need to clean up figures and analyses
 *.png
