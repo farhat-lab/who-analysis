@@ -8,8 +8,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import tracemalloc, pickle
 
-# utils files
-sys.path.append("utils_files")
+# utils files are in a separate folder
+sys.path.append("utils")
 from stats_utils import *
 
 
@@ -102,12 +102,6 @@ if os.path.isfile(os.path.join(out_dir, "AUC_test_results.csv")):
 
 
 df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv")).set_index("sample_id")
-    
-# Read in the PC coordinates dataframe, then keep only the desired number of principal components
-eigenvec_df = pd.read_csv("data/eigenvec_10PC.csv", index_col=[0]).iloc[:, :num_PCs]
-
-# concatenate the eigenvectors to the matrix and check the index ordering against the phenotypes matrix
-matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
 df_phenos = df_phenos.loc[matrix.index]
 assert sum(matrix.index != df_phenos.index.values) == 0
 y = df_phenos["phenotype"].values

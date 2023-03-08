@@ -9,8 +9,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import tracemalloc, pickle
 
-# utils files
-sys.path.append("utils_files")
+# utils files are in a separate folder
+sys.path.append("utils")
 from stats_utils import *
 
 
@@ -83,12 +83,7 @@ mutations_lst = matrix.columns
 if len(tiers_lst) == 2:
     tier1_mutations = pd.read_pickle(os.path.join(out_dir.replace("tiers=1+2", "tiers=1"), "model_matrix.pkl")).columns
     mutations_lst = list(set(mutations_lst) - set(tier1_mutations))
- 
-# Read in the PC coordinates dataframe, then keep only the desired number of principal components
-eigenvec_df = pd.read_csv("data/eigenvec_10PC.csv", index_col=[0]).iloc[:, :num_PCs]
-
-# concatenate the eigenvectors to the matrix and check the index ordering against the phenotypes matrix
-matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
+    
 print(f"{matrix.shape[0]} samples and {matrix.shape[1]} variables in the largest {phenos_name} model")
 
 df_phenos = df_phenos.loc[matrix.index]

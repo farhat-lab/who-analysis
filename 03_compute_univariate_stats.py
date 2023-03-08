@@ -5,8 +5,8 @@ from scipy.stats import binomtest
 import sys, glob, os, yaml, tracemalloc, warnings
 warnings.filterwarnings("ignore")
 
-# stats_utils is in the analysis folder
-sys.path.append(os.path.join(os.getcwd(), "analysis"))
+# utils files are in a separate folder
+sys.path.append("utils")
 from stats_utils import *
 
 
@@ -34,6 +34,7 @@ def get_annotated_genos(analysis_dir, drug):
 
 
 
+
 def compute_statistics_single_model(model_path, model_suffix, df_phenos, annotated_genos, alpha=0.05):
     
     # read in the matrix of inputs and the coefficient outputs
@@ -41,78 +42,81 @@ def compute_statistics_single_model(model_path, model_suffix, df_phenos, annotat
     res_df = pd.read_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"))
     pool_type = model_path.split("_")[-1]
     
-    # pick a random column that would be in the dataframe if the univariate statistics had been computed
-    if "Sens_LB" not in res_df.columns:
+    # previous naming convention
+    del_cols = ["TP", "TN", "FP", "FN"]
+    for col in del_cols:
+        if col in res_df.columns:
+            del res_df[col]
+        
+    # add sample IDs and phenotypes to the matrix
+    matrix = matrix.merge(df_phenos[["sample_id", "phenotype"]], left_index=True, right_on="sample_id", how="inner").reset_index(drop=True)
+
+    # get dataframe of the univariate stats add them to the results dataframe
+    full_predict_values = compute_univariate_stats(matrix[matrix.columns[~matrix.columns.str.contains("PC")]])
     
-        # add sample IDs and phenotypes to the matrix
-        matrix = matrix.merge(df_phenos[["sample_id", "phenotype"]], left_index=True, right_on="sample_id", how="inner").reset_index(drop=True)
+    # old versions will be dropped because the new versions are more updated (because changed the phenotype flipping back to the original, where 1 = R, 0 = S)
+    res_df = res_df.merge(full_predict_values, on="mutation", how="outer", suffixes=('_DROP', '')).drop_duplicates("mutation", keep="first")
+    res_df = res_df[res_df.columns[~res_df.columns.str.contains("_DROP")]]
 
-        # coefficient dictionary to keep track of which variants have positive and negative coefficients
-        variant_coef_dict = dict(zip(res_df["mutation"], res_df["coef"]))
+    # add confidence intervals for all stats except the likelihood ratios
+    res_df = compute_exact_confidence_intervals(res_df, alpha)
 
-        # get dataframe of the univariate stats add them to the results dataframe
-        full_predict_values = compute_univariate_stats(matrix[matrix.columns[~matrix.columns.str.contains("PC")]], variant_coef_dict)
-        res_df = res_df.merge(full_predict_values, on="mutation", how="outer", suffixes=('', '_DROP')).drop_duplicates("mutation", keep="first")
-        res_df = res_df[res_df.columns[~res_df.columns.str.contains("_DROP")]]
+    # add confidence intervals for the likelihood ratios
+    res_df = compute_likelihood_ratio_confidence_intervals(res_df, alpha)
 
-        # add confidence intervals for all stats except the likelihood ratios
-        res_df = compute_exact_confidence_intervals(res_df, alpha)
+    # get effect annotations and merge them with the results dataframe
+    res_df = res_df.merge(annotated_genos, on="mutation", how="outer", suffixes=('', '_DROP'))
+    res_df = res_df[res_df.columns[~res_df.columns.str.contains("_DROP")]]
+    
+    res_df = res_df.loc[~pd.isnull(res_df["coef"])]
 
-        # add confidence intervals for the likelihood ratios
-        res_df = compute_likelihood_ratio_confidence_intervals(res_df, alpha)
+    if pool_type == "poolSeparate":
+        # one pooled LOF feature
+        res_df.loc[res_df["predicted_effect"].isin(["frameshift", "start_lost", "stop_gained", "feature_ablation"]),
+                    "predicted_effect"
+                   ] = "lof"
+        # one pooled inframe feature
+        res_df.loc[(~pd.isnull(res_df["predicted_effect"])) & (res_df["predicted_effect"].str.contains("inframe")),
+                    "predicted_effect"
+                   ] = "inframe"
+    elif pool_type == "poolALL":
+        # combine these predicted effects into a single lof_all feature
+        res_df.loc[res_df["predicted_effect"].isin(["inframe_insertion", "inframe_deletion", "frameshift", "start_lost", "stop_gained", "feature_ablation"]),
+                    "predicted_effect"
+                   ] = "lof_all"
 
-        # get effect annotations and merge them with the results dataframe
-        res_df = res_df.merge(annotated_genos, on="mutation", how="outer", suffixes=('', '_DROP'))
-        res_df = res_df[res_df.columns[~res_df.columns.str.contains("_DROP")]]
-        res_df = res_df.loc[~pd.isnull(res_df["coef"])]
+    res_df.loc[(res_df["mutation"].str.contains("lof")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "lof"
+    res_df.loc[(res_df["mutation"].str.contains("inframe")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "inframe"
+    res_df.loc[res_df["mutation"].str.contains("all"), "predicted_effect"] = "lof_all"
 
-        if pool_type == "poolSeparate":
-            # one pooled LOF feature
-            res_df.loc[res_df["predicted_effect"].isin(["frameshift", "start_lost", "stop_gained", "feature_ablation"]),
-                        "predicted_effect"
-                       ] = "lof"
-            # one pooled inframe feature
-            res_df.loc[(~pd.isnull(res_df["predicted_effect"])) & (res_df["predicted_effect"].str.contains("inframe")),
-                        "predicted_effect"
-                       ] = "inframe"
-        elif pool_type == "poolALL":
-            # combine these predicted effects into a single lof_all feature
-            res_df.loc[res_df["predicted_effect"].isin(["inframe_insertion", "inframe_deletion", "frameshift", "start_lost", "stop_gained", "feature_ablation"]),
-                        "predicted_effect"
-                       ] = "lof_all"
+    # predicted effect should only be NaN for PCs. position is NaN only for the pooled mutations and PCs
+    assert len(res_df.loc[(pd.isnull(res_df["predicted_effect"])) & (~res_df["mutation"].str.contains("|".join(["PC"])))]) == 0
+    assert len(res_df.loc[(pd.isnull(res_df["position"])) & (~res_df["mutation"].str.contains("|".join(["lof", "inframe", "PC"])))]) == 0
 
-        res_df.loc[(res_df["mutation"].str.contains("lof")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "lof"
-        res_df.loc[(res_df["mutation"].str.contains("inframe")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "inframe"
-        res_df.loc[res_df["mutation"].str.contains("all"), "predicted_effect"] = "lof_all"
+    # check that every mutation is present in at least 1 isolate
+    assert res_df.Num_Isolates.min() > 0
 
-        # predicted effect should only be NaN for PCs. position is NaN only for the pooled mutations and PCs
-        assert len(res_df.loc[(pd.isnull(res_df["predicted_effect"])) & (~res_df["mutation"].str.contains("|".join(["PC"])))]) == 0
-        assert len(res_df.loc[(pd.isnull(res_df["position"])) & (~res_df["mutation"].str.contains("|".join(["lof", "inframe", "PC"])))]) == 0
+    # check that there are no NaNs in the univariate statistics. Don't include LR+ upper and lower bounds because they can be NaN if LR+ = inf
+    assert len(res_df.loc[~res_df["mutation"].str.contains("PC")][pd.isnull(res_df[['Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'PPV', 'NPV', 'Sens', 'Spec', 'LR+', 'LR-',
+                                   'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB', 'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR-_LB', 'LR-_UB']]).any(axis=1)]) == 0
 
-        # check that every mutation is present in at least 1 isolate
-        assert res_df.Num_Isolates.min() > 0
+    # check confidence intervals. LB ≤ var ≤ UB, and no confidence intervals have width 0. When the probability is 0 or 1, there are numerical precision issues
+    # i.e. python says 1 != 1. So ignore those cases when checking
+    for var in ["PPV", "NPV", "Sens", "Spec", "LR+", "LR-"]:
+        assert len(res_df.loc[(~res_df[var].isin([0, 1])) & (res_df[var] < res_df[f"{var}_LB"])]) == 0
+        assert len(res_df.loc[(~res_df[var].isin([0, 1])) & (res_df[var] > res_df[f"{var}_UB"])]) == 0
 
-        # check that there are no NaNs in the univariate statistics. Don't include LR+ upper and lower bounds because they can be NaN if LR+ = inf
-        assert len(res_df.loc[~res_df["mutation"].str.contains("PC")][pd.isnull(res_df[['Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'PPV', 'NPV', 'Sens', 'Spec', 'LR+', 'LR-',
-                                       'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB', 'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR-_LB', 'LR-_UB']]).any(axis=1)]) == 0
+        width = res_df[f"{var}_UB"] - res_df[f"{var}_LB"]
+        assert np.min(width) > 0
 
-        # check confidence intervals. LB ≤ var ≤ UB, and no confidence intervals have width 0. When the probability is 0 or 1, there are numerical precision issues
-        # i.e. python says 1 != 1. So ignore those cases when checking
-        for var in ["PPV", "NPV", "Sens", "Spec", "LR+", "LR-"]:
-            assert len(res_df.loc[(~res_df[var].isin([0, 1])) & (res_df[var] < res_df[f"{var}_LB"])]) == 0
-            assert len(res_df.loc[(~res_df[var].isin([0, 1])) & (res_df[var] > res_df[f"{var}_UB"])]) == 0
+    res_df = res_df.sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first")
+    del matrix
 
-            width = res_df[f"{var}_UB"] - res_df[f"{var}_LB"]
-            assert np.min(width) > 0
-
-        res_df = res_df.sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first")
-        del matrix
-
-        res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'coef_LB', 'coef_UB', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval',
-           'Bonferroni_pval', 'Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'PPV', 'NPV', 'Sens', 'Spec',
-           'LR+', 'LR-', 'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB',
-           'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
-           ]].to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)  
+    res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'coef_LB', 'coef_UB', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval',
+       'Bonferroni_pval', 'Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'PPV', 'NPV', 'Sens', 'Spec',
+       'LR+', 'LR-', 'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB',
+       'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
+       ]].to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)  
 
     
     
