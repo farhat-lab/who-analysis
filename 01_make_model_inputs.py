@@ -92,47 +92,11 @@ else:
     pheno_col = "mic_value"
 
     
-# # this is mainly for the CC vs. CC-ATU analysis, which use the same genotype dataframes. Only the phenotypes are different
-# if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
-#     print("Model matrix already exists. Proceeding with modeling")
-#     exit()
+# this is mainly for the CC vs. CC-ATU analysis, which use the same genotype dataframes. Only the phenotypes are different
+if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+    print("Model matrix already exists. Proceeding with modeling")
+    exit()
 
-                
-# def remove_features_save_list(matrix, fName, dropNA=False):
-#     '''
-#     This function saves the names of features that were dropped during a given processing step.
-#     An output file is only written if features were dropped (i.e., no empty files).
-#     '''
-    
-#     # original numbers of features and samples
-#     matrix_features = matrix.columns
-#     num_samples = len(matrix)
-
-#     # drop any isolates with missingness
-#     if dropNA:
-#         matrix = matrix.dropna(axis=0, how="any")
-
-#     # remove any features that have no signal after isolates were dropped, then save the list of dropped features
-#     matrix = matrix[matrix.columns[~((matrix == 0).all())]]
-
-#     # get the dropped features = features in 1 that are not in 2
-#     dropped_feat = list(set(matrix_features) - set(matrix.columns))
-#     num_dropped_samples = num_samples - len(matrix)
-    
-#     if len(dropped_feat) > 0:
-#         with open(fName, "w+") as file:
-#             for feature in dropped_feat:
-#                 file.write(feature + "\n")
-                
-#     # if no samples with NaNs were dropped, then the number of samples should not have changed
-#     if dropNA:
-#         print(f"    Dropped {num_dropped_samples}/{num_samples} samples with any missingness and {len(dropped_feat)} associated features")
-#     else:
-#         print(f"    Dropped {len(dropped_feat)} features that are not present in any sample")
-#         assert num_dropped_samples == 0
-    
-#     return matrix
-    
 
 ######################### STEP 1: GET ALL AVAILABLE PHENOTYPES, PROCESS THEM, AND SAVE TO A GENERAL PHENOTYPES FILE FOR EACH DRUG #########################
 
@@ -287,9 +251,14 @@ df_model = pd.concat([pd.read_csv(os.path.join(analysis_dir, drug, f"genos_{num}
 # then keep only samples of the desired phenotype
 df_model = df_model.loc[df_model["sample_id"].isin(df_phenos["sample_id"])]
 
-# drop synonymous variants, unless the boolean is True
-if not synonymous:
-    df_model = df_model.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']").reset_index(drop=True)
+# if synonymous variants are to be included, check that they are present and would make the model different from the corresponding noSyn model
+if synonymous:
+    if len(df_model.query("predicted_effect in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant'] & variant_binary_status==1")) == 0:
+        print("There are no synonymous variants. Quitting this model")
+        exit()
+# if not, drop them from the dataframe
+else:
+    df_model = df_model.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']").reset_index(drop=True)    
 
     
 ######################### STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #########################
@@ -323,14 +292,14 @@ elif pool_type == "poolALL":
 # set variants with AF <= the threshold as wild-type and AF > the threshold as alternative
 if amb_mode == "BINARY":
     print(f"Binarizing ambiguous variants with AF threshold of {AF_thresh}")
-    df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] <= AF_thresh), "variant_binary_status"] = 0
-    df_model.loc[(pd.isnull(df_model["variant_binary_status"])) & (df_model["variant_allele_frequency"] > AF_thresh), "variant_binary_status"] = 1
-
+    df_genos.loc[(df_genos["variant_allele_frequency"] <= AF_thresh), "variant_binary_status"] = 0
+    df_genos.loc[(df_genos["variant_allele_frequency"] > AF_thresh), "variant_binary_status"] = 1
+    
 # use ambiguous AF as the matrix value for variants with AF > 0.25. Below 0.25, the AF measurements aren't reliable
 elif amb_mode == "AF":
     print("Encoding ambiguous variants with their AF")
     # encode all variants with AF > 0.25 with their AF
-    df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_binary_status"] = df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_allele_frequency"].values
+    df_model.loc[df_model["variant_allele_frequency"] >= 0.25, "variant_binary_status"] = df_model.loc[df_model["variant_allele_frequency"] >= 0.25, "variant_allele_frequency"].values
    
 # drop all isolates with ambiguous variants with ANY AF below the threshold. DON'T DROP FEATURES BECAUSE MIGHT DROP SOMETHING RELEVANT
 elif amb_mode == "DROP":
@@ -374,11 +343,7 @@ def remove_features_save_list(matrix, fName, dropNA=False):
         matrix = matrix.dropna(axis=0)
         next_samples = matrix.index.values
 
-    # drop features with no signal (0 everywhere)
-    #drop_features = matrix.columns[((matrix == 0).all())]
-    #matrix = matrix[matrix.columns[~((matrix == 0).all())]]
-    
-    drop_features = matrix.loc[:, matrix.nunique() == 1]
+    drop_features = matrix.loc[:, matrix.nunique() == 1].columns
     matrix = matrix.loc[:, matrix.nunique() > 1]
 
     if len(drop_features) > 0:
@@ -387,7 +352,7 @@ def remove_features_save_list(matrix, fName, dropNA=False):
                 file.write(feature + "\n")
                 
     if dropNA:
-        print(f"Dropped {len(set(init_samples)-set(next_samples))} isolates due to missigness and {len(drop_features)} associated features")
+        print(f"Dropped {len(set(init_samples)-set(next_samples))} isolates with missingness and {len(drop_features)} associated features")
     else:
         print(f"Dropped {len(drop_features)} features with no signal")
                 

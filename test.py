@@ -112,12 +112,6 @@ print(keys_lst)
 
 mutations_lst = set()
 
-if drug in ["Levofloxacin", "Moxifloxacin"]:
-    freq_thresh = 5
-else:
-    freq_thresh = 1
-print(f"Including significant mutations present in at least {freq_thresh} isolates")
-
 for key in keys_lst:
     
     # keep only significant mutations that are NOT neutral
@@ -131,7 +125,7 @@ for key in keys_lst:
     # # add uncertain mutations that were significant in regression and frequent enough. Basically they didn't pass the LRT or MIC coef criteria
     # mutations_lst = mutations_lst.union(results_excel[key].query("regression_confidence=='Uncertain' & BH_pval < @thresh & Num_Isolates >= 5 & (PPV_LB >= 0.25 | NPV_LB >= 0.25)")["mutation"].values)
     
-    mutations_lst = mutations_lst.union(results_excel[key].query("BH_pval < @thresh & Num_Isolates >= @freq_thresh")["mutation"].values)
+    mutations_lst = mutations_lst.union(results_excel[key].query("BH_pval < @thresh & Num_Isolates >= 1")["mutation"].values)
 
 mutations_lst = list(mutations_lst)
 print(f"{len(mutations_lst)} mutations in the model")
@@ -145,9 +139,7 @@ if len(tiers_lst) == 2:
     if len(set(tier1_mutations).symmetric_difference(mutations_lst)) == 0:
         print("There are no significant Tier 2 mutations. Quitting this model...\n")
         exit()
-        
-pd.Series(mutations_lst).to_csv(os.path.join(out_dir, "mutations_lst.txt"), sep="\t", index=False, header=None)
-    
+            
     
 ############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES #############
     
@@ -269,8 +261,8 @@ def bootstrap_binary_metrics(X, y, num_bootstrap=None):
     return df_combined
 
 
-results_df = bootstrap_binary_metrics(X, y, num_bootstrap)
-results_df.to_csv(os.path.join(out_dir, f"model_stats_CV{model_prefix}_bootstrap.csv"), index=False)
+results_df = bootstrap_binary_metrics(X, y, 0)#num_bootstrap)
+#results_df.to_csv(os.path.join(out_dir, f"model_stats_CV{model_prefix}_bootstrap.csv"), index=False)
 
 
 # def binary_metrics_cross_validation(X, y, num_cv=10):

@@ -35,11 +35,12 @@ def get_annotated_genos(analysis_dir, drug):
 
 
 
-def compute_statistics_single_model(model_path, model_suffix, df_phenos, annotated_genos, alpha=0.05):
+def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_genos, alpha=0.05):
     
     # read in the matrix of inputs and the coefficient outputs
+    model_path = os.path.dirname(model_analysis_file)
     matrix = pd.read_pickle(os.path.join(model_path, "model_matrix.pkl"))
-    res_df = pd.read_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"))
+    res_df = pd.read_csv(model_analysis_file)
     pool_type = model_path.split("_")[-1]
     
     # previous naming convention
@@ -112,46 +113,55 @@ def compute_statistics_single_model(model_path, model_suffix, df_phenos, annotat
     res_df = res_df.sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first")
     del matrix
 
-    res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'coef_LB', 'coef_UB', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval',
-       'Bonferroni_pval', 'Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'PPV', 'NPV', 'Sens', 'Spec',
+    # res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'coef_LB', 'coef_UB', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval',
+    #    'Bonferroni_pval', 'Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'PPV', 'NPV', 'Sens', 'Spec',
+    #    'LR+', 'LR-', 'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB',
+    #    'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
+    #    ]].to_csv(os.path.join(model_path, model_analysis_file), index=False) 
+    
+    res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'Odds_Ratio', 'pval', 'BH_pval',
+       'Bonferroni_pval', 'neutral_pval', 'BH_neutral_pval', 'Bonferroni_neutral_pval', 'Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'PPV', 'NPV', 'Sens', 'Spec',
        'LR+', 'LR-', 'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB',
        'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
-       ]].to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)  
+       ]].to_csv(os.path.join(model_analysis_file), index=False) 
 
     
     
 
 
-def add_significance_predicted_effect(model_path, annotated_genos, model_suffix):
-    '''
-    Use this function for models without both binary inputs and outputs. This function just adds significance and predicted effect and saves the dataframe. 
-    '''
+# def add_significance_predicted_effect(model_path, annotated_genos, model_suffix):
+#     '''
+#     Use this function for models without both binary inputs and outputs. This function just adds significance and predicted effect and saves the dataframe. 
+#     '''
     
-    # get coefficient dataframe and add mutation predicted effects
-    res_df = pd.read_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"))
-    res_df = res_df.merge(annotated_genos, on="mutation", how="outer", suffixes=('', '_DROP'))
-    res_df = res_df[res_df.columns[~res_df.columns.str.contains("_DROP")]]
-    res_df = res_df.loc[~pd.isnull(res_df["coef"])]
+#     # get coefficient dataframe and add mutation predicted effects
+#     res_df = pd.read_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"))
+#     res_df = res_df.merge(annotated_genos, on="mutation", how="outer", suffixes=('', '_DROP'))
+#     res_df = res_df[res_df.columns[~res_df.columns.str.contains("_DROP")]]
+#     res_df = res_df.loc[~pd.isnull(res_df["coef"])]
     
-    res_df.loc[(res_df["mutation"].str.contains("lof")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "lof"
-    res_df.loc[(res_df["mutation"].str.contains("inframe")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "inframe"
-    res_df.loc[res_df["mutation"].str.contains("all"), "predicted_effect"] = "lof_all"
+#     res_df.loc[(res_df["mutation"].str.contains("lof")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "lof"
+#     res_df.loc[(res_df["mutation"].str.contains("inframe")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "inframe"
+#     res_df.loc[res_df["mutation"].str.contains("all"), "predicted_effect"] = "lof_all"
 
-    # no odds ratios, save coefficients. For both, drop principal components when saving the new dataframe
-    if "MIC" in model_path:
-        # res_df.query("~mutation.str.contains('PC')")
-        res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'coef_LB', 'coef_UB', 'pval', 'BH_pval', 'Bonferroni_pval']].sort_values("coef", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)
-    # save odds ratios
-    else:
-        # res_df.query("~mutation.str.contains('PC')")
-        res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'coef_LB', 'coef_UB', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval','Bonferroni_pval']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)
+#     # no odds ratios, save coefficients. For both, drop principal components when saving the new dataframe
+#     if "MIC" in model_path:
+#         # res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'coef_LB', 'coef_UB', 'pval', 'BH_pval', 'Bonferroni_pval']].sort_values("coef", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)
+#         res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'pval', 'BH_pval', 'Bonferroni_pval']].sort_values("coef", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)
+#     # save odds ratios
+#     else:
+#         # res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'coef_LB', 'coef_UB', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval','Bonferroni_pval']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)
+        
+#         res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'Odds_Ratio', 'pval', 'BH_pval','Bonferroni_pval']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)
 
     
 
 # starting the memory monitoring
 tracemalloc.start()
 
-_, drug, folder, analysis_dir = sys.argv
+_, folder, drug = sys.argv
+
+analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
 # this is the intermediate folder
 folder = folder.upper()
@@ -185,29 +195,30 @@ annotated_genos = get_annotated_genos(analysis_dir, drug)
 
     
 if folder == "BINARY":
-    model_suffix = ""
     for model_path in analysis_paths:
-        if "dropAF" in model_path and "unpooled" in model_path:
-            compute_statistics_single_model(model_path, model_suffix, df_phenos, annotated_genos, alpha=0.05)
-        else:
-            add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
+        for fName in glob.glob(os.path.join(model_path, "model_analysis*.csv")):
+            print(model_path)
+            compute_statistics_single_model(fName, df_phenos, annotated_genos, alpha=0.05)
+        # if "dropAF_withSyn_unpooled" in model_path:
+        #     compute_statistics_single_model(model_path, model_suffix, df_phenos, annotated_genos, alpha=0.05)
+        # else:
+        #     add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
             
 
-elif folder == "ATU":
-    for model_path in analysis_paths:  
-        for model_suffix in ["_CC", "_CC_ATU"]:
-            print(model_path)
-            if "dropAF" in model_path:
-                compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
-            else:
-                add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
+# elif folder == "ATU":
+#     for model_path in analysis_paths:  
+#         for model_suffix in ["_CC", "_CC_ATU"]:
+#             print(model_path)
+#             if "dropAF" in model_path:
+#                 compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
+#             else:
+#                 add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
 
-else:
-    model_suffix = ""
-    # just add predicted effect and Significance to these because there are no positive or negative outputs (output is continuous MIC)
-    for model_path in analysis_paths:
-        print(model_path)
-        add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
+# else:
+#     # just add predicted effect and Significance to these because there are no positive or negative outputs (output is continuous MIC)
+#     for model_path in analysis_paths:
+#         print(model_path)
+#         add_significance_predicted_effect(model_path, annotated_genos)
 
         
 # returns a tuple: current, peak memory in bytes 

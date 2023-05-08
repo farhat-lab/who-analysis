@@ -5,7 +5,7 @@ import scipy.stats as st
 import sklearn.metrics
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV, SGDClassifier, SGDRegressor
 import tracemalloc, pickle
 
 # utils files are in a separate folder
@@ -29,6 +29,7 @@ analysis_dir = kwargs["output_dir"]
 
 model_prefix = kwargs["model_prefix"]
 num_PCs = kwargs["num_PCs"]
+eigenvec_df = pd.read_csv("data/eigenvec_100PC.csv", usecols=["sample_id"] + [f"PC{num+1}" for num in np.arange(num_PCs)]).set_index("sample_id")
 num_bootstrap = kwargs["num_bootstrap"]
 
 pheno_category_lst = kwargs["pheno_category_lst"]
@@ -51,60 +52,60 @@ if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
 else:
     matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
     
-    
-# set tier-based threshold. Also, if it's a tier 1 + 2 model, only performing the AUC test for the tier 2 mutations, so remove tier 1
-if len(tiers_lst) == 1:
-    thresh = 0.05
-    tier1_mutations = []
-else:
-    tier1_mutations = pd.read_pickle(os.path.join(out_dir.replace("tiers=1+2", "tiers=1"), "model_matrix.pkl")).columns
-    thresh = 0.01
-     
-# keep only significant mutations in Ridge regression
-ridge_results = pd.read_csv(os.path.join(out_dir, "model_analysis.csv"))
-
-# the LRT dataframe does not contain principal components or tier 1 mutations, so they don't need to be removed
-LRT_results = pd.read_csv(os.path.join(out_dir, "LRT_results.csv")).iloc[1:, :]
-LRT_results.rename(columns={LRT_results.columns[0]: "mutation"}, inplace=True)
-LRT_results = add_pval_corrections(LRT_results)
-
-# get all mutations that have significant p-values in BOTH Ridge or LRT. Ridge is a criteria for Assoc, LRT is for Assoc - strict, so both must be satisfied
-mutations_lst = list(set(ridge_results.query("~mutation.str.contains('PC') & mutation not in @tier1_mutations & BH_pval < @thresh")["mutation"]).intersection(LRT_results.query("BH_pval < @thresh")["mutation"]))
-
-del ridge_results
-del LRT_results
-
-if len(mutations_lst) == 0:
-    print(f"There are no significant tier {tiers_lst[-1]} mutations to run the AUC test on")
-    
-    ###################################### REMOVE THIS SOON ######################################
-    if os.path.isfile(os.path.join(out_dir, "AUC_test_results.csv")):
-        os.remove(os.path.join(out_dir, "AUC_test_results.csv"))
-    ###################################### REMOVE THIS SOON ######################################
+if os.path.isfile(os.path.join(out_dir, "AUC_test_results.csv")):
+    print("AUC test was already performed for this model")
     exit()
     
-# mutations_lst = list(set(ridge_results.query("~mutation.str.contains('PC') & BH_pval < @thresh")["mutation"]).union(LRT_results.query("~mutation.str.contains('PC') & BH_pval < @thresh")["mutation"]))
+mutations_lst = matrix.columns
 
-# get all mutations that have significant odds ratios and with confidence intervals significantly above or below 1
-# mutations_lst = ridge_results.query("~mutation.str.contains('PC') & BH_pval < @thresh & (OR_LB > 1 | OR_UB < 1)")["mutation"].values
-
-if os.path.isfile(os.path.join(out_dir, "AUC_test_results.csv")):
-    df_auc = pd.read_csv(os.path.join(out_dir, "AUC_test_results.csv"))
+# if this is for a tier 1 + 2 model, only compute AUC for tier 2 mutations only to save time
+if len(tiers_lst) == 2:
+    tier1_mutations = pd.read_pickle(os.path.join(out_dir.replace("tiers=1+2", "tiers=1"), "model_matrix.pkl")).columns
+    mutations_lst = list(set(mutations_lst) - set(tier1_mutations))
     
-    if len(set(mutations_lst) - set(df_auc["mutation"])) == 0:
-        print("AUC test was already performed for this model")
-        df_auc = df_auc.query("mutation in @mutations_lst")
-        df_auc.to_csv(os.path.join(out_dir, "AUC_test_results.csv"), index=False)
-        exit()
+# merge with eigenvectors
+matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
+print(f"{matrix.shape[0]} samples and {matrix.shape[1]} variables in the largest model")
     
-
-############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES FOR MODEL FITTING #############
-
-
-df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv")).set_index("sample_id")
+# keep only samples (rows) that are in matrix and use loc with indices to ensure they are in the same order
+phenos_file = os.path.join(analysis_dir, drug, "phenos_binary.csv")
+df_phenos = pd.read_csv(phenos_file).set_index("sample_id")
 df_phenos = df_phenos.loc[matrix.index]
-assert sum(matrix.index != df_phenos.index.values) == 0
+
+# check that the sample ordering is the same in the genotype and phenotype matrices
+assert sum(matrix.index != df_phenos.index) == 0
+    
+# scale inputs
+scaler = StandardScaler()
+X = scaler.fit_transform(matrix.values)
 y = df_phenos["phenotype"].values
+assert len(np.unique(y)) == 2
+    
+# # set tier-based threshold. Also, if it's a tier 1 + 2 model, only performing the AUC test for the tier 2 mutations, so remove tier 1
+# if len(tiers_lst) == 1:
+#     thresh = 0.05
+#     tier1_mutations = []
+# else:
+#     tier1_mutations = pd.read_pickle(os.path.join(out_dir.replace("tiers=1+2", "tiers=1"), "model_matrix.pkl")).columns
+#     thresh = 0.01
+     
+# # keep only significant mutations in Ridge regression
+# ridge_results = pd.read_csv(os.path.join(out_dir, "model_analysis.csv"))
+
+# # the LRT dataframe does not contain principal components or tier 1 mutations, so they don't need to be removed
+# LRT_results = pd.read_csv(os.path.join(out_dir, "LRT_results.csv")).iloc[1:, :]
+# LRT_results.rename(columns={LRT_results.columns[0]: "mutation"}, inplace=True)
+# LRT_results = add_pval_corrections(LRT_results)
+
+# # get all mutations that have significant p-values in BOTH Ridge or LRT. Ridge is a criteria for Assoc, LRT is for Assoc - strict, so both must be satisfied
+# mutations_lst = list(set(ridge_results.query("~mutation.str.contains('PC') & mutation not in @tier1_mutations & BH_pval < @thresh")["mutation"]).intersection(LRT_results.query("BH_pval < @thresh")["mutation"]))
+
+# del ridge_results
+# del LRT_results
+
+# if len(mutations_lst) == 0:
+#     print(f"There are no significant tier {tiers_lst[-1]} mutations to run the AUC test on")
+#     exit()
 
 
 ############# STEP 2: READ IN THE ORIGINAL DATA: MODEL_MATRIX PICKLE FILE FOR A GIVEN MODEL #############
@@ -123,74 +124,95 @@ def remove_single_mut(matrix, mutation):
 # load in original model to get the regularization term
 model = pickle.load(open(os.path.join(out_dir, "model.sav"), "rb"))
 reg_param = model.C_[0]
-del model
+
+# model has already been fit, so extract metrics
+true_null_auc = get_binary_metrics_from_model(model, X, y)["AUC"]
+print(f"AUC for model with all mutations: {true_null_auc}")
     
     
-def logReg_permutation_difference(matrix, y, mutation, num_bootstrap, reg_param):
+def logReg_permutation_difference(matrix, X, y, true_null_auc, mutation, num_bootstrap, reg_param):
     
-    X = scaler.fit_transform(matrix.values)
     X_small = scaler.fit_transform(remove_single_mut(matrix, mutation).values)
     
-    # fit original models
-    true_null_model = LogisticRegression(C=reg_param, penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
-    true_null_model.fit(X, y)
-
+    # fit original model without the mutation of interest 
     true_alt_model = LogisticRegression(C=reg_param, penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
     true_alt_model.fit(X_small, y)
     
-    true_null_auc = get_binary_metrics_from_model(true_null_model, X, y, 0)
-    true_alt_auc = get_binary_metrics_from_model(true_alt_model, X_small, y, 0)
+    true_alt_auc = get_binary_metrics_from_model(true_alt_model, X_small, y)["AUC"]
     true_diff = true_null_auc - true_alt_auc
+    return true_diff
     
-    diff_auc = []
+#     diff_auc = []
     
-    for _ in range(num_bootstrap):
+#     for _ in range(num_bootstrap):
 
-        y_permute = y.copy()
-        np.random.shuffle(y_permute)
+#         y_permute = y.copy()
+#         np.random.shuffle(y_permute)
 
-        null_model = LogisticRegression(C=reg_param, penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
-        null_model.fit(X, y_permute)
+#         null_model = SGDClassifier(loss='log_loss', 
+#                                   penalty='l2', 
+#                                   alpha=reg_param, 
+#                                   l1_ratio=0,
+#                                   fit_intercept=True,
+#                                   max_iter=1000000,
+#                                   n_jobs=-1,
+#                                   tol=1e-6,
+#                                   n_iter_no_change=100,
+#                                   learning_rate='optimal', 
+#                                   early_stopping=True, 
+#                                   validation_fraction=0.25, 
+#                                   class_weight="balanced"
+#                                  )
+#         null_model.fit(X, y_permute)
         
-        alt_model = LogisticRegression(C=reg_param, penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
-        alt_model.fit(X_small, y_permute)
+#         alt_model = SGDClassifier(loss='log_loss', 
+#                                   penalty='l2', 
+#                                   alpha=reg_param, 
+#                                   l1_ratio=0,
+#                                   fit_intercept=True,
+#                                   max_iter=1000000,
+#                                   n_jobs=-1,
+#                                   tol=1e-6,
+#                                   n_iter_no_change=100,
+#                                   learning_rate='optimal', 
+#                                   early_stopping=True, 
+#                                   validation_fraction=0.25, 
+#                                   class_weight="balanced"
+#                                  )
+#         alt_model.fit(X_small, y_permute)
 
-        null_auc = get_binary_metrics_from_model(null_model, X, y_permute, 0)
-        alt_auc = get_binary_metrics_from_model(alt_model, X_small, y_permute, 0)
+#         null_auc = get_binary_metrics_from_model(null_model, X, y_permute)["AUC"]
+#         alt_auc = get_binary_metrics_from_model(alt_model, X_small, y_permute)["AUC"]
         
-        # null hypothesis is that the model with all features is better than the alternative model (1 feature dropped)
-        diff_auc.append(null_auc - alt_auc)
+#         # null hypothesis is that the model with all features is better than the alternative model (1 feature dropped)
+#         diff_auc.append(null_auc - alt_auc)
         
-    # p-value is the number of permuted samples that have a test statistic AT LEAST AS extreme as the true statistic
-    if true_diff > 0:
-        return true_diff, np.mean(np.array(diff_auc) >= true_diff)
-    else:
-        return true_diff, np.mean(np.array(diff_auc) <= true_diff)
+#     # p-value is the number of permuted samples that have a test statistic AT LEAST AS extreme as the true statistic
+#     if true_diff > 0:
+#         return true_diff, np.mean(np.array(diff_auc) >= true_diff)
+#     else:
+#         return true_diff, np.mean(np.array(diff_auc) <= true_diff)
             
-        
-num_bootstrap = 100
-print(f"\nPerforming AUC permutation test on {len(mutations_lst)} mutations with {num_bootstrap} replicates")
+       
+# print(f"\nPerforming AUC permutation test on {len(mutations_lst)} mutations with {num_bootstrap} replicates")
 
-if os.path.isfile(os.path.join(out_dir, "AUC_test_results.csv")):
-    diff_df = pd.read_csv(os.path.join(out_dir, "AUC_test_results.csv"))
-    print(f"Already completed {len(diff_df)}/{len(mutations_lst)} mutations")
-else:    
-    diff_df = pd.DataFrame(columns=["mutation", "AUC_diff", "pval"])
+# diff_df = pd.DataFrame(columns=["mutation", "AUC_diff", "pval"])
+diff_df = pd.DataFrame(columns=["mutation", "AUC_diff"])
 
 for i, mutation in enumerate(mutations_lst):
     
-    if mutation not in diff_df["mutation"].values:
-        diff, pval = logReg_permutation_difference(matrix, y, mutation, num_bootstrap, reg_param)
-        diff_df = pd.concat([diff_df, 
-                             pd.DataFrame({"mutation": mutation, "AUC_diff": diff, "pval": pval}, index=[-1])
-                            ], axis=0)
+    diff = logReg_permutation_difference(matrix, X, y, true_null_auc, mutation, num_bootstrap, reg_param)
+    # diff_df = pd.concat([diff_df, 
+    #                      pd.DataFrame({"mutation": mutation, "AUC_diff": diff, "pval": pval}, index=[-1])
+    #                     ], axis=0)
+    diff_df = pd.concat([diff_df, 
+                         pd.DataFrame({"mutation": mutation, "AUC_diff": diff}, index=[-1])
+                        ], axis=0)
 
-    if i % 10 == 0:
-        diff_df.to_csv(os.path.join(out_dir, "AUC_test_results.csv"), index=False)
-        print(i)
+#     if i % 10 == 0:
+#         print(i)
       
-    
-diff_df = add_pval_corrections(diff_df)
+# diff_df = add_pval_corrections(diff_df)
 diff_df.to_csv(os.path.join(out_dir, "AUC_test_results.csv"), index=False)
 
 # returns a tuple: current, peak memory in bytes 

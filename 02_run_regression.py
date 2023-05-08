@@ -6,7 +6,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import tracemalloc, pickle
 who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
-eigenvec_df = pd.read_csv("data/eigenvec_100PC.csv", index_col=[0])
 lineages_combined = pd.read_csv("data/combined_lineages_samples.csv", low_memory=False)
 
 # utils files are in a separate folder
@@ -52,9 +51,13 @@ kwargs = yaml.safe_load(open(config_file))
 tiers_lst = kwargs["tiers_lst"]
 binary = kwargs["binary"]
 atu_analysis = kwargs["atu_analysis"]
+pool_type = kwargs["pool_type"]
 analysis_dir = kwargs["output_dir"]
 alpha = kwargs["alpha"]
 num_PCs = kwargs["num_PCs"]
+
+# read in the eigenvector dataframe and keep only the PCs for the model
+eigenvec_df = pd.read_csv("data/eigenvec_100PC.csv", usecols=["sample_id"] + [f"PC{num+1}" for num in np.arange(num_PCs)]).set_index("sample_id")
 
 # double check. If running CC vs. CC-ATU analysis, they are binary phenotypes
 if atu_analysis:
@@ -93,7 +96,15 @@ if not os.path.isfile(os.path.join(out_dir, f"model_matrix{model_suffix}.pkl")):
     exit()
 else:
     matrix = pd.read_pickle(os.path.join(out_dir, f"model_matrix{model_suffix}.pkl"))
+    
+    
+if pool_type != "unpooled":
+    
+    model_unpooled = pd.read_pickle(os.path.join(out_dir.replace(pool_type, "unpooled"), f"model_matrix{model_suffix}.pkl"))
 
+    if len(set(model_unpooled.columns).symmetric_difference(matrix.columns)) == 0:
+        print("This pooled model is the same as the corresponding unpooled model. Exiting...")
+        exit()
     
 if binary:
     if atu_analysis:
@@ -119,35 +130,8 @@ if not binary:
 ############# STEP 2: GET THE MATRIX ON WHICH TO FIT THE DATA +/- EIGENVECTOR COORDINATES, DEPENDING ON THE PARAM #############
 
 
-# minor_allele_counts = pd.read_pickle("data/minor_allele_counts.pkl")
-# minor_allele_counts = minor_allele_counts.loc[matrix.index]
-# sample_ids = minor_allele_counts.index.values
-
-# scaler = StandardScaler()
-# grm = np.cov(scaler.fit_transform(minor_allele_counts.values))
-# del minor_allele_counts
-# print(f"GRM shape: {grm.shape}")
-
-# pca = PCA(n_components=num_PCs)
-# pca.fit(scaler.fit_transform(grm))
-# del grm
-
-# print(f"Sum of explained variance ratios: {np.sum(pca.explained_variance_ratio_)}")
-
-# eigenvec = pca.components_.T
-# eigenvec_df = pd.DataFrame(eigenvec)
-# eigenvec_df["sample_id"] = sample_ids
-# eigenvec_df = eigenvec_df.set_index("sample_id")
-# eigenvec_df.columns = [f"PC{num}" for num in range(num_PCs)]
-
-print(np.unique(matrix.values))
-eigenvec_df = eigenvec_df.iloc[:, :num_PCs]
+print(f"{matrix.shape[0]} samples and {matrix.shape[1]} genotypic features in the model")
 matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
-print(f"Matrix with lineages: {matrix.shape}")
-
-# Drop the columns that are the same for all rows
-matrix = matrix.loc[:, ~(matrix.nunique(dropna=False, axis=0) == 1)]
-print(f"Matrix for model: {matrix.shape}")
     
 # keep only samples (rows) that are in matrix and use loc with indices to ensure they are in the same order
 df_phenos = df_phenos.set_index("sample_id")
@@ -155,11 +139,10 @@ df_phenos = df_phenos.loc[matrix.index]
 
 # check that the sample ordering is the same in the genotype and phenotype matrices
 assert sum(matrix.index != df_phenos.index) == 0
-X = matrix.values
     
 # scale inputs
-# scaler = StandardScaler()
-X = scaler.fit_transform(X)
+scaler = StandardScaler()
+X = scaler.fit_transform(matrix.values)
 
 # binary vs. quant (MIC) phenotypes
 if binary:
@@ -172,13 +155,11 @@ if len(y) != X.shape[0]:
     raise ValueError(f"Shapes of model inputs {X.shape} and outputs {len(y)} are incompatible")
 print(f"{X.shape[0]} samples and {X.shape[1]} variables in the model")
 
-model_suffix = "_new"
-
 
 ######################### STEP 3: FIT L2-PENALIZED REGRESSION ##########################
 
 
-if not os.path.isfile(os.path.join(out_dir, f"model{model_suffix}.sav")):
+if not os.path.isfile(os.path.join(out_dir, "model.sav")):
     if binary:
         model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
                                      cv=5,
@@ -186,28 +167,28 @@ if not os.path.isfile(os.path.join(out_dir, f"model{model_suffix}.sav")):
                                      max_iter=10000, 
                                      multi_class='ovr',
                                      scoring='neg_log_loss',
-                                     class_weight='balanced'
+                                     class_weight='balanced',
+                                     n_jobs=-1
                                     )
 
 
     else:
         model = RidgeCV(alphas=np.logspace(-6, 6, 13),
                         cv=5,
-                        scoring='neg_root_mean_squared_error'
+                        scoring='neg_root_mean_squared_error',
                        )
     model.fit(X, y)
+    pickle.dump(model, open(os.path.join(out_dir, "model.sav"), "wb"))
+else:
+    model = pickle.load(open(os.path.join(out_dir, "model.sav"), "rb"))
 
-    # save model because the regularization parameter will be used subsequently
-    if not atu_analysis:
-        pickle.dump(model, open(os.path.join(out_dir, f"model{model_suffix}.sav"), "wb"))
-        
-    # save coefficients
+# save coefficients
+if not os.path.isfile(os.path.join(out_dir, f"regression_coef{model_suffix}.csv")):
     coef_df = pd.DataFrame({"mutation": matrix.columns, "coef": np.squeeze(model.coef_)})
     coef_df.to_csv(os.path.join(out_dir, f"regression_coef{model_suffix}.csv"), index=False)
 else:
-    model = pickle.load(open(os.path.join(out_dir, f"model{model_suffix}.sav"), "rb"))
     coef_df = pd.read_csv(os.path.join(out_dir, f"regression_coef{model_suffix}.csv"))
-
+    
 if binary:
     print(f"Regularization parameter: {model.C_[0]}")
 else:
@@ -217,26 +198,24 @@ else:
 ########################## STEP 4: PERFORM PERMUTATION TEST TO GET SIGNIFICANCE AND BOOTSTRAPPING TO GET ODDS RATIO CONFIDENCE INTERVALS ##########################
 
 
-num_bootstrap = 100
 if not os.path.isfile(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv")):
     print(f"Peforming permutation test with {num_bootstrap} replicates")
-    permute_df = perform_permutation_test(model, X, y, num_bootstrap, binary=binary, penalty_type='l2', progress_bar=True)
+    permute_df = perform_permutation_test(model, X, y, num_bootstrap, binary=binary, fit_type='OLS', progress_bar=True)
     permute_df.columns = matrix.columns
     permute_df.to_csv(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv"), index=False)
 else:
     permute_df = pd.read_csv(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv"))
-    
 
 # if not os.path.isfile(os.path.join(out_dir, f"coef_bootstrapping{model_suffix}.csv")):
 #     print(f"Peforming bootstrapping with {num_bootstrap} replicates")
-#     bootstrap_df = perform_bootstrapping(model, X, y, num_bootstrap, binary=binary, save_summary_stats=False)
+#     bootstrap_df = perform_bootstrapping(model, X, y, num_bootstrap, binary=binary)
 #     bootstrap_df.columns = matrix.columns
 #     bootstrap_df.to_csv(os.path.join(out_dir, f"coef_bootstrapping{model_suffix}.csv"), index=False)
 # else:
 #     bootstrap_df = pd.read_csv(os.path.join(out_dir, f"coef_bootstrapping{model_suffix}.csv"))
 
     
-########################## STEP 4: ADD PERMUTATION TEST P-VALUES TO THE MAIN COEF DATAFRAME ##########################
+# ########################## STEP 4: ADD PERMUTATION TEST P-VALUES TO THE MAIN COEF DATAFRAME ##########################
     
     
 final_df = get_coef_and_confidence_intervals(alpha, binary, who_variants_combined, drug_WHO_abbr, coef_df, permute_df, bootstrap_df=None)
