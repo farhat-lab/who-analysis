@@ -1,0 +1,20 @@
+AF_thresh: 0.75
+alpha: 0.05
+amb_mode: DROP
+atu_analysis: false
+atu_analysis_type: CC
+binary: true
+drop_isolates_before_variants: false
+impute: false
+input_dir: /n/data1/hms/dbmi/farhat/ye12/who
+missing_feature_thresh: 0.25
+missing_isolate_thresh: 0.01
+num_PCs: 50
+num_bootstrap: 1000
+output_dir: /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue
+pheno_category_lst:
+- WHO
+pool_type: unpooled
+synonymous: false
+tiers_lst:
+- '1'
