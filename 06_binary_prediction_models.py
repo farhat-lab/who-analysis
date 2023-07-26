@@ -209,7 +209,6 @@ assert sum(model_matrix.index != df_phenos.index) == 0
 
 scaler = StandardScaler()
 X = scaler.fit_transform(model_matrix.values)
-# X = model_matrix.values
 print(f"{X.shape[0]} isolates and {X.shape[1]} features in the model")
 y = df_phenos["phenotype"].values
 
@@ -271,36 +270,6 @@ def bootstrap_binary_metrics(X, y, num_bootstrap=None):
 
 results_df = bootstrap_binary_metrics(X, y, num_bootstrap)
 results_df.to_csv(os.path.join(out_dir, f"model_stats_CV{model_prefix}_bootstrap.csv"), index=False)
-
-
-# def binary_metrics_cross_validation(X, y, num_cv=10):
-    
-#     results_df = []
-#     print(f"Performing cross-validation with {num_cv} splits")
-#     cv_splits = StratifiedKFold(n_splits=num_cv)
-
-#     for _, (train_idx, val_idx) in enumerate(cv_splits.split(X, y)):
-
-#         X_train = scaler.fit_transform(X[train_idx, :])
-#         X_val = scaler.fit_transform(X[val_idx, :])
-        
-#         model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
-#                                      cv=5,
-#                                      penalty='l2',
-#                                      max_iter=10000, 
-#                                      multi_class='ovr',
-#                                      scoring='neg_log_loss',
-#                                      class_weight='balanced'
-#                                     )
-
-#         model.fit(X_train, y[train_idx])        
-#         results_df.append(pd.DataFrame(get_binary_metrics_from_model(model, X_val, y[val_idx], maximize="sens_spec"), index=[0]))
-
-#     df_combined = pd.concat(results_df, axis=0).reset_index(drop=True)
-#     return df_combined
-
-# results_df = binary_metrics_cross_validation(X, y)
-# results_df.to_csv(os.path.join(out_dir, f"model_stats_CV{model_prefix}.csv"), index=False)
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

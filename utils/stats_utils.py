@@ -6,7 +6,7 @@ import sklearn.metrics
 import statsmodels.stats.api as sm
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression, Ridge, LinearRegression, Lasso
+from sklearn.linear_model import LogisticRegression, Ridge, LinearRegression, Lasso, SGDClassifier, SGDRegressor
 import tracemalloc, pickle
 
 
@@ -14,68 +14,64 @@ scaler = StandardScaler()
 
 
 
-def get_binary_metrics_from_model(model, X, y, return_idx):
+def get_binary_metrics_from_model(model, X, y, maximize="sens_spec"):
         
     # get positive class probabilities and predicted classes after determining the binarization threshold
     y_prob = model.predict_proba(X)[:, 1]
-    y_pred = get_threshold_val_and_classes(y_prob, y)
+    y_pred = get_threshold_val_and_classes(y_prob, y, maximize)
     tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y, y_pred=y_pred).ravel()
     
     results = np.array([sklearn.metrics.roc_auc_score(y_true=y, y_score=y_prob), # AUC
                         tp / (tp + fn), # SENSITIVITY
-                        tn / (tn + fp), # SPECIFICITY
+                        tn / (tn + fp), # SPECIFICITY,
+                        tp / (tp + fp), # PRECISION
                         sklearn.metrics.accuracy_score(y_true=y, y_pred=y_pred), # ACCURACY
                         sklearn.metrics.balanced_accuracy_score(y_true=y, y_pred=y_pred), # BALANCED ACCURACY
                        ])
+        
+    return dict(zip(["AUC", "Sens", "Spec", "Precision", "Accuracy", "Balanced_Acc"], results))
+
+
+
+
+def get_threshold_val_and_classes(y_prob, y_test, spec_thresh=None):
     
-    return results[return_idx]
-
-
-
-def get_threshold_val_and_classes(y_prob, y_test):
-    
-    # Compute number resistant and sensitive
-    num_samples = len(y_test)
-    num_resistant = np.sum(y_test).astype(int)
-    num_sensitive = num_samples - num_resistant
-    
-    pred_df = pd.DataFrame({"y_prob": y_prob, "y_test": y_test})
-
     # Test thresholds from 0 to 1, in 0.01 increments
     thresholds = np.linspace(0, 1, 101)
+    results_df = pd.DataFrame(columns=["thresh", "sens_spec", "sens", "spec"])
     
-    fpr_ = []
-    tpr_ = []
+    for i, thresh in enumerate(thresholds):
 
-    for thresh in thresholds:
+        y_pred = (y_prob > thresh).astype(int)
+        tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y_test, y_pred=y_pred).ravel()
         
-        # binarize using the threshold, then compute true and false positives
-        pred_df["y_pred"] = (pred_df["y_prob"] > thresh).astype(int)
+        sens = tp / (tp + fn)
+        spec = tn / (tn + fp)
         
-        tp = len(pred_df.loc[(pred_df["y_pred"] == 1) & (pred_df["y_test"] == 1)])
-        fp = len(pred_df.loc[(pred_df["y_pred"] == 1) & (pred_df["y_test"] == 0)])
+        results_df.loc[i, :] = [thresh, sens + spec, sens, spec]
+        
+    # get index of highest sum(s) of sens and spec.
+    if spec_thresh is None:
+        select_thresh = results_df.sort_values("sens_spec", ascending=False)["thresh"].values[0]
+    # if there is a threshold on specificity, then choose the threshold that maximizes sensitivity while having a specificity above the threshold
+    else:
+        if results_df["spec"].max() >= spec_thresh:
+            select_thresh = results_df.query("spec >= @spec_thresh").sort_values("sens", ascending=False)["thresh"].values[0]
+        # if there are no cases when the specificity reaches the threshold, take the highest sensitivity given that the specificity is maximized
+        else:
+            max_spec = results_df["spec"].max()
+            select_thresh = results_df.query("spec >= @max_spec").sort_values("sens", ascending=False)["thresh"].values[0]
 
-        # Compute FPR and TPR. FPR = FP / N. TPR = TP / P
-        fpr_.append(fp / num_sensitive)
-        tpr_.append(tp / num_resistant)
-
-    fpr_ = np.array(fpr_)
-    tpr_ = np.array(tpr_)
-
-    sens_spec_sum = (1 - fpr_) + tpr_
-
-    # get index of highest sum(s) of sens and spec. Arbitrarily take the first threshold when there are multiple
-    best_sens_spec_sum_idx = np.where(sens_spec_sum == np.max(sens_spec_sum))[0][0]
-    select_thresh = thresholds[best_sens_spec_sum_idx]
-
+    # print(f"Selected threshold: {select_thresh}")
+    
     # return the predicted class labels
-    return (pred_df["y_prob"] > select_thresh).astype(int).values
+    return (y_prob > select_thresh).astype(int)
 
 
 
 
 # use the regularization parameter determined above
-def perform_bootstrapping(model, X, y, num_bootstrap, binary=True, save_summary_stats=False):
+def perform_bootstrapping(model, X, y, num_bootstrap, binary=True):
     
     if type(model) == float or type(model) == int:
         reg_param = model
@@ -86,7 +82,6 @@ def perform_bootstrapping(model, X, y, num_bootstrap, binary=True, save_summary_
             reg_param = model.alpha_
     
     coefs = []
-    summary_stats_df = pd.DataFrame(columns=["AUC", "Sens", "Spec", "accuracy"])
     
     for i in range(num_bootstrap):
 
@@ -97,81 +92,117 @@ def perform_bootstrapping(model, X, y, num_bootstrap, binary=True, save_summary_
         X_bs = scaler.fit_transform(X[sample_idx, :])
         y_bs = y[sample_idx]
 
+        # if binary:
+        #     if reg_param == 0:
+        #         bs_model = LogisticRegression(penalty='none', max_iter=100000, multi_class='ovr', class_weight='balanced', n_jobs=-1)
+        #     else:
+        #         bs_model = LogisticRegression(C=reg_param, penalty='l2', max_iter=100000, multi_class='ovr', class_weight='balanced', n_jobs=-1)
+        # else:
+        #     if reg_param == 0:
+        #         bs_model = LinearRegression(n_jobs=-1)
+        #     else:
+        #         bs_model = Ridge(alpha=reg_param, max_iter=100000, n_jobs=-1)
         if binary:
-            if reg_param == 0:
-                bs_model = LogisticRegression(penalty='none', max_iter=10000, multi_class='ovr', class_weight='balanced')
-            else:
-                bs_model = LogisticRegression(C=reg_param, penalty='l2', max_iter=10000, multi_class='ovr', class_weight='balanced')
+            bs_model = SGDClassifier(loss='log_loss', 
+                                      penalty='l2', 
+                                      alpha=reg_param, 
+                                      l1_ratio=0,
+                                      fit_intercept=True,
+                                      max_iter=1000000,
+                                      n_jobs=-1,
+                                      tol=0,
+                                      n_iter_no_change=100,
+                                      learning_rate='optimal', 
+                                      early_stopping=True, 
+                                      validation_fraction=0.25, 
+                                      class_weight="balanced"
+                                     )
         else:
-            if reg_param == 0:
-                bs_model = LinearRegression()
-            else:
-                bs_model = Ridge(alpha=reg_param, max_iter=10000)
+            bs_model = SGDRegressor(loss='squared_error', 
+                                     penalty='l2', 
+                                     alpha=reg_param, 
+                                     l1_ratio=0,
+                                     fit_intercept=True,
+                                     max_iter=1000000,
+                                     tol=1e-6,
+                                     n_iter_no_change=100,
+                                     learning_rate='optimal', 
+                                     early_stopping=True, 
+                                     validation_fraction=0.25, 
+                                    )
         
         bs_model.fit(X_bs, y_bs)
         coefs.append(np.squeeze(bs_model.coef_))
         
-        # also output a dataframe with the AUC, sensitivity, specificity, and accuracy of the model
-        if save_summary_stats:
-            
-            y_prob = bs_model.predict_proba(X_bs)[:, 1]
-            y_pred = get_threshold_val_and_classes(y_prob, y_bs)
-            
-            tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y_bs, y_pred=y_pred).ravel()
-            
-            summary_stats_df.loc[i, :] = [sklearn.metrics.roc_auc_score(y_true=y_bs, y_score=y_prob),
-                                           tp / (tp + fn),
-                                           tn / (tn + fp),
-                                           sklearn.metrics.accuracy_score(y_true=y_bs, y_pred=y_pred),
-                                          ]
-
-    if save_summary_stats:        
-        return pd.DataFrame(coefs), summary_stats_df
-    else:
-        return pd.DataFrame(coefs)
+    return pd.DataFrame(coefs)
 
     
     
     
 # use the regularization parameter determined above
-def perform_permutation_test(model, X, y, num_reps, binary=True, penalty_type='l2', progress_bar=False):
+def perform_permutation_test(model, X, y, num_reps, binary=True, fit_type="SGD", progress_bar=False):
     
-    if penalty_type not in ["l1", "l2", None]:
-        raise ValueError(f"{penalty_type} is a not a valid penalty type!")
-        
     if type(model) == float or type(model) == int:
-        reg_param = model
+        reg_param = 0
     else:
-        if penalty_type is not None:
-            if binary:
-                reg_param = model.C_[0]
-            else:
-                reg_param = model.alpha_
+        if binary:
+            reg_param = model.C_[0]
         else:
-            reg_param = 1
-    
+            reg_param = model.alpha_
+            
     coefs = []    
     for i in range(num_reps):
 
+        if i == 0:
+            print(f"Fitting permuted models using {fit_type} and regularization parameter {reg_param}")
+            
         # shuffle phenotypes. np.random.shuffle works in-place
         y_permute = y.copy()
         np.random.shuffle(y_permute)
 
-        if binary:
-            # HAVE SPLIT THIS UP BECAUSE THE UNPENALIZED REGRESSION CONVERGES BETTER WITH THE DEFAULT LBFGS SOLVER THAN WITH SAGA
-            if penalty_type is None:
-                rep_model = LogisticRegression(penalty=None, max_iter=10000, multi_class='ovr', class_weight='balanced')
+        if fit_type == "SGD":
+            if binary:
+                rep_model = SGDClassifier(loss='log_loss', 
+                                          penalty='l2', 
+                                          alpha=reg_param, 
+                                          l1_ratio=0,
+                                          fit_intercept=True,
+                                          max_iter=1000000,
+                                          n_jobs=-1,
+                                          tol=1e-6,
+                                          n_iter_no_change=100,
+                                          learning_rate='optimal', 
+                                          early_stopping=True, 
+                                          validation_fraction=0.25, 
+                                          class_weight="balanced"
+                                         )
             else:
-                rep_model = LogisticRegression(C=reg_param, penalty=penalty_type, max_iter=10000, multi_class='ovr', class_weight='balanced', solver='saga')
-        else:
-            if penalty_type is None:
-                rep_model = LinearRegression()
-            else:
-                if penalty_type == 'l1':
-                    rep_model = Lasso(alpha=reg_param, max_iter=10000)
+                rep_model = SGDRegressor(loss='squared_error', 
+                                         penalty='l2', 
+                                         alpha=reg_param, 
+                                         l1_ratio=0,
+                                         fit_intercept=True,
+                                         max_iter=1000000,
+                                         tol=1e-6,
+                                         n_iter_no_change=100,
+                                         learning_rate='optimal', 
+                                         early_stopping=True, 
+                                         validation_fraction=0.25, 
+                                        )
+        elif fit_type == "OLS":
+            if reg_param == 0:
+                if binary:
+                    rep_model = LogisticRegression(penalty=None, max_iter=10000, multi_class='ovr', class_weight='balanced', solver='lbfgs', n_jobs=-1)
                 else:
-                    rep_model = Ridge(alpha=reg_param, max_iter=10000)
-        
+                    rep_model = LinearRegression(n_jobs=-1)
+            else:
+                if binary:
+                    rep_model = LogisticRegression(C=reg_param, penalty="l2", max_iter=100000, multi_class='ovr', class_weight='balanced', solver='lbfgs', n_jobs=-1)
+                else:
+                    rep_model = Ridge(alpha=reg_param, max_iter=100000)
+        else:
+            raise ValueError(f"{fit_type} is not a valid regression fitting mode!")
+
         rep_model.fit(X, y_permute)
         coefs.append(np.squeeze(rep_model.coef_))
         
@@ -210,13 +241,12 @@ def get_coef_and_confidence_intervals(alpha, binary, who_variants_combined, drug
                 coef_df.loc[i, "pval"] = np.mean(permute_df[row["mutation"]] >= row["coef"])
             else:
                 coef_df.loc[i, "pval"] = np.mean(permute_df[row["mutation"]] <= row["coef"])
+                
+            abs_value_coef = np.abs(row["coef"])
+            coef_df.loc[i, "neutral_pval"] = np.mean((permute_df[row["mutation"]] > -abs_value_coef) & (permute_df[row["mutation"]] < abs_value_coef))
 
         # Benjamini-Hochberg and Bonferroni corrections
         coef_df = add_pval_corrections(coef_df)
-
-        # adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
-        assert len(coef_df.query("pval > BH_pval")) == 0
-        assert len(coef_df.query("pval > Bonferroni_pval")) == 0
 
     # convert to odds ratios
     if binary:
@@ -342,28 +372,31 @@ def compute_likelihood_ratio_confidence_intervals(res_df, alpha):
 
 
 
-def add_pval_corrections(df, col="pval"):
+def add_pval_corrections(df):
     '''
     Implement Benjamini-Hochberg FDR and Bonferroni corrections.
     '''
     
     # LINK TO HOW TO USE: https://tedboy.github.io/statsmodels_doc/generated/statsmodels.stats.multitest.fdrcorrection.html#statsmodels.stats.multitest.fdrcorrection
-
-    if sum(pd.isnull(df[col])) > 0:
-        raise ValueError("There are NaNs in the p-value column!")
         
-    # alpha argument doesn't matter because we threshold later. It's only relevant if you keep the first argument, which is a boolean of reject vs. not reject
-    _, bh_pvals, _, _ = sm.multipletests(df[col], method='fdr_bh', is_sorted=False, returnsorted=False)
-    _, bonferroni_pvals, _, _ = sm.multipletests(df[col], method='bonferroni', is_sorted=False, returnsorted=False)
-    
-    df["BH_pval"] = bh_pvals
-    df["Bonferroni_pval"] = bonferroni_pvals
-    
-    if f"neutral_{col}" in df.columns:
-        _, neutral_bh_pvals, _, _ = sm.multipletests(df[f"neutral_{col}"], method='fdr_bh', is_sorted=False, returnsorted=False)
-        _, neutral_bonferroni_pvals, _, _ = sm.multipletests(df[f"neutral_{col}"], method='bonferroni', is_sorted=False, returnsorted=False)
+    for col in df.columns[df.columns.str.endswith("pval")]:
+            
+        # skip columns that are corrected pvals
+        if "BH" not in col and "Bonferroni" not in col:
+            
+            # NaNs will cause the functions to fail
+            df = df.loc[~pd.isnull(df[col])]
+            
+            # alpha argument doesn't matter because we threshold later. It's only relevant if you keep the first argument, which is a boolean of reject vs. not reject
+            _, bh_pvals, _, _ = sm.multipletests(df[col], method='fdr_bh', is_sorted=False, returnsorted=False)
+            _, bonferroni_pvals, _, _ = sm.multipletests(df[col], method='bonferroni', is_sorted=False, returnsorted=False)
 
-        df["neutral_BH_pval"] = neutral_bh_pvals
-        df["neutral_Bonferroni_pval"] = neutral_bonferroni_pvals
-    
+            # add prefixes to the beginnings of the columns for the corrected p-values
+            df[f"BH_{col}"] = bh_pvals
+            df[f"Bonferroni_{col}"] = bonferroni_pvals
+            
+            # check that adjusted p-values are larger so that fewer null hypotheses (coef = 0) are rejected
+            assert len(df.query(f"{col} > BH_{col}")) == 0
+            assert len(df.query(f"{col} > Bonferroni_{col}")) == 0
+
     return df.reset_index(drop=True)

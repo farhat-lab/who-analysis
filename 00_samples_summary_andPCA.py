@@ -19,9 +19,8 @@ coll2014.rename(columns={"#lineage": "Lineage"}, inplace=True)
 # starting the memory monitoring -- this script needs ~125 GB
 tracemalloc.start()
 
-# mixed_sites_thresh = 100
-_, input_data_dir, mixed_sites_thresh, num_PCs = sys.argv
-mixed_sites_thresh = int(mixed_sites_thresh)
+_, input_data_dir, mixed_sites_prop_thresh, num_PCs = sys.argv
+mixed_sites_prop_thresh = float(mixed_sites_prop_thresh)
 num_PCs = int(num_PCs)
 
 
@@ -78,19 +77,20 @@ else:
 print(f"Minor Allele Counts shape: {minor_allele_counts.shape}")
 
 
-# ###################### REMOVE SITES THAT COULD CONFOUND THE POPULATION STRUCTURE CORRECTION ###################### 
+###################### REMOVE SITES THAT COULD CONFOUND THE POPULATION STRUCTURE CORRECTION ###################### 
 
 
-# # mixed calls information
-# mixed_calls = pd.read_excel("data/mixed_site_counts.xlsx", sheet_name=None)
+# mixed calls information
+mixed_calls = pd.read_excel("data/mixed_site_counts.xlsx", sheet_name=0)
+mixed_sites_thresh = int(np.round(mixed_sites_prop_thresh*len(minor_allele_counts)))
+mixed_sites = mixed_calls.query("genotype_count > @mixed_sites_thresh").position.unique()
 
-# if len(mixed_calls) == 1:
-#     mixed_calls = mixed_calls[list(mixed_calls.keys())[0]]
+keep_sites = list(set(minor_allele_counts.columns) - set(mixed_sites))
+print(f"Keeping {len(keep_sites)}/{minor_allele_counts.shape[1]} sites that do not have low AF in more than {mixed_sites_prop_thresh*100}% of isolates")
+minor_allele_counts = minor_allele_counts[keep_sites]
 
-# mixed_sites = mixed_calls.query("genotype_count > @mixed_sites_thresh").position.unique()
 
-
-###################### GET SITES IN DRUG RESISTANCE LOCI THAT ARE NOT IN THE COLL 2014 SCHEME ######################
+############################################ GET SITES IN DRUG RESISTANCE LOCI ############################################
 
 
 # drop sites that are in drug resistance loci
@@ -106,24 +106,23 @@ drug_res_sites = list(itertools.chain.from_iterable(drug_res_sites))
 drug_res_sites = set(drug_res_sites) - set(coll2014["position"].values.astype(int))
 
 keep_sites = list(set(minor_allele_counts.columns) - drug_res_sites)
-print(f"Keeping {len(keep_sites)}/{minor_allele_counts.shape[1]} sites for the new GRM")
+print(f"Keeping {len(keep_sites)}/{minor_allele_counts.shape[1]} sites that are not in drug-resistance regions")
+minor_allele_counts = minor_allele_counts[keep_sites]
+
+
+################################################### GET HOMPLASIC SITES ###################################################
+
+
+homoplasy = pd.read_excel("data/Vargas_homoplasy.xlsx")
+if len(homoplasy) == 1:
+    homoplasy = homoplasy[list(homoplasy.keys())[0]]
+    
+homoplasic_sites = set(homoplasy["H37Rv Position"].values.astype(int))# - set(coll2014["position"].values.astype(int))
+
+keep_sites = list(set(minor_allele_counts.columns) - homoplasic_sites)
+print(f"Keeping {len(keep_sites)}/{minor_allele_counts.shape[1]} sites that are not homoplasic")
 minor_allele_counts = minor_allele_counts[keep_sites]
 print(minor_allele_counts.shape)
-
-
-# ############################## GET HOMPLASIC SITES THAT ARE NOT IN THE COLL 2014 SCHEME ##############################
-
-
-# homoplasy = pd.read_excel("data/Vargas_homoplasy.xlsx")
-# if len(homoplasy) == 1:
-#     homoplasy = homoplasy[list(homoplasy.keys())[0]]
-    
-# homoplasic_sites = set(homoplasy["H37Rv Position"].values.astype(int)) - set(coll2014["position"].values.astype(int))
-
-# keep_sites = list(set(minor_allele_counts.columns) - drug_res_sites - set(mixed_sites) - homoplasic_sites)
-# print(f"Keeping {len(keep_sites)}/{minor_allele_counts.shape[1]} sites for the new GRM")
-# minor_allele_counts = minor_allele_counts[keep_sites]
-# print(minor_allele_counts.shape)
 
 
 ############################## STEP 2: COMPUTE THE GENETIC RELATEDNESS MATRIX, WHICH IS THE COVARIANCE OF THE MINOR ALLELE COUNTS DATAFRAME. SAVE EIGENVECTORS ##############################
@@ -198,7 +197,7 @@ eigenvec_df.to_csv(f"data/eigenvec_{num_PCs}PC.csv")
 #         return np.nan, np.nan
     
 
-# summary_df = pd.DataFrame(columns=["Drug", "Genos", "Binary_Phenos", "SNP_Matrix", "MICs", "Lineages", "Tier1_LOF", "Tier1_Inframe", "Tier2_LOF", "Tier2_Inframe"])
+# summary_df = pd.DataFrame(columns=["Drug", "Genos", "SNP_Matrix", "Binary_Phenos", "WHO_Phenos", "MICs", "Lineages", "Tier1_LOF", "Tier1_Inframe", "Tier2_LOF", "Tier2_Inframe"])
 # i = 0
 
 # print("Counting data for each drug")
@@ -214,7 +213,7 @@ eigenvec_df.to_csv(f"data/eigenvec_{num_PCs}PC.csv")
     
 #     # get all CSV files containing MICs
 #     mic_files = os.listdir(os.path.join(mic_dir, drug))
-#     mics = pd.concat([pd.read_csv(os.path.join(mic_dir, drug, fName), usecols=["sample_id"]) for fName in mic_files if "run" in fName], axis=0)
+#     mics = pd.concat([pd.read_csv(os.path.join(mic_dir, drug, fName), usecols=["sample_id", "phenotypic_category"]) for fName in mic_files if "run" in fName], axis=0)
     
 #     # get numbers of samples represented in the GRM folder and with lineages (this will be less because not all sample_ids were matched to VCF files)
 #     num_with_snps = set(minor_allele_counts_samples).intersection(genos.sample_id.unique())
@@ -226,8 +225,9 @@ eigenvec_df.to_csv(f"data/eigenvec_{num_PCs}PC.csv")
     
 #     summary_df.loc[i] = [drug.split("=")[1], 
 #                          len(genos.sample_id.unique()), 
-#                          len(phenos.sample_id.unique()), 
 #                          len(num_with_snps),
+#                          len(phenos.sample_id.unique()),
+#                          len(phenos.query("phenotypic_category=='WHO'").sample_id.unique()),
 #                          len(mics.sample_id.unique()),
 #                          len(samples_with_lineages),
 #                          num_lof_tier1,
@@ -245,7 +245,9 @@ eigenvec_df.to_csv(f"data/eigenvec_{num_PCs}PC.csv")
 #     print("There are different numbers of genotypes and phenotypes")
 # if len(summary_df.query("Genos != SNP_Matrix")) > 0:
 #     print("There are different numbers of genotypes and SNP matrix entries")
-    
+# summary_df["WHO_Phenos"] = summary_df["WHO_Phenos"].astype(int)
+# assert len(summary_df.query("WHO_Phenos > Binary_Phenos")) == 0
+
 # summary_df.sort_values("Drug", ascending=True).to_csv("data/samples_summary.csv", index=False)
 
 # returns a tuple: current, peak memory in bytes 

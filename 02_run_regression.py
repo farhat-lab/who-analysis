@@ -90,7 +90,7 @@ else:
 
 ########################## STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES ##########################
 
-
+    
 # no model (basically just for Pretomanid because there are no WHO phenotypes, so some models don't exist)
 if not os.path.isfile(os.path.join(out_dir, f"model_matrix{model_suffix}.pkl")):
     exit()
@@ -122,9 +122,13 @@ if atu_analysis:
     print(f"Running model on {model_suffix} phenotypes")
     model_suffix = "_" + model_suffix.replace('-', '_')
     
-# keep only unique MICs. Many samples have MICs tested in different media, so prioritize them according to the model hierarchy and
+# keep only unique MICs. Many samples have MICs tested in different media, so prioritize them according to the model hierarchy
 if not binary:
-    df_phenos = process_multiple_MICs(df_phenos)
+    df_phenos = process_multiple_MICs_different_media(df_phenos)
+
+if os.path.isfile(os.path.join(out_dir, f"model_analysis{model_suffix}.csv")):
+    print("Regression was already run for this model")
+    exit()
     
 
 ############# STEP 2: GET THE MATRIX ON WHICH TO FIT THE DATA +/- EIGENVECTOR COORDINATES, DEPENDING ON THE PARAM #############

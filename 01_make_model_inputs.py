@@ -5,6 +5,8 @@ import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
 drug_gene_mapping = pd.read_csv("data/drug_gene_mapping.csv")
+sys.path.append("utils")
+from data_utils import *
 
 
 ######################### STEP 0: READ IN PARAMETERS FILE AND MAKE OUTPUT DIRECTORIES #########################
@@ -76,8 +78,14 @@ else:
 # create all directories down to dropped_features, which will contain text files of the features dropped during data processing
 if not os.path.isdir(os.path.join(out_dir, "dropped_features")):
     os.makedirs(os.path.join(out_dir, "dropped_features"))
-    
-print(f"\nSaving model results to {out_dir}")            
+
+# # open the logging file
+# log_file = open(os.path.join(out_dir, 'log.txt'), 'a')
+
+# # Redirect print statements to the file
+# sys.stdout = log_file
+
+print(f"\nSaving model results to {out_dir}")
 
 if binary:
     phenos_dir = os.path.join(input_data_dir, "phenotypes", f"drug_name={drug}")
@@ -98,50 +106,13 @@ if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
     exit()
 
 
-######################### STEP 1: GET ALL AVAILABLE PHENOTYPES, PROCESS THEM, AND SAVE TO A GENERAL PHENOTYPES FILE FOR EACH DRUG #########################
-
-
-def get_mic_midpoints(mic_df, pheno_col):
-    '''
-    This function processes the MIC data from string ranges to float midpoints.  
-    '''
-    mic_sep = mic_df[pheno_col].str.split(",", expand=True)
-    mic_sep.columns = ["MIC_lower", "MIC_upper"]
-
-    mic_sep["Lower_bracket"] = mic_sep["MIC_lower"].str[0] #.map(bracket_mapping)
-    mic_sep["Upper_bracket"] = mic_sep["MIC_upper"].str[-1] #.map(bracket_mapping)
-
-    mic_sep["MIC_lower"] = mic_sep["MIC_lower"].str[1:]
-    mic_sep["MIC_upper"] = mic_sep["MIC_upper"].str[:-1]
-    mic_sep = mic_sep.replace("", np.nan)
-
-    mic_sep[["MIC_lower", "MIC_upper"]] = mic_sep[["MIC_lower", "MIC_upper"]].astype(float)
-    mic_sep = pd.concat([mic_df[["sample_id", "medium"]], mic_sep], axis=1)
-
-    # exclude isolates with unknown lower concentrations, indicated by square bracket in the lower bound
-    mic_sep = mic_sep.query("Lower_bracket != '['")
-    
-    # some mislabeling, where the upper bracket is a parentheses. Can't be possible because the upper bound had to have been tested
-    mic_sep.loc[(mic_sep["MIC_lower"] == 0), "Upper_bracket"] = "]"
-    
-    # upper bracket parentheses should be [max_MIC, NaN), so check this
-    assert len(mic_sep.loc[(mic_sep["Upper_bracket"] == ")") &
-                           (~pd.isnull(mic_sep["MIC_upper"]))
-                          ]) == 0
-    
-    # if the upper bound is NaN, then the MIC (midpoint) should be the lower bound, which is the maximum concentration tested
-    mic_sep.loc[pd.isnull(mic_sep["MIC_upper"]), pheno_col] = mic_sep.loc[pd.isnull(mic_sep["MIC_upper"])]["MIC_lower"]
-    
-    # otherwise, take the average
-    mic_sep.loc[~pd.isnull(mic_sep["MIC_upper"]), pheno_col] = np.mean([mic_sep.loc[~pd.isnull(mic_sep["MIC_upper"])]["MIC_lower"], mic_sep.loc[~pd.isnull(mic_sep["MIC_upper"])]["MIC_upper"]], axis=0)
-    
-    # check that there are no NaNs in the MIC column
-    assert sum(mic_sep[pheno_col].isna()) == 0
-    return mic_sep.drop_duplicates()
+######################### STEP 1: GET ALL AVAILABLE PHENOTYPES, PROCESS THEM, AND SAVE TO A GENERAL PHENOTYPES FILE FOR EACH DRUG #########################        
 
     
 if not os.path.isfile(phenos_file):
-        
+
+    print(f"Creating phenotypes dataframe: {phenos_file}")
+    
     # read them all in, concatenate, and get the number of samples
     df_phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, fName)) for fName in os.listdir(phenos_dir) if "run" in fName], axis=0)
     
@@ -154,52 +125,81 @@ if not os.path.isfile(phenos_file):
         else:
             df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
         
-        print(f"Phenotypic categories: {df_phenos.phenotypic_category.unique()}")
+        print(f"    Phenotypic categories: {df_phenos.phenotypic_category.unique()}")
         if len(df_phenos) == 0:
             print("There are no phenotypes for this analysis. Quitting this model")
             exit()
+
+        # Drop samples with multiple recorded binary phenotypes
+        drop_samples = df_phenos.groupby("sample_id").nunique().query(f"{pheno_col} > 1").reset_index()["sample_id"].values
+         
+        # the ATU dataframe has duplicates -- each sample has a phenotype for CC and one for CC-ATU
+        if not atu_analysis:
+            if len(drop_samples) > 0:
+                print(f"    Dropped {len(drop_samples)}/{len(df_phenos['sample_id'].unique())} isolates with multiple recorded phenotypes")
+                df_phenos = df_phenos.query("sample_id not in @drop_samples")
+        else:
+            # check that all samples are present twice in the ATU analysis dataframe
+            assert sum(df_phenos.groupby(["sample_id"]).count()[pheno_col].unique() != np.array([2])) == 0
+            
+            if len(drop_samples) == 0:
+                print("Phenotypes for all samples are the same for CC and CC-ATU designations. Quitting this model")
+                exit()
+            else:
+                print(f"    {len(drop_samples)}/{len(df_phenos['sample_id'].unique())} isolates have different phenotypes using different CCs")
+
+        assert sum(np.unique(df_phenos["phenotype"]) != np.array(['R', 'S'])) == 0
+        df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
+        
     else:
+        # standardize media names so that later when prioritizing media and normalizing MICs, this is correct 
         df_phenos["medium"] = df_phenos["medium"].replace("Middlebrook7H10", "7H10")
 
-    # Drop samples with multiple recorded phenotypes
-    drop_samples = df_phenos.groupby(["sample_id"]).nunique().query(f"{pheno_col} > 1").index.values
-     
-    # the ATU dataframe has duplicates -- each sample has a phenotype for CC and one for CC-ATU
-    if not atu_analysis:
+        # separate the string value for the MIC into separate lower and upper bounds and compute the midpoint, which is stored in pheno_col ("mic_value")
+        df_phenos = get_mic_midpoints(df_phenos, pheno_col)
+
+        # Drop samples with different MICs recorded in the same media
+        drop_samples = df_phenos.groupby(["sample_id", "medium"]).nunique().query(f"{pheno_col} > 1").reset_index()["sample_id"].values
+
         if len(drop_samples) > 0:
-            print(f"    Dropping {len(drop_samples)} of {len(df_phenos['sample_id'].unique())} isolates with multiple recorded phenotypes")
+            print(f"    Dropped {len(drop_samples)}/{len(df_phenos['sample_id'].unique())} isolates with multiple recorded MICs in the same media")
             df_phenos = df_phenos.query("sample_id not in @drop_samples")
-    else:
-        if len(drop_samples) == 0:
-            print("Phenotypes for all samples are the same for CC and CC-ATU designations. Quitting this model")
-            exit()
-        else:
-            print(f"    {len(drop_samples)} of {len(df_phenos['sample_id'].unique())} isolates have different phenotypes using different CCs")
-            
-        # check that all samples are present twice in the ATU analysis dataframe
-        assert sum(df_phenos.groupby(["sample_id"]).count()[pheno_col].unique() != np.array([2])) == 0
+                    
+    # column not needed, so remove to save space
+    if "box" in df_phenos.columns:
+        del df_phenos["box"]
 
     # check that there is resistance data for all samples
     assert sum(pd.isnull(df_phenos[pheno_col])) == 0
     
-    # additional checks
-    if binary:
-        assert sum(np.unique(df_phenos["phenotype"]) != np.array(['R', 'S'])) == 0
-        df_phenos["phenotype"] = df_phenos["phenotype"].map({'S': 0, 'R': 1})
-    else:
-        df_phenos = get_mic_midpoints(df_phenos, pheno_col)
-        print(f"Min MIC: {np.min(df_phenos[pheno_col].values)}, Max MIC: {np.max(df_phenos[pheno_col].values)}")
-        
-    # column not needed, so remove to save space
-    if "box" in df_phenos.columns:
-        del df_phenos["box"]
-    
     # this is the phenotypes file for all models for the drug. 
     df_phenos.to_csv(phenos_file, index=False)
+
+# phenotypes CSV files exist
 else:
     df_phenos = pd.read_csv(phenos_file)
 
-
+# normalize MICs to the most common medium so that they are on the same MIC scale
+if not binary:
+    if not os.path.isfile("data/critical_concentrations_clean.csv"):
+        
+        cc_df = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/criticalConcentrations_updated.csv")
+        cc_df.columns = ["Drug", "7H10", "7H11", "LJ", "MGIT", "ABBR", "UKMYC"]
+        cc_df["UKMYC6"] = cc_df["UKMYC"]
+        cc_df.rename(columns={"UKMYC": "UKMYC5"}, inplace=True)
+        cc_df["7H9"] = cc_df["7H10"]
+        
+        del cc_df["ABBR"]
+        cc_df = cc_df.set_index("Drug")
+        cc_df.to_csv("data/critical_concentrations_clean.csv")
+    
+    else:
+        cc_df = pd.read_csv("data/critical_concentrations_clean.csv", index_col=[0])
+    
+    # need to drop media now so that any samples that need to be exluded are done so here, and model_matrix.pkl will reflect those
+    df_phenos, most_common_medium = normalize_MICs_return_dataframe(drug, df_phenos, cc_df)
+    print(f"    Min MIC: {np.min(df_phenos[pheno_col].values)}, Max MIC: {np.max(df_phenos[pheno_col].values)} in {most_common_medium}")
+     
 # get only isolates with the desired phenotypic category for the binary model
 if binary and not atu_analysis:
     df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
@@ -208,33 +208,14 @@ if binary and not atu_analysis:
 if len(df_phenos) == 0:
     print(f"There are no {' and '.join(pheno_category_lst)} phenotypes for this model")
     exit()
-    
 
+    
 ######################### STEP 2: GET ALL AVAILABLE GENOTYPES #########################
           
         
 genos_dir = os.path.join(input_data_dir, "full_genotypes")
 tier1_genos_file = os.path.join(analysis_dir, drug, "genos_1.csv.gz")
 tier2_genos_file = os.path.join(analysis_dir, drug, "genos_2.csv.gz")
-
-
-def create_master_genos_files(drug):
-
-    tier_paths = glob.glob(os.path.join(genos_dir, f"drug_name={drug}", "*"))
-
-    for dir_name in tier_paths:
-        
-        if dir_name[-1] in ["1", "2"]:
-            
-            tier = dir_name[-1]
-            num_files = len(os.listdir(dir_name))
-
-            # concatenate all files in the directory and save to a gzipped csv file with the tier number as the suffix
-            # 5th column is the neutral column, but it's all NaN, so remove to save space
-            command = f"awk '(NR == 1) || (FNR > 1)' {dir_name}/* | cut --complement -d ',' -f 5 | gzip > {analysis_dir}/{drug}/genos_{tier}.csv.gz"
-            subprocess.run(command, shell=True)
-            
-            print(f"Created {analysis_dir}/{drug}/genos_{tier}.csv.gz from {num_files} files")
 
 if not os.path.isfile(tier1_genos_file):
     print("Creating master genotype dataframes...")
@@ -248,8 +229,10 @@ if "2" in tiers_lst and not os.path.isfile(tier2_genos_file):
 # read in only the genotypes files for the tiers for this model
 df_model = pd.concat([pd.read_csv(os.path.join(analysis_dir, drug, f"genos_{num}.csv.gz"), compression="gzip", low_memory=False) for num in tiers_lst])
 
-# then keep only samples of the desired phenotype
+# then keep only samples with phenotypes
 df_model = df_model.loc[df_model["sample_id"].isin(df_phenos["sample_id"])]
+
+print(f"    {len(df_model.sample_id.unique())}/{len(df_phenos.sample_id.unique())} isolates have both genotypes and phenotypes")   
 
 # if synonymous variants are to be included, check that they are present and would make the model different from the corresponding noSyn model
 if synonymous:
@@ -262,18 +245,7 @@ else:
 
     
 ######################### STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #########################
-
-
-def pool_mutations(df, effect_lst, pool_col):
     
-    df.loc[df["predicted_effect"].isin(effect_lst), ["variant_category", "position"]] = [pool_col, np.nan]
-
-    # sort descending to keep the largest variant_binary_status and variant_allele_frequency first. In this way, pooled mutations that are actually present are preserved
-    df_pooled = df.query("variant_category == @pool_col").sort_values(by=["variant_binary_status", "variant_allele_frequency"], ascending=False, na_position="last").drop_duplicates(subset=["sample_id", "resolved_symbol"], keep="first")
-
-    # combine with the unpooled variants and the other variants and return
-    return pd.concat([df_pooled, df.query("variant_category != @pool_col")], axis=0)
-
 
 # options for pool_type are unpooled, poolSeparate, and poolALL
 if pool_type == "poolSeparate":
@@ -307,7 +279,7 @@ elif amb_mode == "DROP":
     pre_dropAmb_mutations = df_model.query("variant_binary_status==1")["resolved_symbol"] + "_" + df_model.query("variant_binary_status==1")["variant_category"]
     
     drop_isolates = df_model.query("variant_allele_frequency > 0.25 & variant_allele_frequency < 0.75").sample_id.unique()
-    print(f"    Dropped {len(drop_isolates)} isolates with any intermediate AFs. Remainder are binary")
+    print(f"    Dropped {len(drop_isolates)}/{len(df_model.sample_id.unique())} isolates with any intermediate AFs. Remainder are binary")
     df_model = df_model.query("sample_id not in @drop_isolates")    
     
     # get the features in the dataframe after dropping isolates with ambiguous allele fractions, then save to a file if there are any dropped features
@@ -334,30 +306,7 @@ df_model["mutation"] = df_model["resolved_symbol"] + "_" + df_model["variant_cat
 df_model = df_model.sort_values("variant_binary_status", ascending=False).drop_duplicates(["sample_id", "mutation"], keep="first")
 matrix = df_model.pivot(index="sample_id", columns="mutation", values="variant_binary_status")
 del df_model
-print(f"    Initially {matrix.shape[0]} samples and {matrix.shape[1]} features")         
-
-def remove_features_save_list(matrix, fName, dropNA=False):
-    
-    if dropNA:
-        init_samples = matrix.index.values
-        matrix = matrix.dropna(axis=0)
-        next_samples = matrix.index.values
-
-    drop_features = matrix.loc[:, matrix.nunique() == 1].columns
-    matrix = matrix.loc[:, matrix.nunique() > 1]
-
-    if len(drop_features) > 0:
-        with open(fName, "w+") as file:
-            for feature in drop_features:
-                file.write(feature + "\n")
-                
-    if dropNA:
-        print(f"Dropped {len(set(init_samples)-set(next_samples))} isolates with missingness and {len(drop_features)} associated features")
-    else:
-        print(f"Dropped {len(drop_features)} features with no signal")
-                
-    return matrix
-
+print(f"Initially {matrix.shape[0]} isolates and {matrix.shape[1]} features")         
 
 # remove features with no signal
 matrix = remove_features_save_list(matrix, os.path.join(out_dir, "dropped_features/no_signal.txt"), dropNA=False)
@@ -375,10 +324,16 @@ if amb_mode.upper() in ["BINARY", "DROP"]:
 else:
     assert np.sort(np.unique(matrix.values))[1] > 0.25
 
-print(f"    Kept {matrix.shape[0]} isolates and {matrix.shape[1]} genetic variants")
+print(f"Final: {matrix.shape[0]} isolates and {matrix.shape[1]} variants")
 matrix.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
 tracemalloc.stop()
 print(f"    {script_memory} GB")
+
+# # Reset sys.stdout to its original value (console)
+# sys.stdout = sys.__stdout__
+
+# # Close the file
+# log_file.close()
