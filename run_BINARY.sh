@@ -36,9 +36,9 @@ folder=$(basename "${config_array[0]}" | cut -d "_" -f 1 | tr '[:lower:]' '[:upp
 echo $folder
 
 for i in ${!config_array[@]}; do
-    python3 -u 01_make_model_inputs.py "${config_array[$i]}" "$1" "$2"
-    # python3 -u 02_run_regression.py "${config_array[$i]}" "$1" "$2"
-    # python3 -u 03_likelihood_ratio_test.py "${config_array[$i]}" "$1" "$2"
+    python3 -u model/01_make_model_inputs.py "${config_array[$i]}" "$1" "$2"
+    # python3 -u model/02_run_regression.py "${config_array[$i]}" "$1" "$2"
+    # python3 -u model/03_likelihood_ratio_test.py "${config_array[$i]}" "$1" "$2"
 done
     
-# python3 -u 04_compute_univariate_stats.py "${folder}" "$1"
+# python3 -u model/04_compute_univariate_stats.py "${folder}" "$1"

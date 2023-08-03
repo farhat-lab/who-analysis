@@ -60,8 +60,8 @@ echo $folder
 
 for k in ${!drug_array[@]}; do
     for i in ${!config_array[@]}; do
-        # python3 -u 01_make_model_inputs.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
-        # python3 -u 02_run_regression.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
-        python3 -u 20230726_binary_prediction_models.py "${config_array[$i]}" "${drug_array[$k]}"
+        # python3 -u model/01_make_model_inputs.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
+        # python3 -u model/02_run_regression.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
+        python3 -u model/20230726_binary_prediction_models.py "${config_array[$i]}" "${drug_array[$k]}"
     done
 done
