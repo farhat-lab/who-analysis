@@ -2,15 +2,11 @@
 
 ## Create Environment
 
-Add required channels, then build the environment from the `environment_reqs.txt` file
+<a href="https://www.anaconda.com/" target="_blank">Anaconda3</a> is used to manage packages for this project. All packages are found in the `environment.yaml` file. Change the last line of this file to reflect the path to your anaconda3 distribution and the environment name you want to use. Then run
 
-<code>conda config --add channels bioconda</code>
+```conda env create -f environment.yaml````
 
-<code>conda config --add channels conda-forge</code>
-
-<code>conda create --name env_name --file environment_reqs.txt</code>
-    
-If <code>fast-lineage-caller</code> can only be installed with pip, so next run <code>pip install fast-lineage-caller</code>.
+to create the environment. Run `conda activate <env_name>` to activate it and `conda deactivate` to deactivate once you are in it.
     
 <!-- ## Genotype Annotations
 
