@@ -14,11 +14,11 @@ scaler = StandardScaler()
 
 
 
-def get_binary_metrics_from_model(model, X, y, maximize="sens_spec"):
+def get_binary_metrics_from_model(model, X, y, spec_thresh=None):
         
     # get positive class probabilities and predicted classes after determining the binarization threshold
     y_prob = model.predict_proba(X)[:, 1]
-    y_pred = get_threshold_val_and_classes(y_prob, y, maximize)
+    y_pred = get_threshold_val_and_classes(y_prob, y, spec_thresh)
     tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y, y_pred=y_pred).ravel()
     
     results = np.array([sklearn.metrics.roc_auc_score(y_true=y, y_score=y_prob), # AUC

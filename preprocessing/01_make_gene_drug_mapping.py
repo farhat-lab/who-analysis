@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import glob, os, yaml, subprocess, sparse, sys, tracemalloc
 
+# /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue-raw-data
 _, input_data_dir = sys.argv
 
 # starting the memory monitoring

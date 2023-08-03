@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import glob, os, yaml, sparse, sys
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import tracemalloc, pickle
 who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
@@ -143,10 +142,7 @@ df_phenos = df_phenos.loc[matrix.index]
 
 # check that the sample ordering is the same in the genotype and phenotype matrices
 assert sum(matrix.index != df_phenos.index) == 0
-    
-# scale inputs
-scaler = StandardScaler()
-X = scaler.fit_transform(matrix.values)
+X = matrix.values
 
 # binary vs. quant (MIC) phenotypes
 if binary:

@@ -116,7 +116,7 @@ if not os.path.isfile(phenos_file):
     # read them all in, concatenate, and get the number of samples
     df_phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, fName)) for fName in os.listdir(phenos_dir) if "run" in fName], axis=0)
     
-    # sometimes the data has duplicates
+    # sometimes the data has exact duplicate rows -- same sample ID, medium, phenotype, category, etc.
     df_phenos = df_phenos.drop_duplicates(keep="first").reset_index(drop=True)
     
     if binary:
@@ -125,10 +125,11 @@ if not os.path.isfile(phenos_file):
         else:
             df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
         
-        print(f"    Phenotypic categories: {df_phenos.phenotypic_category.unique()}")
         if len(df_phenos) == 0:
             print("There are no phenotypes for this analysis. Quitting this model")
             exit()
+            
+        print(f"    Phenotypic categories: {df_phenos.phenotypic_category.unique()}")
 
         # Drop samples with multiple recorded binary phenotypes
         drop_samples = df_phenos.groupby("sample_id").nunique().query(f"{pheno_col} > 1").reset_index()["sample_id"].values
@@ -181,22 +182,8 @@ else:
 
 # normalize MICs to the most common medium so that they are on the same MIC scale
 if not binary:
-    if not os.path.isfile("data/critical_concentrations_clean.csv"):
-        
-        cc_df = pd.read_csv("/n/data1/hms/dbmi/farhat/Sanjana/MIC_data/criticalConcentrations_updated.csv")
-        cc_df.columns = ["Drug", "7H10", "7H11", "LJ", "MGIT", "ABBR", "UKMYC"]
-        cc_df["UKMYC6"] = cc_df["UKMYC"]
-        cc_df.rename(columns={"UKMYC": "UKMYC5"}, inplace=True)
-        cc_df["7H9"] = cc_df["7H10"]
-        
-        del cc_df["ABBR"]
-        cc_df = cc_df.set_index("Drug")
-        cc_df.to_csv("data/critical_concentrations_clean.csv")
-    
-    else:
-        cc_df = pd.read_csv("data/critical_concentrations_clean.csv", index_col=[0])
-    
-    # need to drop media now so that any samples that need to be exluded are done so here, and model_matrix.pkl will reflect those
+    cc_df = pd.read_csv("data/drug_CC.csv")
+    # need to drop any media that can't be normalized now so that any samples that need to be exluded are done so here, and model_matrix.pkl will reflect those
     df_phenos, most_common_medium = normalize_MICs_return_dataframe(drug, df_phenos, cc_df)
     print(f"    Min MIC: {np.min(df_phenos[pheno_col].values)}, Max MIC: {np.max(df_phenos[pheno_col].values)} in {most_common_medium}")
      
@@ -209,6 +196,10 @@ if len(df_phenos) == 0:
     print(f"There are no {' and '.join(pheno_category_lst)} phenotypes for this model")
     exit()
 
+if "ALL" in pheno_category_lst and len(df_phenos.query("phenotypic_category=='ALL'")) == 0:
+    print("There are no ALL phenotypes for this model")
+    exit()
+
     
 ######################### STEP 2: GET ALL AVAILABLE GENOTYPES #########################
           
@@ -219,7 +210,7 @@ tier2_genos_file = os.path.join(analysis_dir, drug, "genos_2.csv.gz")
 
 if not os.path.isfile(tier1_genos_file):
     print("Creating master genotype dataframes...")
-    create_master_genos_files(drug)
+    create_master_genos_files(drug, genos_dir, analysis_dir, include_tier2=False)
         
 # this only happens for Pretomanid because there are no Tier 2 genes
 if "2" in tiers_lst and not os.path.isfile(tier2_genos_file):

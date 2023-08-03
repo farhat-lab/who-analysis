@@ -4,6 +4,7 @@ import glob, os, yaml, sparse, sys
 import scipy.stats as st
 import sklearn.metrics
 from sklearn.model_selection import cross_val_score, cross_validate, StratifiedKFold, KFold
+from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import tracemalloc, pickle, warnings
 warnings.filterwarnings("ignore")
@@ -53,99 +54,26 @@ elif amb_mode == "AF":
 elif amb_mode == "DROP":
     model_prefix = ""
         
-# if os.path.isfile(os.path.join(out_dir, f"model_stats_CV{model_prefix}.csv")):
-#     print("Binary model was already fit. Quitting...\n")
-#     exit()
+if os.path.isfile(os.path.join(out_dir, f"model_stats_{model_prefix}_bootstrap.csv")):
+    print("Prediction models weree already fit\n")
+    exit()
 
-results_excel = pd.read_excel(f"results/NEW/{drug}.xlsx", sheet_name=None)
+results_df = pd.read_csv(f"results/FINAL/{drug}.csv")
+results_df["Tier"] = results_df["Tier"].astype(str)
 
-if drug == "Pretomanid":
-    # pick any other drug to get the keys for
-    model_abbrev = pd.read_excel(f"results/NEW/Bedaquiline.xlsx", sheet_name=None).keys()
-else:
-    model_abbrev = results_excel.keys()
-
-binary_analyses_lst = [
-                        ########### Tier 1, WHO phenos ###########
-                        "tiers=1/phenos=WHO/dropAF_noSyn_unpooled",
-                        "tiers=1/phenos=WHO/dropAF_noSyn_poolSeparate",
-                        "tiers=1/phenos=WHO/dropAF_withSyn_unpooled",
-                        ########### Tiers 1 + 2, WHO phenos ###########
-                        "tiers=1+2/phenos=WHO/dropAF_noSyn_unpooled",
-                        "tiers=1+2/phenos=WHO/dropAF_noSyn_poolSeparate",
-                        "tiers=1+2/phenos=WHO/dropAF_withSyn_unpooled",
-                        ########### Tier 1, ALL phenos ###########
-                        "tiers=1/phenos=ALL/dropAF_noSyn_unpooled",
-                        "tiers=1/phenos=ALL/dropAF_noSyn_poolSeparate",
-                        "tiers=1/phenos=ALL/dropAF_withSyn_unpooled",
-                        ########### Tiers 1 + 2, ALL phenos ###########
-                        "tiers=1+2/phenos=ALL/dropAF_noSyn_unpooled",
-                        "tiers=1+2/phenos=ALL/dropAF_noSyn_poolSeparate",
-                        "tiers=1+2/phenos=ALL/dropAF_withSyn_unpooled",
-                      ]
-
-# need to make this dictionary, then can remove the pooled models from the above list
-analyses_keys_dict = dict(zip(binary_analyses_lst, model_abbrev))
-
-# not going to include pooled variants in these models
-binary_analyses_lst = [path for path in binary_analyses_lst if "_unpooled" in path]
-
-# also keep only variants found to be relevant in the particular phenotypes group -- only for WHO phenotypes. For ALL phenotypes, include everything
-binary_analyses_lst = [path for path in binary_analyses_lst if phenos_name in path]
-
-if drug == "Pretomanid":
-    binary_analyses_lst = [path for path in binary_analyses_lst if "WHO" not in path]
+if len(tiers_lst) == 2:
+    if len(results_df.query("regression_confidence != 'Uncertain' & Tier == '2'")) == 0:
+        print("There are no Tier 2 mutations that are not Uncertain.\n")
+        exit()
     
-analyses_lst = []
-
-for path in binary_analyses_lst:
-    if len(tiers_lst) == 2:
-        analyses_lst.append(path)
-    else:
-        if "1+2" not in path:
-            analyses_lst.append(path)
-    
-# get the names of the Excel file sheets
-keys_lst = [analyses_keys_dict[key] for key in analyses_lst]
-print(keys_lst)
-
-mutations_lst = set()
-
-if drug in ["Levofloxacin", "Moxifloxacin"]:
-    freq_thresh = 5
-else:
-    freq_thresh = 1
-print(f"Including significant mutations present in at least {freq_thresh} isolates")
-
-for key in keys_lst:
-    
-    # keep only significant mutations that are NOT neutral
-    # mutations_lst = mutations_lst.union(results_excel[key].query("regression_confidence not in ['Uncertain', 'Neutral']")["mutation"].values)
-    
-    if "1+2" in key:
-        thresh = 0.01
-    else:
-        thresh = 0.05
-        
-    # # add uncertain mutations that were significant in regression and frequent enough. Basically they didn't pass the LRT or MIC coef criteria
-    # mutations_lst = mutations_lst.union(results_excel[key].query("regression_confidence=='Uncertain' & BH_pval < @thresh & Num_Isolates >= 5 & (PPV_LB >= 0.25 | NPV_LB >= 0.25)")["mutation"].values)
-    
-    mutations_lst = mutations_lst.union(results_excel[key].query("BH_pval < @thresh & Num_Isolates >= @freq_thresh")["mutation"].values)
-
-mutations_lst = list(mutations_lst)
-print(f"{len(mutations_lst)} mutations in the model")
+mutations_lst = results_df.query("regression_confidence != 'Uncertain' & Tier in @tiers_lst & ~mutation.str.contains('|'.join(['lof', 'inframe']))")["mutation"].values
+cat1_mutations = results_df.query("regression_confidence == 'Assoc w R - strict' & Tier in @tiers_lst & ~mutation.str.contains('|'.join(['lof', 'inframe']))")["mutation"].values
 
 if len(mutations_lst) == 0:
-    print("There are no significant non-neutral, unpooled mutations. Quitting this model...\n")
+    print("There are no significant mutations for this model\n")
     exit()
-    
-if len(tiers_lst) == 2:
-    tier1_mutations = pd.read_csv(os.path.join(out_dir.replace("tiers=1+2", "tiers=1"), "mutations_lst.txt"), sep="\t", header=None)[0].values
-    if len(set(tier1_mutations).symmetric_difference(mutations_lst)) == 0:
-        print("There are no significant Tier 2 mutations. Quitting this model...\n")
-        exit()
-        
-pd.Series(mutations_lst).to_csv(os.path.join(out_dir, "mutations_lst.txt"), sep="\t", index=False, header=None)
+else:
+    print(f"Fitting binary prediction models on {len(mutations_lst)} tiers={'+'.join(tiers_lst)} mutations for {phenos_name} phenotypes")
     
     
 ############# STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES #############
@@ -156,6 +84,36 @@ df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv")).q
 
 df_genos = pd.concat([pd.read_csv(os.path.join(analysis_dir, drug, f"genos_{num}.csv.gz"), compression="gzip") for num in tiers_lst], axis=0)
 df_genos["mutation"] = df_genos["resolved_symbol"] + "_" + df_genos["variant_category"]
+
+if len(cat1_mutations) > 0:
+
+    print(f"Performing catalog-based classification with {len(cat1_mutations)} mutations")    
+    pred_df = df_genos[["sample_id", "mutation", "variant_binary_status"]].merge(df_phenos, on="sample_id")
+    pred_df["variant_binary_status"] = pred_df["variant_binary_status"].fillna(0)
+    
+    cat1_isolates = pred_df.loc[(pred_df["mutation"].isin(cat1_mutations)) & (pred_df["variant_binary_status"]==1)].sample_id.unique()
+    pred_df.loc[pred_df["sample_id"].isin(cat1_isolates), "pred_phenotype"] = 1
+    pred_df["pred_phenotype"] = pred_df["pred_phenotype"].fillna(0).astype(int)
+    pred_df = pred_df.drop_duplicates("sample_id")
+
+    y = pred_df["phenotype"].values
+    y_pred = pred_df["pred_phenotype"].values
+    
+    tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y, y_pred=y_pred).ravel()
+
+    catalog_results = pd.DataFrame({"AUC": np.nan,
+                                    "Sens": tp / (tp + fn),
+                                    "Spec": tn / (tn + fp),
+                                    "Precision": tp / (tp + fp),
+                                    "Accuracy": sklearn.metrics.accuracy_score(y_true=y, y_pred=y_pred),
+                                    "Balanced_Acc": sklearn.metrics.balanced_accuracy_score(y_true=y, y_pred=y_pred),
+                                    "Model": "Catalog",
+                                    "CV": 0
+                                   }, index=[0])
+    print(catalog_results)
+else:
+    catalog_results = pd.DataFrame(columns=["AUC", "Sens", "Spec", "Precision", "Accuracy", "Balanced_Acc", "Catalog", "CV"])
+    
 df_genos = df_genos.query("mutation in @mutations_lst & sample_id in @df_phenos.sample_id.values").drop_duplicates()
 del df_genos["resolved_symbol"]
 del df_genos["variant_category"]
@@ -176,7 +134,7 @@ elif amb_mode == "AF":
 # drop all isolates with ambiguous variants with ANY AF below the threshold. DON'T DROP FEATURES BECAUSE MIGHT DROP SOMETHING RELEVANT
 elif amb_mode == "DROP":    
     drop_isolates = df_genos.query("variant_allele_frequency > 0.25 & variant_allele_frequency < 0.75").sample_id.unique()
-    print(f"    Dropped {len(drop_isolates)} isolates with any intermediate AFs. Remainder are binary")
+    print(f"    Dropped {len(drop_isolates)}/{len(df_genos.sample_id.unique())} isolates with any intermediate AFs. Remainder are binary")
     df_genos = df_genos.query("sample_id not in @drop_isolates")    
                 
 # check after this step that the only NaNs left are truly missing data --> NaN in variant_binary_status must also be NaN in variant_allele_frequency
@@ -206,7 +164,9 @@ df_phenos = df_phenos.loc[model_matrix.index]
 # check that the sample ordering is the same in the genotype and phenotype matrices
 assert sum(model_matrix.index != df_phenos.index) == 0
 
-X = model_matrix.values
+print(model_matrix.shape)
+scaler = StandardScaler()
+X = scaler.fit_transform(model_matrix.values)
 print(f"{X.shape[0]} isolates and {X.shape[1]} features in the model")
 y = df_phenos["phenotype"].values
 
@@ -235,7 +195,7 @@ def bootstrap_binary_metrics(X, y, num_bootstrap=None):
     else:
         spec_thresh = None
         
-    all_model_results = [pd.DataFrame(get_binary_metrics_from_model(model, X, y, maximize="sens_spec", spec_thresh=spec_thresh), index=[0])]
+    all_model_results = [pd.DataFrame(get_binary_metrics_from_model(model, X, y, spec_thresh=spec_thresh), index=[0])]
     print(all_model_results[0])
     
     if num_bootstrap is not None:
@@ -256,18 +216,19 @@ def bootstrap_binary_metrics(X, y, num_bootstrap=None):
                                       )
 
             model.fit(X_bs, y_bs)        
-            all_model_results.append(pd.DataFrame(get_binary_metrics_from_model(model, X_bs, y_bs, maximize="sens_spec", spec_thresh=spec_thresh), index=[0]))
+            all_model_results.append(pd.DataFrame(get_binary_metrics_from_model(model, X_bs, y_bs, spec_thresh=spec_thresh), index=[0]))
 
             if i % int(num_bootstrap / 10) == 0:
                 print(i)
 
     df_combined = pd.concat(all_model_results, axis=0).reset_index(drop=True)
     df_combined["CV"] = df_combined.index.values
+    df_combined["Model"] = "L2_Reg"
     return df_combined
 
 
-results_df = bootstrap_binary_metrics(X, y, num_bootstrap)
-results_df.to_csv(os.path.join(out_dir, f"model_stats_CV{model_prefix}_bootstrap.csv"), index=False)
+reg_results = bootstrap_binary_metrics(X, y, num_bootstrap=None)
+pd.concat([catalog_results, reg_results], axis=0).to_csv(os.path.join(out_dir, f"model_stats{model_prefix}_bootstrap.csv"), index=False)
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
