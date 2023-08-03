@@ -2,7 +2,7 @@
 
 ## Create Environment
 
-This project uses <a href="https://www.anaconda.com/" target="_blank">Anaconda3</a> to manage packages. All packages are found in the `environment.yaml` file. Change the last line of this file to reflect the path to your anaconda3 distribution and the environment name you want to use. Then run
+This project uses `conda` to manage packages (install Anaconda <a href="https://www.anaconda.com/" target="_blank">here</a>). All packages are found in the `environment.yaml` file. Change the last line of this file to reflect the path to your Anaconda distribution and the environment name you want to use. Then run
 
 ```conda env create -f environment.yaml```
 
