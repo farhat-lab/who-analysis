@@ -4,7 +4,7 @@
 
 <a href="https://www.anaconda.com/" target="_blank">Anaconda3</a> is used to manage packages for this project. All packages are found in the `environment.yaml` file. Change the last line of this file to reflect the path to your anaconda3 distribution and the environment name you want to use. Then run
 
-```conda env create -f environment.yaml````
+```conda env create -f environment.yaml```
 
 to create the environment. Run `conda activate <env_name>` to activate it and `conda deactivate` to deactivate once you are in it.
     
