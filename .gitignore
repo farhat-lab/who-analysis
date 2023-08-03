@@ -13,10 +13,12 @@ data/sample_ids_mapping.csv
 data/lineages.csv
 data/combined_lineage_sample_IDs.pkl
 
-# files got too big
+# files too big
 data/*.pkl
 data/eigenvec_*.csv
 data/lineages*.csv
+PCA/*.pkl
+PCA/eigenvec_*.csv
 
 # extra semi-duplicate files used for testing
 bash_scripts/dup*.sh
