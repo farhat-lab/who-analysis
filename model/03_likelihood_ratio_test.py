@@ -33,7 +33,7 @@ atu_analysis = kwargs["atu_analysis"]
 atu_analysis_type = kwargs["atu_analysis_type"]
 analysis_dir = kwargs["output_dir"]
 num_PCs = kwargs["num_PCs"]
-eigenvec_df = pd.read_csv("data/eigenvec_100PC.csv", usecols=["sample_id"] + [f"PC{num+1}" for num in np.arange(num_PCs)]).set_index("sample_id")
+eigenvec_df = pd.read_csv("PCA/eigenvec_100PC.csv", usecols=["sample_id"] + [f"PC{num+1}" for num in np.arange(num_PCs)]).set_index("sample_id")
 
 if "ALL" in pheno_category_lst:
     phenos_name = "ALL"
@@ -135,15 +135,15 @@ def run_regression_for_LRT(matrix, y, results_df, mutation, reg_param):
                               )
     model.fit(X, y)
 
-    # get positive class probabilities and predicted classes after determining the binarization threshold
-    y_prob = model.predict_proba(X)[:, 1]
-    y_pred = get_threshold_val_and_classes(y_prob, y)
-
     # log-likelihood is the negative of the log-loss. Y_PRED MUST BE THE PROBABILITIES. set normalize=False to get sum of the log-likelihoods
+    y_prob = model.predict_proba(X)[:, 1]
     log_like = -sklearn.metrics.log_loss(y_true=y, y_pred=y_prob, normalize=False)
     
     # null hypothesis is that full model log-like > alt model log-like. Larger log-like is a better model
     chi_stat = 2 * (results_df.loc["FULL", "log_like"] - log_like)
+
+    # get positive class probabilities and predicted classes after determining the binarization threshold
+    y_pred = get_threshold_val_and_classes(y_prob, y)
     tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y, y_pred=y_pred).ravel()
      
     results_df.loc[mutation, :] = [log_like, 
@@ -154,6 +154,7 @@ def run_regression_for_LRT(matrix, y, results_df, mutation, reg_param):
                                    tp / (tp + fn),
                                    tn / (tn + fp),
                                    sklearn.metrics.accuracy_score(y_true=y, y_pred=y_pred),
+                                   sklearn.metrics.balanced_accuracy_score(y_true=y, y_pred=y_pred),
                                   ]
     return results_df
 
@@ -171,13 +172,14 @@ log_like = -sklearn.metrics.log_loss(y_true=y, y_pred=y_prob, normalize=False)
 tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y, y_pred=y_pred).ravel()
         
 # add the results for the full model
-results_df = pd.DataFrame(columns=["log_like", "chi_stat", "LRT_pval", "LRT_neutral_pval", "AUC", "Sens", "Spec", "accuracy"])
+results_df = pd.DataFrame(columns=["log_like", "chi_stat", "LRT_pval", "LRT_neutral_pval", "AUC", "Sens", "Spec", "accuracy", "balanced_accuracy"])
 results_df.loc["FULL", :] = [log_like, 
                              np.nan, np.nan, np.nan,
                              sklearn.metrics.roc_auc_score(y_true=y, y_score=y_prob),
                              tp / (tp + fn),
                              tn / (tn + fp),
                              sklearn.metrics.accuracy_score(y_true=y, y_pred=y_pred),
+                             sklearn.metrics.balanced_accuracy_score(y_true=y, y_pred=y_pred)
                             ]
 
     

@@ -22,7 +22,7 @@ kwargs = yaml.safe_load(open(config_file))
 tiers_lst = kwargs["tiers_lst"]
 binary = kwargs["binary"]
 atu_analysis = kwargs["atu_analysis"]
-input_data_dir = kwargs["input_dir"]
+input_data_dir = kwargs["input_data_dir"]
 analysis_dir = kwargs["output_dir"]
 
 # double check. If running CC vs. CC-ATU analysis, they are binary phenotypes
@@ -321,7 +321,7 @@ matrix.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
 tracemalloc.stop()
-print(f"    {script_memory} GB")
+print(f"    {script_memory} GB\n")
 
 # # Reset sys.stdout to its original value (console)
 # sys.stdout = sys.__stdout__

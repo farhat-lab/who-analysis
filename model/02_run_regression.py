@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import glob, os, yaml, sparse, sys
-from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import tracemalloc, pickle
 who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
@@ -56,7 +56,7 @@ alpha = kwargs["alpha"]
 num_PCs = kwargs["num_PCs"]
 
 # read in the eigenvector dataframe and keep only the PCs for the model
-eigenvec_df = pd.read_csv("data/eigenvec_100PC.csv", usecols=["sample_id"] + [f"PC{num+1}" for num in np.arange(num_PCs)]).set_index("sample_id")
+eigenvec_df = pd.read_csv("PCA/eigenvec_100PC.csv", usecols=["sample_id"] + [f"PC{num+1}" for num in np.arange(num_PCs)]).set_index("sample_id")
 
 # double check. If running CC vs. CC-ATU analysis, they are binary phenotypes
 if atu_analysis:
@@ -142,7 +142,10 @@ df_phenos = df_phenos.loc[matrix.index]
 
 # check that the sample ordering is the same in the genotype and phenotype matrices
 assert sum(matrix.index != df_phenos.index) == 0
-X = matrix.values
+scaler = StandardScaler()
+
+# scale values because input matrix and PCA matrix are on slightly different scales
+X = scaler.fit_transform(matrix.values)
 
 # binary vs. quant (MIC) phenotypes
 if binary:
@@ -164,7 +167,7 @@ if not os.path.isfile(os.path.join(out_dir, "model.sav")):
         model = LogisticRegressionCV(Cs=np.logspace(-6, 6, 13), 
                                      cv=5,
                                      penalty='l2',
-                                     max_iter=10000, 
+                                     max_iter=100000, 
                                      multi_class='ovr',
                                      scoring='neg_log_loss',
                                      class_weight='balanced',
@@ -200,7 +203,7 @@ else:
 
 if not os.path.isfile(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv")):
     print(f"Peforming permutation test with {num_bootstrap} replicates")
-    permute_df = perform_permutation_test(model, X, y, num_bootstrap, binary=binary, fit_type='OLS', progress_bar=True)
+    permute_df = perform_permutation_test(model, X, y, num_bootstrap, binary=binary, fit_type='OLS', progress_bar=False)
     permute_df.columns = matrix.columns
     permute_df.to_csv(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv"), index=False)
 else:

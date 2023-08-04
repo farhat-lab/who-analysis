@@ -3,6 +3,7 @@ import pandas as pd
 import glob, os, yaml, sparse, sys
 import scipy.stats as st
 import sklearn.metrics
+frmo sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import cross_val_score, cross_validate, StratifiedKFold, KFold
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import tracemalloc, pickle, warnings
@@ -206,7 +207,8 @@ df_phenos = df_phenos.loc[model_matrix.index]
 # check that the sample ordering is the same in the genotype and phenotype matrices
 assert sum(model_matrix.index != df_phenos.index) == 0
 
-X = model_matrix.values
+scaler = StandardScaler()
+X = scaler.fit_transform(model_matrix.values)
 print(f"{X.shape[0]} isolates and {X.shape[1]} features in the model")
 y = df_phenos["phenotype"].values
 

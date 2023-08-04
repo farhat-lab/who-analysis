@@ -16,26 +16,40 @@ source activate who-analysis
 
 drug_array=(
  # 'Pretomanid'
- # 'Delamanid'
- # 'Bedaquiline'
- # 'Clofazimine'
- # 'Linezolid'
- # 'Moxifloxacin'
- # 'Levofloxacin'
- # 'Rifampicin'
+ 'Delamanid'
+ 'Bedaquiline'
+ 'Clofazimine'
+ 'Linezolid'
+ 'Moxifloxacin'
+ 'Levofloxacin'
+ 'Rifampicin'
  'Isoniazid'
+ 'Ethambutol'
+ 'Ethionamide'
+ 'Kanamycin'
+ 'Amikacin'
+ 'Streptomycin'
+ 'Pyrazinamide'
+ 'Capreomyacin'
 )
 
 drug_abbr_array=(
  # 'PTM'
- # 'DLM'
- # 'BDQ'
- # 'CFZ'
- # 'LZD'
- # 'MXF'
- # 'LEV'
- # 'RIF'
-  'INH'
+ 'DLM'
+ 'BDQ'
+ 'CFZ'
+ 'LZD'
+ 'MXF'
+ 'LEV'
+ 'RIF'
+ 'INH'
+ 'EMB'
+ 'ETH'
+ 'KAN'
+ 'AMI'
+ 'STM'
+ 'PZA'
+ 'CAP'
 )
 
 # list of config files to use
@@ -43,9 +57,9 @@ config_array=(
  'config_files/mic_01.yaml'
  'config_files/mic_02.yaml'
  'config_files/mic_03.yaml'
- 'config_files/mic_04.yaml'
- 'config_files/mic_05.yaml'
- 'config_files/mic_06.yaml'
+ # 'config_files/mic_04.yaml'
+ # 'config_files/mic_05.yaml'
+ # 'config_files/mic_06.yaml'
 )
 
 

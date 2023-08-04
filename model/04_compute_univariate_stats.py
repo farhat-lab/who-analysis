@@ -125,36 +125,7 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
        'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
        ]].to_csv(os.path.join(model_analysis_file), index=False) 
 
-    
-    
 
-
-# def add_significance_predicted_effect(model_path, annotated_genos, model_suffix):
-#     '''
-#     Use this function for models without both binary inputs and outputs. This function just adds significance and predicted effect and saves the dataframe. 
-#     '''
-    
-#     # get coefficient dataframe and add mutation predicted effects
-#     res_df = pd.read_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"))
-#     res_df = res_df.merge(annotated_genos, on="mutation", how="outer", suffixes=('', '_DROP'))
-#     res_df = res_df[res_df.columns[~res_df.columns.str.contains("_DROP")]]
-#     res_df = res_df.loc[~pd.isnull(res_df["coef"])]
-    
-#     res_df.loc[(res_df["mutation"].str.contains("lof")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "lof"
-#     res_df.loc[(res_df["mutation"].str.contains("inframe")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "inframe"
-#     res_df.loc[res_df["mutation"].str.contains("all"), "predicted_effect"] = "lof_all"
-
-#     # no odds ratios, save coefficients. For both, drop principal components when saving the new dataframe
-#     if "MIC" in model_path:
-#         # res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'coef_LB', 'coef_UB', 'pval', 'BH_pval', 'Bonferroni_pval']].sort_values("coef", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)
-#         res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'pval', 'BH_pval', 'Bonferroni_pval']].sort_values("coef", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)
-#     # save odds ratios
-#     else:
-#         # res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'coef_LB', 'coef_UB', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval','Bonferroni_pval']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)
-        
-#         res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'Odds_Ratio', 'pval', 'BH_pval','Bonferroni_pval']].sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first").to_csv(os.path.join(model_path, f"model_analysis{model_suffix}.csv"), index=False)
-
-    
 
 # starting the memory monitoring
 tracemalloc.start()

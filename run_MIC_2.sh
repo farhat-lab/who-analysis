@@ -36,15 +36,15 @@ drug_abbr_array=(
  'LEV'
 )
 
-# # list of config files to use
-# config_array=(
-#  'config_files/mic_01.yaml'
-#  'config_files/mic_02.yaml'
-#  'config_files/mic_03.yaml'
+# list of config files to use
+config_array=(
+ 'config_files/mic_01.yaml'
+ 'config_files/mic_02.yaml'
+ 'config_files/mic_03.yaml'
 #  'config_files/mic_04.yaml'
 #  'config_files/mic_05.yaml'
 #  'config_files/mic_06.yaml'
-# )
+)
 
 config_array=(
   # 'config_files/binary_01.yaml'

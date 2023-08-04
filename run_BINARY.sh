@@ -1,8 +1,8 @@
 #!/bin/bash 
 #SBATCH -c 1
-#SBATCH -t 0-02:00
+#SBATCH -t 0-11:59
 #SBATCH -p short
-#SBATCH --mem=30G 
+#SBATCH --mem=50G
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
@@ -37,8 +37,8 @@ echo $folder
 
 for i in ${!config_array[@]}; do
     python3 -u model/01_make_model_inputs.py "${config_array[$i]}" "$1" "$2"
-    # python3 -u model/02_run_regression.py "${config_array[$i]}" "$1" "$2"
-    # python3 -u model/03_likelihood_ratio_test.py "${config_array[$i]}" "$1" "$2"
+    python3 -u model/02_run_regression.py "${config_array[$i]}" "$1" "$2"
+    python3 -u model/03_likelihood_ratio_test.py "${config_array[$i]}" "$1" "$2"
 done
     
-# python3 -u model/04_compute_univariate_stats.py "${folder}" "$1"
+python3 -u model/04_compute_univariate_stats.py "${folder}" "$1"

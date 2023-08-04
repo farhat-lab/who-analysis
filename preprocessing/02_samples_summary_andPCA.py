@@ -30,8 +30,7 @@ num_PCs = int(num_PCs)
 ################## STEP 1: CREATE THE MINOR ALLELE COUNTS DATAFRAME ##################
 
 
-# snp_dir = os.path.join(input_data_dir, "grm")
-snp_dir = "/n/data1/hms/dbmi/farhat/ye12/who/grm"
+snp_dir = os.path.join(input_data_dir, "grm")
 genos_dir = os.path.join(input_data_dir, "full_genotypes")
 phenos_dir = os.path.join(input_data_dir, "phenotypes")
 mic_dir = os.path.join(input_data_dir, "mic")
@@ -82,7 +81,7 @@ print(f"Minor Allele Counts shape: {minor_allele_counts.shape}")
 
 
 # mixed calls information
-mixed_calls = pd.read_excel("data/mixed_site_counts.xlsx", sheet_name=0)
+mixed_calls = pd.read_excel("PCA/mixed_site_counts.xlsx", sheet_name=0)
 mixed_sites_thresh = int(np.round(mixed_sites_prop_thresh*len(minor_allele_counts)))
 mixed_sites = mixed_calls.query("genotype_count > @mixed_sites_thresh").position.unique()
 
@@ -114,7 +113,7 @@ minor_allele_counts = minor_allele_counts[keep_sites]
 ################################################### GET HOMPLASIC SITES ###################################################
 
 
-homoplasy = pd.read_excel("data/Vargas_homoplasy.xlsx")
+homoplasy = pd.read_excel("PCA/Vargas_homoplasy.xlsx")
 if len(homoplasy) == 1:
     homoplasy = homoplasy[list(homoplasy.keys())[0]]
     
