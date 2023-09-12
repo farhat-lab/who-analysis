@@ -155,7 +155,9 @@ eigenvec_df.columns = [f"PC{num+1}" for num in range(num_PCs)]
 eigenvec_df.to_csv(f"PCA/eigenvec_{num_PCs}PC.csv")
     
     
-###### STEP 3: COMPUTE NUMBERS OF SAMPLES WE HAVE DATA FOR, SEPARATED BY DRUG AND GENE TIER. INCLUDE NUMBER OF LINEAGES FOUND AND NUMBERS OF SAMPLES WITH LOF AND INFRAME (POOLED) MUTATIONS ######
+############################## STEP 3: COMPUTE NUMBERS OF SAMPLES WE HAVE DATA FOR, SEPARATED BY DRUG AND GENE TIER ##############################
+
+############################## INCLUDE NUMBER OF LINEAGES FOUND AND NUMBERS OF SAMPLES WITH LOF AND INFRAME (POOLED) MUTATIONS ###################
     
     
 lineages = pd.read_csv("data/combined_lineages_samples.csv")

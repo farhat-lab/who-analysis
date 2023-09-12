@@ -20,7 +20,7 @@ from stats_utils import *
 # starting the memory monitoring
 tracemalloc.start()
 
-_, config_file, drug, _ = sys.argv
+_, config_file, drug = sys.argv
 
 kwargs = yaml.safe_load(open(config_file))    
 binary = kwargs["binary"]
@@ -59,11 +59,15 @@ if binary:
 
 print(f"Saving results to {out_dir}")
 
-if os.path.isfile(os.path.join(out_dir, "LRT_results.csv")):
-    print("LRT was already performed for this model")
-    exit()
-       
+# if os.path.isfile(os.path.join(out_dir, "LRT_results.csv")):
+#     print("LRT was already performed for this model")
+#     exit()
 
+if not os.path.isfile(os.path.join(out_dir, "model.sav")):
+    print("There is no regression model for this analysis")
+    exit()
+
+    
 ############# STEP 1: READ IN THE ORIGINAL DATA: MODEL_MATRIX PICKLE FILE FOR A GIVEN MODEL #############
 
 
@@ -76,7 +80,8 @@ if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
     exit()
 else:
     matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
-    
+
+print(matrix.shape)
 mutations_lst = matrix.columns
 
 # if this is for a tier 1 + 2 model, only compute LRT for tier 2 mutations because the script takes a while to run, so remove the tier 1 mutations
@@ -84,20 +89,20 @@ if len(tiers_lst) == 2:
     tier1_mutations = pd.read_pickle(os.path.join(out_dir.replace("tiers=1+2", "tiers=1"), "model_matrix.pkl")).columns
     mutations_lst = list(set(mutations_lst) - set(tier1_mutations))
     
-# if this is for a +synonymous model, only compute LRT for the synonymous because the script takes a while to run, so remove the nonsyn mutations
-# LRT will have already been computed for these in the corresponding noSyn model
-if synonymous:
-    nonsyn_mutations = pd.read_pickle(os.path.join(out_dir.replace("withSyn", "noSyn"), "model_matrix.pkl")).columns
-    mutations_lst = list(set(mutations_lst) - set(nonsyn_mutations))
+# # if this is for a +synonymous model, only compute LRT for the synonymous because the script takes a while to run, so remove the nonsyn mutations
+# # LRT will have already been computed for these in the corresponding noSyn model
+# if synonymous:
+#     nonsyn_mutations = pd.read_pickle(os.path.join(out_dir.replace("withSyn", "noSyn"), "model_matrix.pkl")).columns
+#     mutations_lst = list(set(mutations_lst) - set(nonsyn_mutations))
    
-# only compute LRT for the pooled mutations because the unpooled mutation data will come from the unpooled models
-if "poolSeparate" in model_prefix:
-    unpooled_mutations = pd.read_pickle(os.path.join(out_dir.replace("poolSeparate", "unpooled"), "model_matrix.pkl")).columns
-    mutations_lst = list(set(mutations_lst) - set(unpooled_mutations))
+# # only compute LRT for the pooled mutations because the unpooled mutation data will come from the unpooled models
+# if "poolSeparate" in model_prefix:
+#     unpooled_mutations = pd.read_pickle(os.path.join(out_dir.replace("poolSeparate", "unpooled"), "model_matrix.pkl")).columns
+#     mutations_lst = list(set(mutations_lst) - set(unpooled_mutations))
     
 # merge with eigenvectors
+print(f"{matrix.shape[0]} samples and {matrix.shape[1]} variants in the largest model")
 matrix = matrix.merge(eigenvec_df, left_index=True, right_index=True, how="inner")
-print(f"{matrix.shape[0]} samples and {matrix.shape[1]} variables in the largest model")
 
 df_phenos = df_phenos.loc[matrix.index]
 assert sum(matrix.index != df_phenos.index.values) == 0
@@ -171,22 +176,33 @@ y_pred = get_threshold_val_and_classes(y_prob, y)
 log_like = -sklearn.metrics.log_loss(y_true=y, y_pred=y_prob, normalize=False)
 tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_true=y, y_pred=y_pred).ravel()
         
-# add the results for the full model
-results_df = pd.DataFrame(columns=["log_like", "chi_stat", "LRT_pval", "LRT_neutral_pval", "AUC", "Sens", "Spec", "accuracy", "balanced_accuracy"])
-results_df.loc["FULL", :] = [log_like, 
-                             np.nan, np.nan, np.nan,
-                             sklearn.metrics.roc_auc_score(y_true=y, y_score=y_prob),
-                             tp / (tp + fn),
-                             tn / (tn + fp),
-                             sklearn.metrics.accuracy_score(y_true=y, y_pred=y_pred),
-                             sklearn.metrics.balanced_accuracy_score(y_true=y, y_pred=y_pred)
-                            ]
-
     
 ############# STEP 3: GET ALL MUTATIONS TO PERFORM THE LRT FOR AND FIT L2-PENALIZED REGRESSIONS FOR ALL MODELS WITH 1 FEATURE REMOVED #############
 
 
-print(f"Performing LRT for {len(mutations_lst)} mutations\n")
+if os.path.isfile(os.path.join(out_dir, "LRT_results.csv")):
+    print("Results dataframe exists. Appending additional mutations")
+    results_df = pd.read_csv(os.path.join(out_dir, "LRT_results.csv"), index_col=[0])
+    finished_mutations = results_df.index.values
+    mutations_lst = list(set(mutations_lst) - set(finished_mutations) - set(["FULL"]))
+
+else:
+    print("Creating LRT results dataframe")
+    # create the results dataframe and add the results for the full model
+    results_df = pd.DataFrame(columns=["log_like", "chi_stat", "LRT_pval", "LRT_neutral_pval", "AUC", "Sens", "Spec", "accuracy", "balanced_accuracy"])
+    results_df.loc["FULL", :] = [log_like, 
+                                 np.nan, np.nan, np.nan,
+                                 sklearn.metrics.roc_auc_score(y_true=y, y_score=y_prob),
+                                 tp / (tp + fn),
+                                 tn / (tn + fp),
+                                 sklearn.metrics.accuracy_score(y_true=y, y_pred=y_pred),
+                                 sklearn.metrics.balanced_accuracy_score(y_true=y, y_pred=y_pred)
+                                ]
+
+if len(mutations_lst) == 0:
+    print("Finished LRT for all mutations in this model")
+else:
+    print(f"Performing LRT for {len(mutations_lst)} mutations\n")
     
 for i, mutation in enumerate(mutations_lst):
     
@@ -194,6 +210,7 @@ for i, mutation in enumerate(mutations_lst):
     
     if i % 100 == 0:
         print(f"Finished {mutation}")
+        results_df.reset_index().rename(columns={"index":"mutation"}).to_csv(os.path.join(out_dir, "LRT_results.csv"), index=False)
     
 results_df.reset_index().rename(columns={"index":"mutation"}).to_csv(os.path.join(out_dir, "LRT_results.csv"), index=False)
 

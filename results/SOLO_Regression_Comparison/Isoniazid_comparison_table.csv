@@ -1,0 +1,8 @@
+,SOLO_CONFIDENCE_GRADING,SOLO_CONFIDENCE_GRADING,SOLO_CONFIDENCE_GRADING,SOLO_CONFIDENCE_GRADING,SOLO_CONFIDENCE_GRADING
+,1) Assoc w R,2) Assoc w R - Interim,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+REGRESSION_CONFIDENCE_GRADING,,,,,
+1) Assoc w R,8,7,24,0,0
+2) Assoc w R - Interim,0,3,15,0,0
+3) Uncertain significance,0,113,1503,366,11
+4) Not assoc w R - Interim,0,0,0,0,0
+5) Not assoc w R,0,0,3,0,2

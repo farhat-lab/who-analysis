@@ -334,19 +334,19 @@ def compute_exact_confidence_intervals(res_df, alpha):
             # binomtest requires the numbers to be integers
             row[["Mut_R", "Mut_S", "NoMut_S", "NoMut_R"]] = row[["Mut_R", "Mut_S", "NoMut_S", "NoMut_R"]].astype(int)
         
-            # PPV
+            # PPV: TP / (TP + FP)
             ci = st.binomtest(k=row["Mut_R"], n=row["Mut_R"] + row["Mut_S"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
             res_df.loc[i, ["PPV_LB", "PPV_UB"]] = [ci.low, ci.high]
             
-            # NPV
+            # NPV: TN / (TN + FN)
             ci = st.binomtest(k=row["NoMut_S"], n=row["NoMut_S"] + row["NoMut_R"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
             res_df.loc[i, ["NPV_LB", "NPV_UB"]] = [ci.low, ci.high]
             
-            # Sensitivity
+            # Sensitivity: TP / (TP + FN)
             ci = st.binomtest(k=row["Mut_R"], n=row["Mut_R"] + row["NoMut_R"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
             res_df.loc[i, ["Sens_LB", "Sens_UB"]] = [ci.low, ci.high]
             
-            # Specificity
+            # Specificity: TN / (TN + FP)
             ci = st.binomtest(k=row["NoMut_S"], n=row["NoMut_S"] + row["Mut_S"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
             res_df.loc[i, ["Spec_LB", "Spec_UB"]] = [ci.low, ci.high]
     

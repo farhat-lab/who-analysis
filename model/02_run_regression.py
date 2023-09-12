@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, sparse, sys
+import glob, os, yaml, sparse, sys, shutil
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import tracemalloc, pickle
@@ -103,6 +103,13 @@ if pool_type != "unpooled":
 
     if len(set(model_unpooled.columns).symmetric_difference(matrix.columns)) == 0:
         print("This pooled model is the same as the corresponding unpooled model. Exiting...")
+
+        # # then copy every file in the corresponding unpooled model to this folder
+        # for fName in os.listdir(out_dir.replace(pool_type, "unpooled")):
+
+        #     # ignore the dropped features folder because that is already there from script 01
+        #     if os.path.isfile(os.path.join(out_dir.replace(pool_type, "unpooled"), fName)):
+        #         shutil.copy(os.path.join(out_dir.replace(pool_type, "unpooled"), fName), os.path.join(out_dir, fName))
         exit()
     
 if binary:

@@ -1,6 +1,6 @@
 #!/bin/bash 
-#SBATCH -c 2
-#SBATCH -t 0-06:00
+#SBATCH -c 1
+#SBATCH -t 0-11:59
 #SBATCH -p short
 #SBATCH --mem=100G 
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
@@ -15,7 +15,7 @@
 source activate who-analysis
 
 drug_array=(
- # 'Pretomanid'
+ 'Pretomanid'
  'Delamanid'
  'Bedaquiline'
  'Clofazimine'
@@ -24,17 +24,17 @@ drug_array=(
  'Levofloxacin'
  'Rifampicin'
  'Isoniazid'
- 'Ethambutol'
  'Ethionamide'
  'Kanamycin'
  'Amikacin'
  'Streptomycin'
  'Pyrazinamide'
- 'Capreomyacin'
+ 'Capreomycin'
+ 'Ethambutol'
 )
 
 drug_abbr_array=(
- # 'PTM'
+ 'PTM'
  'DLM'
  'BDQ'
  'CFZ'
@@ -43,13 +43,13 @@ drug_abbr_array=(
  'LEV'
  'RIF'
  'INH'
- 'EMB'
  'ETH'
  'KAN'
  'AMI'
  'STM'
  'PZA'
  'CAP'
+ 'EMB'
 )
 
 # list of config files to use
@@ -57,9 +57,11 @@ config_array=(
  'config_files/mic_01.yaml'
  'config_files/mic_02.yaml'
  'config_files/mic_03.yaml'
- # 'config_files/mic_04.yaml'
+ 'config_files/mic_04.yaml'
  # 'config_files/mic_05.yaml'
  # 'config_files/mic_06.yaml'
+ # 'config_files/mic_07.yaml'
+ # 'config_files/mic_08.yaml'
 )
 
 

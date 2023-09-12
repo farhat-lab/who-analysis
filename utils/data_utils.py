@@ -33,7 +33,7 @@ def create_master_genos_files(drug, genos_dir, analysis_dir, include_tier2=False
 
 
 def pool_mutations(df, effect_lst, pool_col):
-    
+        
     df.loc[df["predicted_effect"].isin(effect_lst), ["variant_category", "position"]] = [pool_col, np.nan]
 
     # sort descending to keep the largest variant_binary_status and variant_allele_frequency first. In this way, pooled mutations that are actually present are preserved
@@ -41,7 +41,6 @@ def pool_mutations(df, effect_lst, pool_col):
 
     # combine with the unpooled variants and the other variants and return
     return pd.concat([df_pooled, df.query("variant_category != @pool_col")], axis=0)
-
 
     
 

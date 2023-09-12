@@ -234,6 +234,13 @@ if synonymous:
 else:
     df_model = df_model.query("predicted_effect not in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']").reset_index(drop=True)    
 
+
+# 1 = alternative allele, 0 = reference allele, NaN = missing
+df_model["mutation"] = df_model["resolved_symbol"] + "_" + df_model["variant_category"]
+
+# drop any duplicates. Preferentially keep variant_binary_status = 1, so sort descending and keep first. Not very relevant though because the duplicates are just NaNs (missing values)
+df_model = df_model.sort_values("variant_binary_status", ascending=False).drop_duplicates(["sample_id", "mutation"], keep="first").reset_index(drop=True)
+
     
 ######################### STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #########################
     
@@ -241,7 +248,7 @@ else:
 # options for pool_type are unpooled, poolSeparate, and poolALL
 if pool_type == "poolSeparate":
     print("Pooling LOF and inframe mutations separately")
-    df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation"], "lof")
+    df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation"], "LoF")
     df_model = pool_mutations(df_model, ["inframe_insertion", "inframe_deletion"], "inframe")
 
 elif pool_type == "poolALL":
@@ -265,12 +272,13 @@ elif amb_mode == "AF":
     df_model.loc[df_model["variant_allele_frequency"] >= 0.25, "variant_binary_status"] = df_model.loc[df_model["variant_allele_frequency"] >= 0.25, "variant_allele_frequency"].values
    
 # drop all isolates with ambiguous variants with ANY AF below the threshold. DON'T DROP FEATURES BECAUSE MIGHT DROP SOMETHING RELEVANT
+# by default, AF <= 0.75 --> ABSENT. Later, when including "HETs", the threshold will be dropped to 0.25, so anything with AF <= 0.25 --> ABSENT, and AF > 0.25 = PRESENT
 elif amb_mode == "DROP":
     
     pre_dropAmb_mutations = df_model.query("variant_binary_status==1")["resolved_symbol"] + "_" + df_model.query("variant_binary_status==1")["variant_category"]
     
     drop_isolates = df_model.query("variant_allele_frequency > 0.25 & variant_allele_frequency < 0.75").sample_id.unique()
-    print(f"    Dropped {len(drop_isolates)}/{len(df_model.sample_id.unique())} isolates with any intermediate AFs. Remainder are binary")
+    print(f"    Dropped {len(drop_isolates)}/{len(df_model.sample_id.unique())} isolates with with any AFs in the range (0.25, {AF_thresh}). Remainder have been binarized")
     df_model = df_model.query("sample_id not in @drop_isolates")    
     
     # get the features in the dataframe after dropping isolates with ambiguous allele fractions, then save to a file if there are any dropped features
@@ -290,11 +298,7 @@ assert len(df_model.loc[(~pd.isnull(df_model["variant_allele_frequency"])) & (pd
 ######################### STEP 5: PIVOT TO MATRIX AND DROP MISSINGNESS AND ANY FEATURES THAT ARE ALL 0 #########################
 
 
-# 1 = alternative allele, 0 = reference allele, NaN = missing
-df_model["mutation"] = df_model["resolved_symbol"] + "_" + df_model["variant_category"]
-
-# drop any duplicates. Preferentially keep variant_binary_status = 1, so sort descending and keep first
-df_model = df_model.sort_values("variant_binary_status", ascending=False).drop_duplicates(["sample_id", "mutation"], keep="first")
+# pivot to matrix
 matrix = df_model.pivot(index="sample_id", columns="mutation", values="variant_binary_status")
 del df_model
 print(f"Initially {matrix.shape[0]} isolates and {matrix.shape[1]} features")         
