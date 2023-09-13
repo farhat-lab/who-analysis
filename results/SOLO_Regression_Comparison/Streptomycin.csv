@@ -1,0 +1,6 @@
+REGRESSION,1) Assoc w R,2) Assoc w R - Interim,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+1) Assoc w R,15,15,47,0,0
+2) Assoc w R - Interim,0,5,21,0,0
+3) Uncertain significance,0,124,1607,237,15
+4) Not assoc w R - Interim,0,0,0,0,0
+5) Not assoc w R,0,0,3,0,2
