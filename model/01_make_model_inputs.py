@@ -271,22 +271,26 @@ elif amb_mode == "AF":
     # encode all variants with AF > 0.25 with their AF
     df_model.loc[df_model["variant_allele_frequency"] >= 0.25, "variant_binary_status"] = df_model.loc[df_model["variant_allele_frequency"] >= 0.25, "variant_allele_frequency"].values
    
-# drop all isolates with ambiguous variants with ANY AF below the threshold. DON'T DROP FEATURES BECAUSE MIGHT DROP SOMETHING RELEVANT
+# drop all isolates with ambiguous variants with ANY AF below the threshold. Then remove features that are no longer present
 # by default, AF <= 0.75 --> ABSENT. Later, when including "HETs", the threshold will be dropped to 0.25, so anything with AF <= 0.25 --> ABSENT, and AF > 0.25 = PRESENT
 elif amb_mode == "DROP":
-    
-    pre_dropAmb_mutations = df_model.query("variant_binary_status==1")["resolved_symbol"] + "_" + df_model.query("variant_binary_status==1")["variant_category"]
+
+    # get all mutations that are present in the dataset somewhere.
+    # NOTE: doing this before dropping mutations with no signal does not affect the no signal category 
+    pre_dropAmb_mutations = df_model.query("variant_binary_status==1").reset_index(drop=True)["resolved_symbol"] + "_" + df_model.query("variant_binary_status==1").reset_index(drop=True)["variant_category"]
     
     drop_isolates = df_model.query("variant_allele_frequency > 0.25 & variant_allele_frequency < 0.75").sample_id.unique()
-    print(f"    Dropped {len(drop_isolates)}/{len(df_model.sample_id.unique())} isolates with with any AFs in the range (0.25, {AF_thresh}). Remainder have been binarized")
+    print(f"    Dropped {len(drop_isolates)}/{len(df_model.sample_id.unique())} isolates with with any AFs in the range (0.25, {AF_thresh}). Remainder are binary")
     df_model = df_model.query("sample_id not in @drop_isolates")    
     
     # get the features in the dataframe after dropping isolates with ambiguous allele fractions, then save to a file if there are any dropped features
-    post_dropAmb_mutations = df_model.query("variant_binary_status==1")["resolved_symbol"] + "_" + df_model.query("variant_binary_status==1")["variant_category"]
+    post_dropAmb_mutations = df_model.query("variant_binary_status==1").reset_index(drop=True)["resolved_symbol"] + "_" + df_model.query("variant_binary_status==1").reset_index(drop=True)["variant_category"]
     
     # get the dropped features that are in pre_dropAmb_mutations but not in post_dropAmb_mutations, then write them to a file
     dropped_feat = list(set(pre_dropAmb_mutations) - set(post_dropAmb_mutations))
+    
     if len(dropped_feat) > 0:
+        print(f"    Dropped {len(dropped_feat)} features present only in samples with intermediate AFs")
         with open(os.path.join(out_dir, "dropped_features/isolates_with_amb.txt"), "w+") as file:
             for feature in dropped_feat:
                 file.write(feature + "\n")

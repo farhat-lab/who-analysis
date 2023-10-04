@@ -38,9 +38,11 @@ out_dir = os.path.join(analysis_dir, drug, "BINARY", f"tiers={'+'.join(tiers_lst
 print(f"Saving results to {out_dir}")
 assert os.path.isdir(out_dir)
 
-results_df = pd.read_csv(f"results/FINAL/{drug}.csv")    
-mutations_lst = results_df.query("regression_confidence not in ['Neutral', 'Uncertain']")["mutation"].values
-R_assoc = results_df.query("regression_confidence.str.contains('Assoc w R')")["mutation"].values
+results_df = pd.read_csv(f"results/FINAL/{drug}.csv")   
+print(results_df['FINAL CONFIDENCE GRADING'].unique())
+
+mutations_lst = results_df.loc[~results_df['FINAL CONFIDENCE GRADING'].isin(['Neutral', 'Uncertain', 'Neutral - Interim'])]["mutation"].values
+R_assoc = results_df.loc[results_df['FINAL CONFIDENCE GRADING'].str.contains('Assoc w R')]["mutation"].values
 
 if len(R_assoc) == 0:
     print("There are no significant R-associated mutations for this model\n")
