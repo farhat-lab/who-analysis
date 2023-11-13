@@ -1,14 +1,14 @@
-mutation,WHO_Odds_Ratio,ALL_Odds_Ratio,FINAL CONFIDENCE GRADING,SOLO FINAL CONFIDENCE GRADING
-ahpC_c.-57C>T,1.164949955570362,1.165687921617051,Assoc w R,3) Uncertain significance
-ahpC_c.-48G>A,1.16846607531299,1.161707801372521,Assoc w R,3) Uncertain significance
-ahpC_c.-52C>T,1.138770189124913,1.13683431757648,Assoc w R,3) Uncertain significance
-ahpC_c.-54C>T,1.125298385618386,1.133144390327582,Assoc w R,3) Uncertain significance
-ahpC_c.-76T>A,1.13802587753347,1.097204179571881,Assoc w R,3) Uncertain significance
-ahpC_c.-72C>T,1.045260229898884,1.080957284233958,Assoc w R,3) Uncertain significance
-ahpC_c.-47_-46insT,1.061279156337113,1.083090090154689,Uncertain,3) Uncertain significance
-ahpC_c.-52C>A,1.077762998274187,1.073249084830679,Uncertain,3) Uncertain significance
-ahpC_c.-51G>A,1.059371666839331,1.062916404293851,Uncertain,3) Uncertain significance
-ahpC_c.-81C>T,1.080169267111852,1.04217470223575,Uncertain,3) Uncertain significance
-ahpC_c.-77T>G,1.041036210127473,1.034058816425291,Uncertain,3) Uncertain significance
-ahpC_c.-74G>A,1.01587457866258,1.021034635294338,Uncertain,3) Uncertain significance
-ahpC_c.-88_-87insAT,1.019480185779035,1.017783262693271,Uncertain,3) Uncertain significance
+mutation,WHO_Odds_Ratio,WHO_BH_pval,ALL_Odds_Ratio,ALL_BH_pval,FINAL CONFIDENCE GRADING,SOLO FINAL CONFIDENCE GRADING
+ahpC_c.-57C>T,1.164949955570362,0.0,1.165687921617051,0.0,Assoc w R,3) Uncertain significance
+ahpC_c.-48G>A,1.16846607531299,0.0,1.161707801372521,0.0,Assoc w R,3) Uncertain significance
+ahpC_c.-52C>T,1.138770189124913,0.0,1.13683431757648,0.0,Assoc w R,3) Uncertain significance
+ahpC_c.-54C>T,1.125298385618386,0.0,1.133144390327582,0.0,Assoc w R,3) Uncertain significance
+ahpC_c.-76T>A,1.13802587753347,0.0,1.097204179571881,0.0,Assoc w R,3) Uncertain significance
+ahpC_c.-72C>T,1.045260229898884,0.0,1.080957284233958,0.0,Assoc w R,3) Uncertain significance
+ahpC_c.-47_-46insT,1.061279156337113,0.0,1.083090090154689,0.0,Uncertain,3) Uncertain significance
+ahpC_c.-52C>A,1.077762998274187,0.0,1.073249084830679,0.0,Uncertain,3) Uncertain significance
+ahpC_c.-51G>A,1.059371666839331,0.0,1.062916404293851,0.0,Uncertain,3) Uncertain significance
+ahpC_c.-81C>T,1.080169267111852,0.0,1.04217470223575,0.014,Uncertain,3) Uncertain significance
+ahpC_c.-77T>G,1.041036210127473,0.1081782729805014,1.034058816425291,0.0641379310344827,Uncertain,3) Uncertain significance
+ahpC_c.-74G>A,1.01587457866258,0.345970786516854,1.021034635294338,0.2204444444444444,Uncertain,3) Uncertain significance
+ahpC_c.-88_-87insAT,1.019480185779035,0.3124735632183908,1.017783262693271,0.1117425287356321,Uncertain,3) Uncertain significance
