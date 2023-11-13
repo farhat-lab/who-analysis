@@ -253,7 +253,7 @@ if pool_type == "poolSeparate":
 
 elif pool_type == "poolALL":
     print("Pooling LOF and inframe mutations together into a single feature")
-    df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation", "inframe_insertion", "inframe_deletion"], "lof_all")
+    df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation", "inframe_insertion", "inframe_deletion"], "LoF_all")
 
 
 ######################### STEP 4: PROCESS AMBIGUOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #########################
@@ -265,11 +265,11 @@ if amb_mode == "BINARY":
     df_genos.loc[(df_genos["variant_allele_frequency"] <= AF_thresh), "variant_binary_status"] = 0
     df_genos.loc[(df_genos["variant_allele_frequency"] > AF_thresh), "variant_binary_status"] = 1
     
-# use ambiguous AF as the matrix value for variants with AF > 0.25. Below 0.25, the AF measurements aren't reliable
+# use ambiguous AF as the matrix value for variants with AF > 0.25. AF = 0.25 is considered absent. Below 0.25, the AF measurements aren't reliable
 elif amb_mode == "AF":
     print("Encoding ambiguous variants with their AF")
-    # encode all variants with AF > 0.25 with their AF
-    df_model.loc[df_model["variant_allele_frequency"] >= 0.25, "variant_binary_status"] = df_model.loc[df_model["variant_allele_frequency"] >= 0.25, "variant_allele_frequency"].values
+    # encode all variants with AF > 0.25 with their AF. Variants with AF <= 0.25 already have variant_binary_status = 0
+    df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_binary_status"] = df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_allele_frequency"].values
    
 # drop all isolates with ambiguous variants with ANY AF below the threshold. Then remove features that are no longer present
 # by default, AF <= 0.75 --> ABSENT. Later, when including "HETs", the threshold will be dropped to 0.25, so anything with AF <= 0.25 --> ABSENT, and AF > 0.25 = PRESENT
@@ -319,7 +319,7 @@ assert sum(pd.isnull(np.unique(matrix.values))) == 0
 # in this case, only 2 possible values -- 0 (ref), 1 (alt) because we already dropped NaNs
 if amb_mode.upper() in ["BINARY", "DROP"]:
     assert len(np.unique(matrix.values)) <= 2
-# the smallest value will be 0. Check that the second smallest value is greater than 0.25 (below this, AFs are not really reliable)
+# the smallest value will be 0. Check that the second smallest value is greater than 0.25
 else:
     assert np.sort(np.unique(matrix.values))[1] > 0.25
 

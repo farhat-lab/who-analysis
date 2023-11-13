@@ -1,0 +1,14 @@
+mutation,Initial confidence grading WHO dataset,Initial confidence grading ALL dataset,UNPOOLED CONFIDENCE GRADING,POOLED CONFIDENCE GRADING,Reason,FINAL CONFIDENCE GRADING,SOLO FINAL GRADING
+ahpC_c.-57C>T,Assoc w R,Assoc w R,Assoc w R,Assoc w R,,Assoc w R,3) Uncertain significance
+ahpC_c.-52C>T,Assoc w R,Assoc w R,Assoc w R,Assoc w R,,Assoc w R,3) Uncertain significance
+ahpC_c.-76T>A,Assoc w R,Assoc w R,Assoc w R,Assoc w R,,Assoc w R,3) Uncertain significance
+ahpC_c.-48G>A,Assoc w R,Assoc w R,Assoc w R,Assoc w R - Interim,Pooled Unpooled Different,Assoc w R - Interim,3) Uncertain significance
+ahpC_c.-54C>T,Assoc w R,Assoc w R,Assoc w R,Assoc w R - Interim,Pooled Unpooled Different,Assoc w R - Interim,3) Uncertain significance
+ahpC_c.-72C>T,Possible Assoc w R,Assoc w R,Assoc w R - Interim,Assoc w R - Interim,,Assoc w R - Interim,3) Uncertain significance
+ahpC_c.-81C>T,Possible Assoc w R,Possible Assoc w R,Uncertain,Uncertain,,Uncertain,3) Uncertain significance
+ahpC_c.-52C>A,Possible Assoc w R,Possible Assoc w R,Uncertain,Uncertain,,Uncertain,3) Uncertain significance
+ahpC_c.-47_-46insT,Possible Assoc w R,Possible Assoc w R,Uncertain,Uncertain,,Uncertain,3) Uncertain significance
+ahpC_c.-51G>A,Possible Assoc w R,Possible Assoc w R,Uncertain,Uncertain,,Uncertain,3) Uncertain significance
+ahpC_c.-77T>G,Uncertain,Uncertain,Uncertain,Uncertain,,Uncertain,3) Uncertain significance
+ahpC_c.-88_-87insAT,Uncertain,Uncertain,Uncertain,Uncertain,,Uncertain,3) Uncertain significance
+ahpC_c.-74G>A,Uncertain,Uncertain,Uncertain,Uncertain,,Uncertain,3) Uncertain significance

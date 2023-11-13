@@ -22,7 +22,7 @@ def get_annotated_genos(analysis_dir, drug):
                                       usecols=["resolved_symbol", "variant_category", "predicted_effect", "position"]
                                      ) for fName in genos_files]).drop_duplicates()
     
-    # get annotations for mutations to combine later. Exclude lof and inframe, these will be manually replaced later
+    # get annotations for mutations to combine later. Exclude LoF and inframe, these will be manually replaced later
     df_genos["mutation"] = df_genos["resolved_symbol"] + "_" + df_genos["variant_category"]
     del df_genos["resolved_symbol"]
     del df_genos["variant_category"]
@@ -35,11 +35,21 @@ def get_annotated_genos(analysis_dir, drug):
 
 
 
-def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_genos, alpha=0.05):
+def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_genos, encodeAF=False, alpha=0.05):
     
     # read in the matrix of inputs and the coefficient outputs
     model_path = os.path.dirname(model_analysis_file)
     matrix = pd.read_pickle(os.path.join(model_path, "model_matrix.pkl"))
+
+    # if the model is an encodeAF model, consider present as AFs > 0.25 and absent as AFs <= 0.25
+    # normally, AFs > 0.75 are considered present (variant_binary_status = 1)
+    if encodeAF:
+        matrix[matrix > 0.25] = 1
+        matrix[matrix <= 0.25] = 0
+
+    # check that the matrix is now binary
+    assert len(np.unique(matrix.values)) == 2
+    
     res_df = pd.read_csv(model_analysis_file)
     pool_type = model_path.split("_")[-1]
     
@@ -75,35 +85,37 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
         # one pooled LOF feature
         res_df.loc[res_df["predicted_effect"].isin(["frameshift", "start_lost", "stop_gained", "feature_ablation"]),
                     "predicted_effect"
-                   ] = "lof"
+                   ] = "LoF"
         # one pooled inframe feature
         res_df.loc[(~pd.isnull(res_df["predicted_effect"])) & (res_df["predicted_effect"].str.contains("inframe")),
                     "predicted_effect"
                    ] = "inframe"
     elif pool_type == "poolALL":
-        # combine these predicted effects into a single lof_all feature
+        # combine these predicted effects into a single LoF_all feature
         res_df.loc[res_df["predicted_effect"].isin(["inframe_insertion", "inframe_deletion", "frameshift", "start_lost", "stop_gained", "feature_ablation"]),
                     "predicted_effect"
-                   ] = "lof_all"
+                   ] = "LoF_all"
 
-    res_df.loc[(res_df["mutation"].str.contains("lof")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "lof"
+    # fix LoF naming convention
+    res_df["mutation"] = res_df.mutation.str.replace("lof", "LoF")
+    res_df.loc[(res_df["mutation"].str.contains("LoF")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "LoF"
     res_df.loc[(res_df["mutation"].str.contains("inframe")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "inframe"
-    res_df.loc[res_df["mutation"].str.contains("all"), "predicted_effect"] = "lof_all"
+    res_df.loc[res_df["mutation"].str.contains("all"), "predicted_effect"] = "LoF_all"
 
     # predicted effect should only be NaN for PCs. position is NaN only for the pooled mutations and PCs
     assert len(res_df.loc[(pd.isnull(res_df["predicted_effect"])) & (~res_df["mutation"].str.contains("|".join(["PC"])))]) == 0
-    assert len(res_df.loc[(pd.isnull(res_df["position"])) & (~res_df["mutation"].str.contains("|".join(["lof", "inframe", "PC"])))]) == 0
+    assert len(res_df.loc[(pd.isnull(res_df["position"])) & (~res_df["mutation"].str.contains("|".join(["LoF", "inframe", "PC"])))]) == 0
 
     # check that every mutation is present in at least 1 isolate
     assert res_df.Num_Isolates.min() > 0
 
     # check that there are no NaNs in the univariate statistics. Don't include LR+ upper and lower bounds because they can be NaN if LR+ = inf
-    assert len(res_df.loc[~res_df["mutation"].str.contains("PC")][pd.isnull(res_df[['Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'PPV', 'NPV', 'Sens', 'Spec', 'LR+', 'LR-',
-                                   'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB', 'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR-_LB', 'LR-_UB']]).any(axis=1)]) == 0
+    assert len(res_df.loc[~res_df["mutation"].str.contains("PC")][pd.isnull(res_df[['Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'R_PPV', 'S_PPV', 'Sens', 'Spec', 'LR+', 'LR-',
+                                   'R_PPV_LB', 'R_PPV_UB', 'S_PPV_LB', 'S_PPV_UB', 'Sens_LB', 'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR-_LB', 'LR-_UB']]).any(axis=1)]) == 0
 
     # check confidence intervals. LB ≤ var ≤ UB, and no confidence intervals have width 0. When the probability is 0 or 1, there are numerical precision issues
     # i.e. python says 1 != 1. So ignore those cases when checking
-    for var in ["PPV", "NPV", "Sens", "Spec", "LR+", "LR-"]:
+    for var in ["R_PPV", "S_PPV", "Sens", "Spec", "LR+", "LR-"]:
         assert len(res_df.loc[(~res_df[var].isin([0, 1])) & (res_df[var] < res_df[f"{var}_LB"])]) == 0
         assert len(res_df.loc[(~res_df[var].isin([0, 1])) & (res_df[var] > res_df[f"{var}_UB"])]) == 0
 
@@ -113,15 +125,9 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
     res_df = res_df.sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first")
     del matrix
 
-    # res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'coef_LB', 'coef_UB', 'Odds_Ratio', 'OR_LB', 'OR_UB', 'pval', 'BH_pval',
-    #    'Bonferroni_pval', 'Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'PPV', 'NPV', 'Sens', 'Spec',
-    #    'LR+', 'LR-', 'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB',
-    #    'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
-    #    ]].to_csv(os.path.join(model_path, model_analysis_file), index=False) 
-    
     res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'Odds_Ratio', 'pval', 'BH_pval',
-       'Bonferroni_pval', 'neutral_pval', 'BH_neutral_pval', 'Bonferroni_neutral_pval', 'Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'PPV', 'NPV', 'Sens', 'Spec',
-       'LR+', 'LR-', 'PPV_LB', 'PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB',
+       'Bonferroni_pval', 'neutral_pval', 'BH_neutral_pval', 'Bonferroni_neutral_pval', 'Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'R_PPV', 'S_PPV', 'Sens', 'Spec',
+       'LR+', 'LR-', 'R_PPV_LB', 'R_PPV_UB', 'S_PPV_LB', 'S_PPV_UB', 'Sens_LB',
        'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
        ]].to_csv(os.path.join(model_analysis_file), index=False) 
 
@@ -130,13 +136,22 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
 # starting the memory monitoring
 tracemalloc.start()
 
-_, folder, drug = sys.argv
+_, model_type, drug = sys.argv
 
 analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
 # this is the intermediate folder
-folder = folder.upper()
-assert folder in ["BINARY", "ATU", "MIC"]
+model_type = model_type.upper()
+assert model_type in ["BINARY", "AF", "ATU", "MIC"]
+
+if model_type == "MIC":
+    print("There are no univariate statistics to add for MIC models. Quitting this script.")
+    exit()
+# folder in which to search (options are MIC, ATU, and BINARY)
+elif model_type == "ATU":
+    folder = "ATU"
+else:
+    folder = "BINARY"
 
 # get all models to compute univariate statistics for
 analysis_paths = []
@@ -147,12 +162,14 @@ for tier in os.listdir(os.path.join(analysis_dir, drug, folder)):
     if "tiers" in tier and os.path.isdir(os.path.join(analysis_dir, drug, folder, tier)):
         tiers_path = os.path.join(analysis_dir, drug, folder, tier)
 
+        # level_1 = phenotypes (if it exists) 
         for level_1 in os.listdir(tiers_path):
             level1_path = os.path.join(analysis_dir, drug, folder, tier, level_1)
 
             if os.path.isfile(os.path.join(level1_path, "model_matrix.pkl")):
                 analysis_paths.append(level1_path)
 
+            # level_2 = model names
             for level_2 in os.listdir(level1_path):
                 level2_path = os.path.join(analysis_dir, drug, folder, tier, level_1, level_2)
 
@@ -163,35 +180,19 @@ for tier in os.listdir(os.path.join(analysis_dir, drug, folder)):
 phenos_file = os.path.join(analysis_dir, drug, f"phenos_{folder.lower()}.csv")    
 df_phenos = pd.read_csv(phenos_file)
 annotated_genos = get_annotated_genos(analysis_dir, drug)
-
     
-if folder == "BINARY":
-    for model_path in analysis_paths:
-        for fName in glob.glob(os.path.join(model_path, "model_analysis*.csv")):
-            print(model_path)
-            compute_statistics_single_model(fName, df_phenos, annotated_genos, alpha=0.05)
-        # if "dropAF_withSyn_unpooled" in model_path:
-        #     compute_statistics_single_model(model_path, model_suffix, df_phenos, annotated_genos, alpha=0.05)
-        # else:
-        #     add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
-            
+for model_path in analysis_paths:
+    for fName in glob.glob(os.path.join(model_path, "model_analysis*.csv")):
 
-# elif folder == "ATU":
-#     for model_path in analysis_paths:  
-#         for model_suffix in ["_CC", "_CC_ATU"]:
-#             print(model_path)
-#             if "dropAF" in model_path:
-#                 compute_statistics_single_model(model_path, df_phenos, df_genos, annotated_genos, model_suffix, alpha=0.05)
-#             else:
-#                 add_significance_predicted_effect(model_path, annotated_genos, model_suffix)
+        if model_type == "AF":
+            if "encodeAF" in model_path:
+                print(model_path)
+                compute_statistics_single_model(fName, df_phenos, annotated_genos, encodeAF=True, alpha=0.05)
+        else:
+            if "dropAF" in model_path:
+                print(model_path)
+                compute_statistics_single_model(fName, df_phenos, annotated_genos, encodeAF=False, alpha=0.05)        
 
-# else:
-#     # just add predicted effect and Significance to these because there are no positive or negative outputs (output is continuous MIC)
-#     for model_path in analysis_paths:
-#         print(model_path)
-#         add_significance_predicted_effect(model_path, annotated_genos)
-
-        
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
 tracemalloc.stop()

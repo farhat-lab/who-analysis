@@ -19,20 +19,40 @@ source activate who-analysis
 #  'config_files/binary_01.yaml'
 #  'config_files/binary_02.yaml'
 #  'config_files/binary_03.yaml'
-#  'config_files/binary_04.yaml'
-#  'config_files/binary_05.yaml'
-#  'config_files/binary_06.yaml'
-#  'config_files/binary_07.yaml'
-#  'config_files/binary_08.yaml'
+#  # 'config_files/binary_04.yaml'
+#  # 'config_files/binary_05.yaml'
+#  # 'config_files/binary_06.yaml'
+#  # 'config_files/binary_07.yaml'
+#  # 'config_files/binary_08.yaml'
 #  'config_files/binary_09.yaml'
 #  'config_files/binary_10.yaml'
 #  'config_files/binary_11.yaml'
-#  'config_files/binary_12.yaml'
-#  'config_files/binary_13.yaml'
-#  'config_files/binary_14.yaml'
-#  'config_files/binary_15.yaml'
-#  'config_files/binary_16.yaml'
+#  # 'config_files/binary_12.yaml'
+#  # 'config_files/binary_13.yaml'
+#  # 'config_files/binary_14.yaml'
+#  # 'config_files/binary_15.yaml'
+#  # 'config_files/binary_16.yaml'
 # )
+
+# list of config files to use
+config_array=(
+ 'config_files/af_01.yaml'
+ 'config_files/af_02.yaml'
+ 'config_files/af_03.yaml'
+ # 'config_files/binary_04.yaml'
+ # 'config_files/binary_05.yaml'
+ # 'config_files/binary_06.yaml'
+ # 'config_files/binary_07.yaml'
+ # 'config_files/binary_08.yaml'
+ 'config_files/af_09.yaml'
+ 'config_files/af_10.yaml'
+ 'config_files/af_11.yaml'
+ # 'config_files/binary_12.yaml'
+ # 'config_files/binary_13.yaml'
+ # 'config_files/binary_14.yaml'
+ # 'config_files/binary_15.yaml'
+ # 'config_files/binary_16.yaml'
+)
 
 drug_array=(
  'Pretomanid'
@@ -53,24 +73,24 @@ drug_array=(
  'Ethambutol'
 )
 
-# drug_abbr_array=(
-#  'PTM'
-#  'DLM'
-#  'BDQ'
-#  'CFZ'
-#  'LZD'
-#  'MXF'
-#  'LEV'
-#  'RIF'
-#  'INH'
-#  'ETH'
-#  'KAN'
-#  'AMI'
-#  'STM'
-#  'PZA'
-#  'CAP'
-#  'EMB'
-# )
+drug_abbr_array=(
+ # 'PTM'
+ # 'DLM'
+ # 'BDQ'
+ # 'CFZ'
+ # 'LZD'
+ 'MXF'
+ 'LEV'
+ # 'RIF'
+ # 'INH'
+ # 'ETH'
+ # 'KAN'
+ # 'AMI'
+ # 'STM'
+ # 'PZA'
+ # 'CAP'
+ # 'EMB'
+)
 
 
 # only one config_file because using all phenotypes and tier 1 only
@@ -79,17 +99,27 @@ for k in ${!drug_array[@]}; do
     python3 -u model/05_binary_prediction_models.py "config_files/binary_01.yaml" "${drug_array[$k]}" 0.25
 done
 
+python3 -u model/05_binary_prediction_models.py config_files/af_01.yaml Moxifloxacin 0.75
+python3 -u model/05_binary_prediction_models.py config_files/af_01.yaml Moxifloxacin 0.25
+python3 -u model/05_binary_prediction_models.py config_files/af_01.yaml Levofloxacin 0.75
+python3 -u model/05_binary_prediction_models.py config_files/af_01.yaml Levofloxacin 0.25
+
 # # get the folder name (basename, then split on "_" and get the first word, and make it uppercase)
 # folder=$(basename "${config_array[0]}" | cut -d "_" -f 1 | tr '[:lower:]' '[:upper:]')
 # echo $folder
 
 # for k in ${!drug_array[@]}; do
-#     for i in ${!config_array[@]}; do
-#         python3 -u model/01_make_model_inputs.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
-#         python3 -u model/02_run_regression.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
-#         python3 -u model/03_likelihood_ratio_test.py "${config_array[$i]}" "${drug_array[$k]}"
-#     done
 
-#     python3 -u model/04_compute_univariate_stats.py "${folder}" "${drug_array[$k]}"
+#     # for i in ${!config_array[@]}; do
+#     #     python3 -u model/01_make_model_inputs.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
+#     #     python3 -u model/02_run_regression.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
+#     #     python3 -u model/03_likelihood_ratio_test.py "${config_array[$i]}" "${drug_array[$k]}"
+#     # done
+
+#     # python3 -u model/04_compute_univariate_stats.py "${folder}" "${drug_array[$k]}"
+#     python3 -u model/04_compute_univariate_stats.py "BINARY" "${drug_array[$k]}"
     
 # done
+
+# python3 -u model/04_compute_univariate_stats.py "AF" "Moxifloxacin"
+# python3 -u model/04_compute_univariate_stats.py "AF" "Levofloxacin"

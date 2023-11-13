@@ -1,8 +1,8 @@
 #!/bin/bash 
-#SBATCH -c 1
+#SBATCH -c 2
 #SBATCH -t 0-11:59
 #SBATCH -p short
-#SBATCH --mem=100G 
+#SBATCH --mem=150G 
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
@@ -57,7 +57,7 @@ config_array=(
  'config_files/mic_01.yaml'
  'config_files/mic_02.yaml'
  'config_files/mic_03.yaml'
- 'config_files/mic_04.yaml'
+ # 'config_files/mic_04.yaml'
  # 'config_files/mic_05.yaml'
  # 'config_files/mic_06.yaml'
  # 'config_files/mic_07.yaml'
@@ -65,13 +65,20 @@ config_array=(
 )
 
 
-# get the folder name (basename, then split on "_" and get the first word, and make it uppercase)
-folder=$(basename "${config_array[0]}" | cut -d "_" -f 1 | tr '[:lower:]' '[:upper:]')
-echo $folder
+# # get the folder name (basename, then split on "_" and get the first word, and make it uppercase)
+# folder=$(basename "${config_array[0]}" | cut -d "_" -f 1 | tr '[:lower:]' '[:upper:]')
+# echo $folder
 
+# for k in ${!drug_array[@]}; do
+#     for i in ${!config_array[@]}; do
+#         python3 -u model/01_make_model_inputs.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
+#         python3 -u model/02_run_regression.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
+#     done
+# done
+
+
+# only one config_file because using all phenotypes and tier 1 only
 for k in ${!drug_array[@]}; do
-    for i in ${!config_array[@]}; do
-        python3 -u model/01_make_model_inputs.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
-        python3 -u model/02_run_regression.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
-    done
+    python3 -u model/05_binary_prediction_models.py "config_files/binary_01.yaml" "${drug_array[$k]}" 0.75
+    python3 -u model/05_binary_prediction_models.py "config_files/binary_01.yaml" "${drug_array[$k]}" 0.25
 done

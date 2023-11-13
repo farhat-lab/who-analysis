@@ -39,9 +39,12 @@ def pool_mutations(df, effect_lst, pool_col):
     # sort descending to keep the largest variant_binary_status and variant_allele_frequency first. In this way, pooled mutations that are actually present are preserved
     df_pooled = df.query("variant_category == @pool_col").sort_values(by=["variant_binary_status", "variant_allele_frequency"], ascending=False, na_position="last").drop_duplicates(subset=["sample_id", "resolved_symbol"], keep="first")
 
+    # remake the mutation column so that it's gene + inframe/LoF
+    df_pooled["mutation"] = df_pooled["resolved_symbol"] + "_" + df_pooled["variant_category"]
+
     # combine with the unpooled variants and the other variants and return
     return pd.concat([df_pooled, df.query("variant_category != @pool_col")], axis=0)
-
+    
     
 
 def process_multiple_MICs_different_media(df_phenos):
