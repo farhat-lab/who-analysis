@@ -12,7 +12,7 @@ config_files/
 data/additional_samples.xlsx
 data/sample_ids_mapping.csv
 data/lineages.csv
-data/combined_lineage_sample_IDs.pkl
+data/combined_lineages_samples.csv
 
 # files too big
 data/*.pkl
