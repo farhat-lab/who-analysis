@@ -136,7 +136,7 @@ def normalize_MICs_return_dataframe(drug, df, cc_df):
         
         print(f"    Dropped {len(set(old_samples_lst)-set(df.sample_id))}/{len(old_samples_lst)} isolates in {remove_media_lst} without critical concentrations")
 
-        critical_conc_dict = dict(zip(cc_df["Medium"], cc_df["Value"]))
+        critical_conc_dict = dict(zip(single_drug_CC["Medium"], single_drug_CC["Value"]))
         df["medium_CC"] = df["medium"].map(critical_conc_dict)
         
         # no NaNs because the unnormalizable media were removed already

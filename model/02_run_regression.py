@@ -90,27 +90,11 @@ else:
 ########################## STEP 1: READ IN THE PREVIOUSLY GENERATED MATRICES ##########################
 
     
-# no model (basically just for Pretomanid because there are no WHO phenotypes, so some models don't exist)
+# no model (some models don't exist: i.e. Pretomanid ALL models and any pooled models that aren't different from the corresponding unpooled models)
 if not os.path.isfile(os.path.join(out_dir, f"model_matrix{model_suffix}.pkl")):
     exit()
 else:
     matrix = pd.read_pickle(os.path.join(out_dir, f"model_matrix{model_suffix}.pkl"))
-    
-    
-if pool_type != "unpooled":
-    
-    model_unpooled = pd.read_pickle(os.path.join(out_dir.replace(pool_type, "unpooled"), f"model_matrix{model_suffix}.pkl"))
-
-    if len(set(model_unpooled.columns).symmetric_difference(matrix.columns)) == 0:
-        print("This pooled model is the same as the corresponding unpooled model. Exiting...")
-
-        # # then copy every file in the corresponding unpooled model to this folder
-        # for fName in os.listdir(out_dir.replace(pool_type, "unpooled")):
-
-        #     # ignore the dropped features folder because that is already there from script 01
-        #     if os.path.isfile(os.path.join(out_dir.replace(pool_type, "unpooled"), fName)):
-        #         shutil.copy(os.path.join(out_dir.replace(pool_type, "unpooled"), fName), os.path.join(out_dir, fName))
-        exit()
     
 if binary:
     if atu_analysis:
@@ -130,11 +114,27 @@ if atu_analysis:
     
 # keep only unique MICs. Many samples have MICs tested in different media, so prioritize them according to the model hierarchy
 if not binary:
+
+    # there are no critical concentrations for Pretomanid, so keep only the most common medium and use un-normalized values because they're all the same medium
+    if drug == "Pretomanid":
+        pheno_col = "mic_value"
+    else:
+        pheno_col = "norm_MIC"
+    
+    cc_df = pd.read_csv("data/drug_CC.csv")
+
+    # first apply the media hierarchy to decide which of the measured MICs to keep for each isolate (for isolates with multiple MICs measured in different media)
     df_phenos = process_multiple_MICs_different_media(df_phenos)
+
+    # then normalize the MICs to the most common medium. This creates a new column: norm_MIC that should be used if not Pretomanid
+    df_phenos, most_common_medium = normalize_MICs_return_dataframe(drug, df_phenos, cc_df)
+    print(f"    Min MIC: {np.min(df_phenos[pheno_col].values)}, Max MIC: {np.max(df_phenos[pheno_col].values)} in {most_common_medium}")
 
 if os.path.isfile(os.path.join(out_dir, f"model_analysis{model_suffix}.csv")):
     print("Regression was already run for this model")
     exit()
+else:
+    print(f"Saving reuslts to {out_dir}")
     
 
 ############# STEP 2: GET THE MATRIX ON WHICH TO FIT THE DATA +/- EIGENVECTOR COORDINATES, DEPENDING ON THE PARAM #############
@@ -159,7 +159,7 @@ if binary:
     y = df_phenos["phenotype"].values
     assert len(np.unique(y)) == 2
 else:
-    y = np.log2(df_phenos["mic_value"].values)
+    y = np.log2(df_phenos[pheno_col].values)
 
 if len(y) != X.shape[0]:
     raise ValueError(f"Shapes of model inputs {X.shape} and outputs {len(y)} are incompatible")
@@ -225,7 +225,7 @@ else:
 #     bootstrap_df = pd.read_csv(os.path.join(out_dir, f"coef_bootstrapping{model_suffix}.csv"))
 
     
-# ########################## STEP 4: ADD PERMUTATION TEST P-VALUES TO THE MAIN COEF DATAFRAME ##########################
+########################## STEP 4: ADD PERMUTATION TEST P-VALUES TO THE MAIN COEF DATAFRAME ##########################
     
     
 final_df = get_coef_and_confidence_intervals(alpha, binary, who_variants_combined, drug_WHO_abbr, coef_df, permute_df, bootstrap_df=None)

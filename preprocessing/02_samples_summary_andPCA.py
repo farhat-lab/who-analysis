@@ -31,16 +31,16 @@ num_PCs = int(num_PCs)
 
 
 snp_dir = os.path.join(input_data_dir, "grm")
-genos_dir = os.path.join(input_data_dir, "full_genotypes")
-phenos_dir = os.path.join(input_data_dir, "phenotypes")
-mic_dir = os.path.join(input_data_dir, "mic")
+# genos_dir = os.path.join(input_data_dir, "full_genotypes")
+# phenos_dir = os.path.join(input_data_dir, "phenotypes")
+# mic_dir = os.path.join(input_data_dir, "mic")
 
-pheno_drugs = os.listdir(phenos_dir)
-geno_drugs = os.listdir(genos_dir)
-mic_drugs = os.listdir(mic_dir)
+# pheno_drugs = os.listdir(phenos_dir)
+# geno_drugs = os.listdir(genos_dir)
+# mic_drugs = os.listdir(mic_dir)
 
-drugs_for_analysis = list(set(geno_drugs).intersection(set(pheno_drugs)).intersection(set(mic_drugs)))
-print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
+# drugs_for_analysis = list(set(geno_drugs).intersection(set(pheno_drugs)).intersection(set(mic_drugs)))
+# print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
 minor_alleles_file = "PCA/minor_allele_counts.pkl"
 
 if not os.path.isfile(minor_alleles_file):
@@ -200,7 +200,7 @@ def compute_num_mutations(drug, tiers_lst):
         return np.nan, np.nan
     
 
-summary_df = pd.DataFrame(columns=["Drug", "Genos", "SNP_Matrix", "Binary_Phenos", "WHO_Phenos", "MICs", "Lineages", "Tier1_LOF", "Tier1_Inframe", "Tier2_LOF", "Tier2_Inframe"])
+summary_df = pd.DataFrame(columns=["Drug", "Genos", "SNP_Matrix", "ALL_Phenos", "WHO_Phenos", "ALL_Only", "MIC", "ALL_MIC", "Lineages", "Tier1_LOF", "Tier1_Inframe", "Tier2_LOF", "Tier2_Inframe"])
 i = 0
 
 print("Counting data for each drug")
@@ -210,7 +210,7 @@ for drug in drugs_for_analysis:
     pheno_files = os.listdir(os.path.join(phenos_dir, drug))
     
     # not really necessary to remove CC and CC-ATU phenotypes from this count because all samples should be represented in CC, CC-ATU, and WHO/ALL
-    phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, drug, fName), usecols=["sample_id", "phenotypic_category"]) for fName in pheno_files if "run" in fName], axis=0).query("phenotypic_category in ['WHO', 'ALL']")
+    phenos = pd.concat([pd.read_csv(os.path.join(phenos_dir, drug, fName), usecols=["sample_id", "phenotypic_category", "box"]) for fName in pheno_files if "run" in fName], axis=0).query("phenotypic_category in ['WHO', 'ALL']")
     
     # just do tier 1, all samples in tier 1 are represented in tier 2
     geno_files = [os.path.join(genos_dir, drug, "tier=1", fName) for fName in os.listdir(os.path.join(genos_dir, drug, "tier=1")) if "run" in fName]
@@ -223,17 +223,20 @@ for drug in drugs_for_analysis:
     # get numbers of samples represented in the GRM folder and with lineages (this will be less because not all sample_ids were matched to VCF files)
     num_with_snps = set(minor_allele_counts_samples).intersection(genos.sample_id.unique())
     samples_with_lineages = lineages.loc[lineages["Sample_ID"].isin(genos["sample_id"])]
-        
+
     # get the numbers of isolates, by tier
     num_lof_tier1, num_inframe_tier1 = compute_num_mutations(drug, ['1'])
     num_lof_tier2, num_inframe_tier2 = compute_num_mutations(drug, ['2'])
     
     summary_df.loc[i] = [drug.split("=")[1], 
-                         len(genos.sample_id.unique()), 
+                         genos.sample_id.nunique(), 
                          len(num_with_snps),
-                         len(phenos.sample_id.unique()),
-                         len(phenos.query("phenotypic_category=='WHO'").sample_id.unique()),
-                         len(mics.sample_id.unique()),
+                         phenos.sample_id.nunique(),
+                         phenos.query("phenotypic_category=='WHO'").sample_id.nunique(),
+                         phenos.query("phenotypic_category=='ALL'").sample_id.nunique(),
+                         mics.sample_id.nunique(),
+                         phenos.query("box in ['CRyPTIC_MIC', 'MYCOTB_MIC']").sample_id.nunique(), # number of samples in the ALL-only dataset whose phenotypes come from binarized MICs
+                         #phenos.query("phenotypic_category=='ALL' & box.str.contains('MIC')").sample_id.nunique(), # gives the same results as the line above
                          len(samples_with_lineages),
                          num_lof_tier1,
                          num_inframe_tier1,
@@ -246,7 +249,7 @@ for drug in drugs_for_analysis:
     
     
 # check and save
-if len(summary_df.query("Genos != Binary_Phenos")) > 0:
+if len(summary_df.query("Genos != ALL_Phenos")) > 0:
     print(summary_df)
     raise ValueError("There are different numbers of samples with genotypes and binary phenotypes")
 
@@ -255,10 +258,14 @@ if len(summary_df.query("Genos != SNP_Matrix")) > 0:
     raise ValueError("There are different numbers of samples with genotypes and SNPs for the GRM")
 
 summary_df["WHO_Phenos"] = summary_df["WHO_Phenos"].astype(int)
-assert len(summary_df.query("WHO_Phenos > Binary_Phenos")) == 0
+assert len(summary_df.query("WHO_Phenos > ALL_Phenos")) == 0
+
+summary_df[['ALL_Only', 'ALL_MIC']] = summary_df[['ALL_Only', 'ALL_MIC']].astype(int)
+assert sum(summary_df['ALL_Only'] + summary_df['WHO_Phenos'] != summary_df['ALL_Phenos']) == 0
+
 summary_df.sort_values("Drug", ascending=True).to_csv("data/samples_summary.csv", index=False)
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
 tracemalloc.stop()
-print(f"{script_memory} GB")
+# print(f"{script_memory} GB")

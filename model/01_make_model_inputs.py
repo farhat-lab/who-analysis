@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, sys, subprocess
+import glob, os, yaml, sys, subprocess, shutil
 import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
@@ -79,11 +79,8 @@ else:
 if not os.path.isdir(os.path.join(out_dir, "dropped_features")):
     os.makedirs(os.path.join(out_dir, "dropped_features"))
 
-# # open the logging file
-# log_file = open(os.path.join(out_dir, 'log.txt'), 'a')
-
-# # Redirect print statements to the file
-# sys.stdout = log_file
+if not os.path.isdir(os.path.join(out_dir, "dropped_isolates")):
+    os.makedirs(os.path.join(out_dir, "dropped_isolates"))
 
 print(f"\nSaving model results to {out_dir}")
 
@@ -98,12 +95,6 @@ else:
     phenos_dir = os.path.join(input_data_dir, "mic", f"drug_name={drug}")
     phenos_file = os.path.join(analysis_dir, drug, "phenos_mic.csv")
     pheno_col = "mic_value"
-
-    
-# this is mainly for the CC vs. CC-ATU analysis, which use the same genotype dataframes. Only the phenotypes are different
-if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
-    print("Model matrix already exists. Proceeding with modeling")
-    exit()
 
 
 ######################### STEP 1: GET ALL AVAILABLE PHENOTYPES, PROCESS THEM, AND SAVE TO A GENERAL PHENOTYPES FILE FOR EACH DRUG #########################        
@@ -185,7 +176,12 @@ if not binary:
     cc_df = pd.read_csv("data/drug_CC.csv")
     # need to drop any media that can't be normalized now so that any samples that need to be exluded are done so here, and model_matrix.pkl will reflect those
     df_phenos, most_common_medium = normalize_MICs_return_dataframe(drug, df_phenos, cc_df)
-    print(f"    Min MIC: {np.min(df_phenos[pheno_col].values)}, Max MIC: {np.max(df_phenos[pheno_col].values)} in {most_common_medium}")
+
+    # no normalized value for Pretomanid because there are no WHO-approved critical concentrations, so we just use the most common one
+    if drug == "Pretomanid":
+        print(f"    Min MIC: {np.min(df_phenos['mic_value'].values)}, Max MIC: {np.max(df_phenos['mic_value'].values)} in {most_common_medium}")
+    else:
+        print(f"    Min MIC: {np.min(df_phenos['norm_MIC'].values)}, Max MIC: {np.max(df_phenos['norm_MIC'].values)} in {most_common_medium}")
      
 # get only isolates with the desired phenotypic category for the binary model
 if binary and not atu_analysis:
@@ -242,12 +238,35 @@ df_model["mutation"] = df_model["resolved_symbol"] + "_" + df_model["variant_cat
 df_model = df_model.sort_values("variant_binary_status", ascending=False).drop_duplicates(["sample_id", "mutation"], keep="first").reset_index(drop=True)
 
     
-######################### STEP 3: POOL LOF MUTATIONS, IF INDICATED BY THE MODEL PARAMS #########################
+######################### STEP 3: POOL LoF AND INFRAME MUTATIONS, IF INDICATED BY THE MODEL PARAMS #########################
     
 
+if pool_type != 'unpooled':
+    # check if there is more than 1 mutation (actually present, so threshold on variant_allele_frequency) that would be affected by pooling. If the number of mutations ≤ 1, then the pooled model is the same as the unpooled
+    # do this because sometimes there is a single variant that will be pooled, and it will be renamed to the pooled variant, so when you check against the corresponding unpooled model, it will come up as different because the variant has been renamed. But it is still the exact same signal
+
+    # get the number of unique LoF and inframe mutations per gene (because pooling is done on a per-gene basis) 
+    num_unique_inframe_by_gene = {}
+    num_unique_LoF_by_gene = {}
+    
+    for gene in df_model.resolved_symbol.unique():
+    
+        num_unique_inframe_by_gene[gene] = df_model.query('resolved_symbol == @gene & predicted_effect in ["inframe_insertion", "inframe_deletion"] & variant_allele_frequency > 0.75').variant_category.nunique()
+    
+        num_unique_LoF_by_gene[gene] = df_model.query('resolved_symbol == @gene & predicted_effect in ["frameshift", "start_lost", "stop_gained", "feature_ablation"] & variant_allele_frequency > 0.75').variant_category.nunique()
+
+    # combine the counts into a single list
+    combined_counts = list(num_unique_inframe_by_gene.values()) + list(num_unique_LoF_by_gene.values())
+
+    # if all counts are less than or equal to 1 -- means that there is 0-1 mutations of each type, so pooling will not make a difference. Need at least 2 mutations for a difference. 
+    if np.max(combined_counts) <= 1:
+        print(f"Pooling LoF and inframe mutations separately does not affect this model. Quitting this model...\n")
+        shutil.rmtree(out_dir) # delete the entire directory
+        exit()
+        
 # options for pool_type are unpooled, poolSeparate, and poolALL
 if pool_type == "poolSeparate":
-    print("Pooling LOF and inframe mutations separately")
+    print("Pooling LOF and inframe mutations separately")        
     df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation"], "LoF")
     df_model = pool_mutations(df_model, ["inframe_insertion", "inframe_deletion"], "inframe")
 
@@ -279,9 +298,13 @@ elif amb_mode == "DROP":
     # NOTE: doing this before dropping mutations with no signal does not affect the no signal category 
     pre_dropAmb_mutations = df_model.query("variant_binary_status==1").reset_index(drop=True)["resolved_symbol"] + "_" + df_model.query("variant_binary_status==1").reset_index(drop=True)["variant_category"]
     
-    drop_isolates = df_model.query("variant_allele_frequency > 0.25 & variant_allele_frequency < 0.75").sample_id.unique()
-    print(f"    Dropped {len(drop_isolates)}/{len(df_model.sample_id.unique())} isolates with with any AFs in the range (0.25, {AF_thresh}). Remainder are binary")
+    drop_isolates = df_model.query("variant_allele_frequency > 0.25 & variant_allele_frequency <= 0.75").sample_id.unique()
+    print(f"    Dropped {len(drop_isolates)}/{len(df_model.sample_id.unique())} isolates with with any AFs in the range (0.25, {AF_thresh}]. Remainder are binary")
     df_model = df_model.query("sample_id not in @drop_isolates")    
+
+    # save the dropped isolate IDs for counting later
+    if len(drop_isolates) > 0:
+        pd.Series(drop_isolates).to_csv(os.path.join(out_dir, "dropped_isolates/isolates_with_amb.txt"), sep="\t", header=None, index=False)    
     
     # get the features in the dataframe after dropping isolates with ambiguous allele fractions, then save to a file if there are any dropped features
     post_dropAmb_mutations = df_model.query("variant_binary_status==1").reset_index(drop=True)["resolved_symbol"] + "_" + df_model.query("variant_binary_status==1").reset_index(drop=True)["variant_category"]
@@ -291,12 +314,17 @@ elif amb_mode == "DROP":
     
     if len(dropped_feat) > 0:
         print(f"    Dropped {len(dropped_feat)} features present only in samples with intermediate AFs")
-        with open(os.path.join(out_dir, "dropped_features/isolates_with_amb.txt"), "w+") as file:
-            for feature in dropped_feat:
-                file.write(feature + "\n")
+        pd.Series(dropped_feat).to_csv(os.path.join(out_dir, "dropped_features/isolates_with_amb.txt"), sep="\t", header=None, index=False)
     
 # check after this step that the only NaNs left are truly missing data --> NaN in variant_binary_status must also be NaN in variant_allele_frequency
 assert len(df_model.loc[(~pd.isnull(df_model["variant_allele_frequency"])) & (pd.isnull(df_model["variant_binary_status"]))]) == 0
+
+# save isolates with missing variants for counting later
+isolates_with_missingness = df_model.loc[pd.isnull(df_model['variant_allele_frequency'])].sample_id.unique()
+
+if len(isolates_with_missingness) > 0:
+    print(f"Dropped {len(isolates_with_missingness)}/{df_model.sample_id.nunique()} isolates with any missing variants")
+    pd.Series(isolates_with_missingness).to_csv(os.path.join(out_dir, "dropped_isolates/isolates_dropped.txt"), sep="\t", header=None, index=False)
 
 
 ######################### STEP 5: PIVOT TO MATRIX AND DROP MISSINGNESS AND ANY FEATURES THAT ARE ALL 0 #########################
@@ -330,9 +358,3 @@ matrix.to_pickle(os.path.join(out_dir, "model_matrix.pkl"))
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
 tracemalloc.stop()
 print(f"    {script_memory} GB\n")
-
-# # Reset sys.stdout to its original value (console)
-# sys.stdout = sys.__stdout__
-
-# # Close the file
-# log_file.close()
