@@ -8,11 +8,11 @@ sandbox*.ipynb
 # config_files -- they keep getting updated as models are run, so can cause merge conflicts
 config_files/
 
-# confidential information
-data/additional_samples.xlsx
-data/sample_ids_mapping.csv
-data/lineages.csv
-data/combined_lineages_samples.csv
+# confidential information -- sample IDs
+data/sample_ids_mapping_20220922.csv
+data/missing_28samples.xlsx
+lineages/20240129_lineages.csv
+lineages/combined_lineages_samples.csv
 
 # files too big
 data/*.pkl
@@ -24,6 +24,3 @@ PCA/eigenvec_*.csv
 # extra semi-duplicate files used for testing
 bash_scripts/dup*.sh
 temp/
-
-# need to clean up figures and analyses
-*.png
