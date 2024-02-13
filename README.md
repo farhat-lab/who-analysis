@@ -162,3 +162,18 @@ A threshold of <b>1%</b> is used to drop isolates, i.e. if more than 1% of an is
 Similarly, if more than <b>25%</b> of the isolates in a given analysis are missing that feature, then drop the feature. 
 
 Then, all remaining features with anything missing are dropped. Imputation can be done instead by setting the argument `impute` to True. This will impute every element in the matrix that is missing by averaging the feature, stratified by resistance phenotype.  -->
+
+
+Matrix from Sacha after removing sites close to PE/PPE genes and applying the 1% variant frequency threshold: 6,938 sites.
+
+
+6614/6938 sites do not have low AF in more than 1.0% of isolates 
+
+
+6491/6614 sites are not in drug-resistance regions 
+
+
+6190/6491 sites are not homoplastic 
+
+
+Final size: (52567, 6190) 

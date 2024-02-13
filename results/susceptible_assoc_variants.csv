@@ -1,25 +1,30 @@
-Drug,mutation,predicted_effect,ALL_Odds_Ratio,MIC_coef,MIC_BH_pval,FINAL CONFIDENCE GRADING,SOLO FINAL CONFIDENCE GRADING
-Amikacin,eis_p.His150fs,frameshift,0.8803863579495288,-0.0506841246859069,0.0,Assoc w S,3) Uncertain significance
-Amikacin,eis_p.Met1?,start_lost,0.9192723298502328,-0.0320153539639201,0.0,Assoc w S,3) Uncertain significance
-Amikacin,eis_c.-9T>C,upstream_gene_variant,0.930727533754852,-0.0380938992386648,0.0,Assoc w S - Interim,3) Uncertain significance
-Bedaquiline,mmpL5_LoF,LoF,0.8881523959830655,-0.3449118337455245,0.0,Assoc w S - Interim,3) Uncertain significance
-Bedaquiline,mmpL5_p.Arg202fs,frameshift,0.9151582215592902,-0.2632787014620666,0.0,Assoc w S - Interim,3) Uncertain significance
-Capreomycin,rrs_n.517C>T,non_coding_transcript_exon_variant,0.8889772683326006,-0.0368413488068899,0.4648421052631579,Assoc w S,5) Not assoc w R
-Clofazimine,Rv1979c_c.-50A>C,upstream_gene_variant,0.906948829095991,-0.0647536133904223,0.0,Assoc w S - Interim,3) Uncertain significance
-Clofazimine,mmpL5_p.Asp767Asn,missense_variant,0.9126735759411436,-0.088396706867165,0.0,Assoc w S - Interim,5) Not assoc w R
-Clofazimine,Rv1979c_c.-389C>A,upstream_gene_variant,0.9195570601814456,-0.0275054125693515,0.0907692307692307,Assoc w S - Interim,5) Not assoc w R
-Clofazimine,mmpL5_p.Ile948Val,missense_variant,0.9250780657063512,-0.0153996618877361,0.3165176470588235,Assoc w S - Interim,5) Not assoc w R
-Ethambutol,embC_c.-1803G>C,upstream_gene_variant,0.9443785256197283,-0.0048039130157673,0.5304612365063788,Assoc w S - Interim,5) Not assoc w R
-Ethambutol,embC_c.-589C>G,upstream_gene_variant,0.9560157664869816,0.0032170165852513,0.5304612365063788,Assoc w S - Interim,5) Not assoc w R
-Ethambutol,embA_p.Arg404Gln,missense_variant,0.9563372799375088,-0.0167514383079401,0.5304612365063788,Assoc w S - Interim,3) Uncertain significance
-Isoniazid,katG_p.Arg463Leu,missense_variant,0.7951389467498022,-0.1863186521450076,0.3084074074074074,Assoc w S,5) Not assoc w R
-Kanamycin,eis_p.His150fs,frameshift,0.8761825123415242,-0.074232622916333,0.0,Assoc w S - Interim,3) Uncertain significance
-Kanamycin,eis_p.Met1?,start_lost,0.8980195106852187,-0.0492922417119724,0.0,Assoc w S - Interim,3) Uncertain significance
-Kanamycin,eis_LoF,LoF,0.9287230386411832,-0.1083454797849027,0.0,Assoc w S - Interim,3) Uncertain significance
-Levofloxacin,gyrA_p.Ser95Thr,missense_variant,0.5026124194896839,-0.4221374812432651,0.0,Assoc w S,5) Not assoc w R
-Levofloxacin,gyrA_p.Asp293Tyr,missense_variant,0.9147941596170516,-0.0235586006901416,0.2393023255813953,Assoc w S,3) Uncertain significance
-Moxifloxacin,gyrA_p.Ser95Thr,missense_variant,0.5349390773137526,-0.2012479649443447,0.0,Assoc w S,5) Not assoc w R
-Pyrazinamide,pncA_p.Val21Ala,missense_variant,0.9227225349889988,,,Assoc w S - Interim,4) Not assoc w R - Interim
-Rifampicin,rpoB_c.-83A>G,upstream_gene_variant,0.9288320230861395,-0.0267411137797879,0.5785806451612903,Assoc w S,3) Uncertain significance
-Streptomycin,rpsL_c.-165T>C,upstream_gene_variant,0.9012879834503914,-0.0571329316143012,0.4924096385542168,Assoc w S,5) Not assoc w R
-Streptomycin,Rv1258c_p.Ala237Val,missense_variant,0.9476898877302794,,,Assoc w S - Interim,3) Uncertain significance
+Drug,mutation,ALL_Odds_Ratio,REGRESSION FINAL CONFIDENCE GRADING,SOLO INITIAL CONFIDENCE GRADING,SOLO FINAL CONFIDENCE GRADING,Present_SOLO_R,Present_SOLO_S,MIC_coef,MIC_BH_pval
+Amikacin,eis_p.His150fs,0.8803863579495288,Assoc w S,3) Uncertain significance,3) Uncertain significance,0.0,0.0,-0.04763999425777,0.0
+Amikacin,eis_p.Met1?,0.9192723298502328,Assoc w S,3) Uncertain significance,3) Uncertain significance,0.0,0.0,-0.0328583997501198,0.0
+Amikacin,eis_c.-9T>C,0.930727533754852,Assoc w S - Interim,3) Uncertain significance,3) Uncertain significance,0.0,0.0,-0.037032801059901,0.0
+Bedaquiline,mmpL5_LoF,0.8881523959830655,Assoc w S - Interim,3) Uncertain significance,3) Uncertain significance,0.0,209.0,-0.3236640621255205,0.0
+Bedaquiline,mmpL5_p.Arg202fs,0.9151582215592902,Assoc w S - Interim,3) Uncertain significance,3) Uncertain significance,0.0,0.0,-0.2176647064268547,0.0
+Capreomycin,rrs_n.517C>T,0.8889772683326006,Assoc w S,5) Not assoc w R,5) Not assoc w R,17.0,436.0,-0.0547669093180078,0.4074285714285714
+Clofazimine,Rv1979c_c.-50A>C,0.906948829095991,Assoc w S - Interim,3) Uncertain significance,3) Uncertain significance,0.0,52.0,-0.0643404132821708,0.0
+Clofazimine,mmpL5_p.Asp767Asn,0.9126735759411436,Assoc w S - Interim,5) Not assoc w R,5) Not assoc w R,0.0,0.0,-0.089274856878179,0.0
+Clofazimine,Rv1979c_c.-389C>A,0.9195570601814456,Assoc w S - Interim,5) Not assoc w R,5) Not assoc w R,0.0,0.0,-0.0286165489580248,0.0816923076923076
+Clofazimine,mmpL5_p.Ile948Val,0.9250780657063512,Assoc w S - Interim,5) Not assoc w R,5) Not assoc w R,1.0,49.0,-0.0147765644545586,0.3325763688760807
+Ethambutol,embC_c.-1803G>C,0.9443785256197283,Assoc w S - Interim,5) Not assoc w R,5) Not assoc w R,0.0,69.0,-0.0045745844431441,0.5166118980169973
+Ethambutol,embC_c.-589C>G,0.9560157664869816,Assoc w S - Interim,5) Not assoc w R,5) Not assoc w R,0.0,0.0,0.0038450144160929,0.5166118980169973
+Ethambutol,embA_p.Arg404Gln,0.9563372799375088,Assoc w S - Interim,3) Uncertain significance,3) Uncertain significance,0.0,0.0,-0.0155584697807143,0.5166118980169973
+Isoniazid,katG_p.Arg463Leu,0.7951389467498022,Assoc w S,5) Not assoc w R,5) Not assoc w R,327.0,7029.0,-0.1540138853248203,0.397425
+Isoniazid,katG_c.-507C>G,0.8247413992509983,Assoc w S - Interim,3) Uncertain significance,3) Uncertain significance,0.0,1.0,-0.0382532197009742,0.4756020942408376
+Kanamycin,eis_p.His150fs,0.8761825123415242,Assoc w S - Interim,3) Uncertain significance,3) Uncertain significance,0.0,0.0,-0.0740566554737229,0.0
+Kanamycin,eis_p.Met1?,0.8980195106852187,Assoc w S - Interim,3) Uncertain significance,3) Uncertain significance,0.0,0.0,-0.0495814102405553,0.0
+Kanamycin,eis_LoF,0.9287230386411832,Assoc w S - Interim,3) Uncertain significance,3) Uncertain significance,5.0,158.0,-0.1081524393549851,0.0
+Kanamycin,eis_c.-13A>G,0.9386639280770872,Assoc w S - Interim,3) Uncertain significance,3) Uncertain significance,0.0,0.0,,
+Kanamycin,eis_p.Val85Ala,0.9404297023625824,Assoc w S - Interim,3) Uncertain significance,3) Uncertain significance,0.0,0.0,,
+Levofloxacin,gyrA_p.Ser95Thr,0.5026124194896839,Assoc w S,5) Not assoc w R,5) Not assoc w R,1.0,22.0,-0.3830874322104091,0.0
+Levofloxacin,gyrA_p.Asp293Tyr,0.9147941596170516,Assoc w S,3) Uncertain significance,3) Uncertain significance,0.0,6.0,-0.0235712514722815,0.2842
+Moxifloxacin,gyrA_p.Ser95Thr,0.5349390773137526,Assoc w S,5) Not assoc w R,5) Not assoc w R,0.0,17.0,-0.1784687727693083,0.0
+Pyrazinamide,pncA_p.Val21Ala,0.9227225349889988,Assoc w S - Interim,4) Not assoc w R - Interim,4) Not assoc w R - Interim,0.0,5.0,,
+Rifampicin,rpoB_c.-83A>G,0.9288320230861395,Assoc w S,3) Uncertain significance,3) Uncertain significance,0.0,21.0,-0.0271258315646914,0.5774468085106382
+Rifampicin,rpoB_p.Asp594Ala,0.9594385584564074,Assoc w S - Interim,3) Uncertain significance,3) Uncertain significance,0.0,0.0,,
+Streptomycin,rpsL_c.-165T>C,0.9012879834503914,Assoc w S,5) Not assoc w R,5) Not assoc w R,262.0,5678.0,-0.0600484215111736,0.4646304347826087
+Streptomycin,Rv1258c_p.Ala237Val,0.9476898877302794,Assoc w S - Interim,3) Uncertain significance,3) Uncertain significance,0.0,3.0,,
+Streptomycin,rrs_n.924C>T,0.9478985806307636,Assoc w S - Interim,3) Uncertain significance,3) Uncertain significance,0.0,0.0,,

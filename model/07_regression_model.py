@@ -39,7 +39,7 @@ print(f"Saving results to {out_dir}")
 assert os.path.isdir(out_dir)
 
 # all variants graded not Neutral and not Uncertain
-mutations_lst = results_final.loc[~results_final['REGRESSION FINAL CONFIDENCE GRADING'].isin(['Uncertain', 'Neutral'])].query("Drug==@drug & ~mutation.str.contains('inframe')")["mutation"].values
+mutations_lst = results_final.loc[~results_final['REGRESSION FINAL CONFIDENCE GRADING'].isin(['Uncertain', 'Neutral'])].query("Drug==@drug & ~mutation.str.contains('inframe') & ~mutation.str.contains('LoF')")["mutation"].values
 
 if len(mutations_lst) == 0:
     print("There are no significant mutations for this model\n")
@@ -81,7 +81,6 @@ unpooled_matrix = unpooled_matrix.drop_duplicates(["sample_id", "mutation"], kee
 
 # keep all isolates (i.e., no dropping due to NaNs)
 model_matrix = pd.concat([pooled_matrix, unpooled_matrix], axis=1)
-assert model_matrix.shape[1] == len(mutations_lst)
 
 # in this case, only 3 possible values -- 0 (ref), 1 (alt), and NaN
 assert len(np.unique(model_matrix.values)) <= 3
@@ -172,6 +171,8 @@ if AF_thresh == 0.75:
     
     if model_matrix.shape[1] != len(mutations_lst):
         print(f"Some features were dropped from this model!")
+
+    print(mutations_lst)
     
     # keep only samples (rows) that are in matrix and use loc with indices to ensure they are in the same order
     df_phenos = df_phenos.set_index("sample_id")
@@ -207,7 +208,7 @@ if AF_thresh == 0.75:
         reg_param = model.C_[0]
         print(f"Regularization parameter: {reg_param}") 
     
-    pickle.dump(model, open(os.path.join(out_dir, "logReg_classification_withLoF.sav"), "wb"))
+    pickle.dump(model, open(os.path.join(out_dir, "logReg_classification.sav"), "wb"))
     
     # get the classes after binarizing the probabilities
     y_prob = model.predict_proba(X)[:, 1]
@@ -245,7 +246,7 @@ if AF_thresh == 0.75:
     reg_results["AUC_ub"] = auc_ci[1]
     reg_results["Model"] = "Regression"
     
-    reg_results.set_index("Model").to_csv(os.path.join(out_dir, "regression_stats_withLoF.csv"))
+    reg_results.set_index("Model").to_csv(os.path.join(out_dir, "regression_stats.csv"))
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

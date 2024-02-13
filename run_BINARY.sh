@@ -1,8 +1,8 @@
 #!/bin/bash 
 #SBATCH -c 1
-#SBATCH -t 0-02:00
+#SBATCH -t 0-11:59
 #SBATCH -p short
-#SBATCH --mem=100G
+#SBATCH --mem=150G
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
@@ -59,20 +59,20 @@ config_array=(
 drug_array=(
  # 'Pretomanid'
  # 'Delamanid'
- # 'Bedaquiline'
- # 'Clofazimine'
- # 'Linezolid'
+ 'Bedaquiline'
+ 'Clofazimine'
+ 'Linezolid'
  'Moxifloxacin'
  'Levofloxacin'
- # 'Rifampicin'
- # 'Isoniazid'
- # 'Ethionamide'
- # 'Kanamycin'
- # 'Amikacin'
- # 'Streptomycin'
- # 'Pyrazinamide'
- # 'Capreomycin'
- # 'Ethambutol'
+ 'Rifampicin'
+ 'Isoniazid'
+ 'Ethionamide'
+ 'Kanamycin'
+ 'Amikacin'
+ 'Streptomycin'
+ 'Pyrazinamide'
+ 'Capreomycin'
+ 'Ethambutol'
 )
 
 drug_abbr_array=(
@@ -100,30 +100,10 @@ drug_abbr_array=(
 
 for k in ${!drug_array[@]}; do
 
-    for i in ${!config_array[@]}; do
-        python3 -u model/01_make_model_inputs.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
-    done
-    
-    # python3 -u model/06_regression_model.py "${drug_array[$k]}" 0.75
-    
-    # python3 -u model/05_catalog_model.py "${drug_array[$k]}" 0.75
-    # python3 -u model/05_catalog_model.py "${drug_array[$k]}" 0.25
-    # python3 -u model/07_catalog_model_SOLO.py "${drug_array[$k]}" 0.75 INITIAL
-    # python3 -u model/07_catalog_model_SOLO.py "${drug_array[$k]}" 0.25 INITIAL
-    # python3 -u model/07_catalog_model_SOLO.py "${drug_array[$k]}" 0.75 FINAL
-    # python3 -u model/07_catalog_model_SOLO.py "${drug_array[$k]}" 0.25 FINAL
+    # for i in ${!config_array[@]}; do
+    #     python3 -u model/01_make_model_inputs.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
+    # done
+
+    python3 -u model/07_regression_model.py "${drug_array[$k]}" 0.75
 
 done
-
-# for k in ${!drug_array[@]}; do
-
-#     for i in ${!config_array[@]}; do
-#         python3 -u model/01_make_model_inputs.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
-#         # python3 -u model/02_run_regression.py "${config_array[$i]}" "${drug_array[$k]}" "${drug_abbr_array[$k]}"
-#         # python3 -u model/03_likelihood_ratio_test.py "${config_array[$i]}" "${drug_array[$k]}"
-#     done
-
-#     # # python3 -u model/04_compute_univariate_stats.py "${folder}" "${drug_array[$k]}"
-#     # python3 -u model/04_compute_univariate_stats.py "BINARY" "${drug_array[$k]}"
-    
-# done
