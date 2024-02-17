@@ -6,7 +6,7 @@ This project uses `conda` to manage packages (install Anaconda <a href="https://
 
 ```conda env create -f environment.yaml```
 
-to create the environment. Run `conda activate who-analysis` to activate it and `conda deactivate` to deactivate once you are in it.
+to create the environment. Run `conda activate <env_name>` to activate it and `conda deactivate` to deactivate once you are in it.
     
 <!-- ## Genotype Annotations
 
@@ -46,7 +46,7 @@ to create the environment. Run `conda activate who-analysis` to activate it and 
         </ul>
 </ul> -->
 
-## <code>data</code> Files
+## <code>data/</code>
 
 1. <code>drug_CC.csv</code>: Critical concentrations for each drug used for binarization of MIC data.
 2. <code>drug_gene_mapping.csv</code>: Names of genes and tiers used to build models for each drug.
@@ -57,17 +57,15 @@ to create the environment. Run `conda activate who-analysis` to activate it and 
 7. <code>samples_summary.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, binary phenotypes, SNP counts, MICs, lineages, and the numbers of (sample, gene) pairs with LOF and inframe mutations (to see how many get pooled).
 8. <code>v1_to_v2_variants_mapping.csv</code>: File mapping the variant names between the V1 and V2 iterations of the catalog.
 
-## <code>PCA</code> Files
+## <code>PCA/</code>
 
-* Note: The eigenvectors (<code>eigenvec_100PC.csv</code>) were not committed to the repository because the file is too large.
+* Note: The minor allele counts file (<code>minor_allele_counts.pkl</code>) eigenvectors (<code>eigenvec_100PC.csv</code>) were not committed to the repository because these file are too large.
    
 1. <code>pca_explained_var.npy</code>: Array of explained variances of the first 100 principal components.
 2. <code>pca_explained_var_ratio.npy</code>: Array of explained variance ratios (array sums to 1) of the first 100 principal components.
 3. <code>Vargas_PNAS_2023_homoplasy.xlsx</code>: List of 1,525 homoplasic sites in MTBC. Dataset S1 from <a href="https://www.pnas.org/doi/10.1073/pnas.2301394120" target="_blank">Vargas <i>et al., PNAS</i>, 2023</a>.
-4. <code>mixed_site_counts.xlsx</code>: List
+4. <code>mixed_site_counts.xlsx</code>: SNVs for PCA with the proportion of isolates containing an unfixed variant (25% < AF ≤ 75%). Used for filtering out sites at which more than 1% of isolates have an unfixed variant. 
 
- 
- 
 ## Running the Analysis
         
 ### Primary Model Features:
