@@ -70,14 +70,6 @@ to create the environment. Run `conda activate <env_name>` to activate it and `c
         
 ### Primary Model Features:
     
-<ul>
-    <li>Tier 1 genes</li>
-    <li>Isolates with WHO-approved phenotypes</li>
-    <li>No synonymous mutations</li>
-    <li>Pool loss-of-function (LOF) mutations</li>
-    <li>Pool inframe (insertions and deletions) mutations</li>
-    <li>Drop isolates with ambiguous allele frequencies (i.e. "HETs")</li>
-</ul>
     
 ### Model Scripts
 
@@ -122,44 +114,23 @@ Parameters in the yaml file:
 
 Some of the parameters above were kept constant throughout all analyses, but they remained as parameters if they need to be toggled in the future. 
 
-### Order of Binary Models:
+### All Tier 1-Only Models (9 per drug):
 
-1. Tier 1, WHO, no synonymous, DROP Hets, pool LOF and inframe mutations SEPARATELY
-2. Tier 1, WHO, no synonymous, DROP Hets, <b>pool LOF and inframe mutations TOGETHER</b>
-3. Tier 1, WHO, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
-4. Tier 1, WHO, <b>with synonymous</b>, DROP Hets, pool LOF and inframe mutations SEPARATELY
-5. <b>Tier 1+2</b>, WHO, no synonymous, DROP Hets, pool LOF and inframe mutations SEPARATELY
-6. <b>Tier 1+2</b>, WHO, no synonymous, DROP Hets, <b>pool LOF and inframe mutations TOGETHER</b>
-7. <b>Tier 1+2</b>, WHO, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
-8. <b>Tier 1+2</b>, WHO, <b>with synonymous</b>, DROP Hets, pool LOF and inframe mutations SEPARATELY
-9. Tier 1, <b>ALL</b>, no synonymous, DROP Hets, pool LOF and inframe mutations SEPARATELY
-10. Tier 1, <b>ALL</b>, no synonymous, DROP Hets, <b>pool LOF and inframe mutations TOGETHER</b>
-11. Tier 1, ALL, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
-12. Tier 1, <b>ALL, with synonymous</b>, DROP Hets, pool LOF and inframe mutations SEPARATELY
-13. <b>Tier 1+2, ALL</b>, no synonymous, DROP Hets, pool LOF and inframe mutations SEPARATELY
-14. <b>Tier 1+2, ALL</b>, no synonymous, DROP Hets, <b>pool LOF and inframe mutations TOGETHER</b>
-15. <b>Tier 1+2, ALL</b>, no synonymous, DROP Hets, <b>unpool LOFs and inframes</b>
-16. <b>Tier 1+2, ALL</b>, <b>with synonymous</b>, DROP Hets, pool LOF and inframe mutations SEPARATELY
-<!-- 17. Tier 1, WHO, no synonymous, <b>encode AF</b>, pool LOF and inframe mutations SEPARATELY
-18. <b>Tier 1+2</b>, WHO, no synonymous, <b>encode AF</b>, pool LOF and inframe mutations SEPARATELY
-19. Tier 1, <b>ALL</b>, no synonymous, <b>encode AF</b>, pool LOF and inframe mutations SEPARATELY
-20. <b>Tier 1+2, ALL</b>, no synonymous, <b>encode AF</b>, pool LOF and inframe mutations SEPARATELY -->
+For all models, we dropped isolates containing unfixed variants.
+
+1. WHO, - silent variants, all variants unpooled.
+2. WHO, - silent variants, <b>pool</b> LoF and inframe mutations SEPARATELY
+3. WHO, <b>+ silent</b> variants, all variants unpooled
+4. <b>ALL</b>, - silent variants, all variants unpooled
+5. ALL, - silent variants, <b>pool</b> LoF and inframe mutations SEPARATELY
+6. ALL, <b>+ silent</b> variants, all variants unpooled
+7. MIC, - silent variants, all variants unpooled
+8. MIC, - silent variants, <b>pool</b> LoF and inframe mutations SEPARATELY
+9. MIC, <b>+ silent</b> variants, all variants unpooled
 
 ### Final Analysis
 
 TODO
-
-### Intermediate Allele Frequencies
-
-Intermediate = allele fractions in the range [0.25, 0.75]. Below this range, alleles are reference (0), and above it, they are alternative (1). Selection of how to encode intermediate allele frequencies is made using the `config.yaml` file. The options are:
-
-<ul>
-    <li>Drop all isolates containing any ambiguous mutations.</li>
-    <li>Encode all variants with AF > 0.25 (including those with AF > 0.75) with their AF, not binary. </li>
-    <li>Binarize them using an AF threshold</li>
-</ul>
-
-Currently, we are using the top 2 modes. In the code, they are referred to as <b>dropAF</b> and <b>encodeAF</b>, respectively. 
 
 ### Missing Data
 
