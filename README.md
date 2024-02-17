@@ -6,7 +6,7 @@ This project uses `conda` to manage packages (install Anaconda <a href="https://
 
 ```conda env create -f environment.yaml```
 
-to create the environment. Run `conda activate <env_name>` to activate it and `conda deactivate` to deactivate once you are in it.
+to create the environment. Run `conda activate who-analysis` to activate it and `conda deactivate` to deactivate once you are in it.
     
 <!-- ## Genotype Annotations
 
