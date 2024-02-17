@@ -117,7 +117,7 @@ homoplasy = pd.read_excel("PCA/Vargas_homoplasy.xlsx")
 if len(homoplasy) == 1:
     homoplasy = homoplasy[list(homoplasy.keys())[0]]
     
-homoplasic_sites = set(homoplasy["H37Rv Position"].values.astype(int))# - set(coll2014["position"].values.astype(int))
+homoplasic_sites = set(homoplasy["H37Rv Position"].values.astype(int))
 
 keep_sites = list(set(minor_allele_counts.columns) - homoplasic_sites)
 print(f"Keeping {len(keep_sites)}/{minor_allele_counts.shape[1]} sites that are not homoplasic")
