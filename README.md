@@ -35,28 +35,39 @@ to create the environment. Run `conda activate who-analysis` to activate it and 
     <li>Variant binary status</li>
         <ul>
             <li>1 if the variant meets QC and AF > 0.75</li>
-            <li>0 if the variant meets QC, and AF < 0.25</li>
+            <li>0 if the variant meets QC, and AF ≤ 0.25</li>
             <li>NA if the variant does not meet QC or 0.25 $\leq$ AF $\leq$ 0.75</li>
         </ul>
     <li>Variant allele frequency</li>
         <ul>
             <li>AF if the variant meets QC and AF $\geq$ 0.25</li>
-            <li>0 if the variant meets QC and AF < 0.25</li>
+            <li>0 if the variant meets QC and AF ≤ 0.25</li>
             <li>NA if the variant does not meet QC</li>
         </ul>
 </ul> -->
 
-## Files in the Data Directory
+## <code>data</code> Files
 
 1. <code>drug_CC.csv</code>: Critical concentrations for each drug used for binarization of MIC data.
 2. <code>drug_gene_mapping.csv</code>: Names of genes and tiers used to build models for each drug.
 3. <code>drugs_loci.csv</code>: Dataframe of resistance loci and their coordinates in H37Rv. The Start column is 0-indexed, and the End column is 1-indexed.
-4. <code>eigenvec_10PC.csv</code>: Eigenvector coordinates for the first 10 principal components of the genetic relatedness matrix. There are ~52,000 samples in this file, which is the full set of samples that passed genotypic and phenotypic QC. 
-5. <code>overview_MIC_data.xlsx</code>: Overviews of MIC data, counts, sources, number resistant vs. susceptible, etc.
-6. <code>pca_explained_var.npy</code>: Array of explained variance ratios of the first 10 principal components.
+4. <code>NotAwR by literature.xlsx</code>: List of variants by drug that are not associated with resistance based on literature evidence.
+5. <code>coll2014_SNP_scheme.tsv</code>: Orthogonal lineage-defining SNPs for 62 lineages based on the <a href="https://www.nature.com/articles/ncomms5812" target="_blank">Coll 2014 scheme</a>.
+6. <code>overview_MIC_data.xlsx</code>: Overviews of MIC data, counts, sources, number resistant vs. susceptible, etc.
 7. <code>samples_summary.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, binary phenotypes, SNP counts, MICs, lineages, and the numbers of (sample, gene) pairs with LOF and inframe mutations (to see how many get pooled).
-8. <code>v1_to_v2_variants_mapping.csv</code>: File mapping the variant names between the 2021 and 2022 iterations of the catalog.
+8. <code>v1_to_v2_variants_mapping.csv</code>: File mapping the variant names between the V1 and V2 iterations of the catalog.
 
+## <code>PCA</code> Files
+
+* Note: The eigenvectors (<code>eigenvec_100PC.csv</code>) were not committed to the repository because the file is too large.
+   
+1. <code>pca_explained_var.npy</code>: Array of explained variances of the first 100 principal components.
+2. <code>pca_explained_var_ratio.npy</code>: Array of explained variance ratios (array sums to 1) of the first 100 principal components.
+3. <code>Vargas_PNAS_2023_homoplasy.xlsx</code>: List of 1,525 homoplasic sites in MTBC. Dataset S1 from <a href="https://www.pnas.org/doi/10.1073/pnas.2301394120" target="_blank">Vargas <i>et al., PNAS</i>, 2023</a>.
+4. <code>mixed_site_counts.xlsx</code>: List
+
+ 
+ 
 ## Running the Analysis
         
 ### Primary Model Features:
