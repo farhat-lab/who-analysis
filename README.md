@@ -55,7 +55,7 @@ to create the environment. Run `conda activate <env_name>` to activate it and `c
 5. <code>coll2014_SNP_scheme.tsv</code>: Orthogonal lineage-defining SNPs for 62 lineages based on the <a href="https://www.nature.com/articles/ncomms5812" target="_blank">Coll 2014 scheme</a>.
 6. <code>overview_MIC_data.xlsx</code>: Overviews of MIC data, counts, sources, number resistant vs. susceptible, etc.
 7. <code>samples_summary.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, binary phenotypes, SNP counts, MICs, lineages, and the numbers of (sample, gene) pairs with LOF and inframe mutations (to see how many get pooled).
-8. <code>v1_to_v2_variants_mapping.csv</code>: File mapping the variant names between the <a href="https://www.who.int/publications/i/item/9789240028173" target="_blank">first</a> <a href="https://www.who.int/publications/i/item/9789240082410" target="_blank">second</a> iterations of the catalog.
+8. <code>v1_to_v2_variants_mapping.csv</code>: File mapping the variant names between the <a href="https://www.who.int/publications/i/item/9789240028173" target="_blank">first</a> and <a href="https://www.who.int/publications/i/item/9789240082410" target="_blank">second</a> versions of the catalog.
 
 ## <code>PCA/</code>
 
