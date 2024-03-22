@@ -217,11 +217,6 @@ def perform_permutation_test(model, X, y, num_reps, binary=True, fit_type="SGD",
 
 
 def get_coef_and_confidence_intervals(alpha, binary, drug_WHO_abbr, coef_df, permute_df=None, bootstrap_df=None):
-    
-    # # get dataframe of 2021 WHO confidence gradings
-    # who_variants_single_drug = who_variants_combined.query("drug==@drug_WHO_abbr")
-    # del who_variants_single_drug["drug"]
-    # del who_variants_combined
 
     # add confidence intervals for the coefficients for all mutation. first check ordering of mutations
     if bootstrap_df is not None:
@@ -256,9 +251,6 @@ def get_coef_and_confidence_intervals(alpha, binary, drug_WHO_abbr, coef_df, per
             coef_df["OR_LB"] = np.exp(coef_df["coef_LB"])
             coef_df["OR_UB"] = np.exp(coef_df["coef_UB"])
 
-    # add in the WHO 2021 catalog confidence levels, using the dataframe with 2021 to 2022 mapping and save
-    # final_df = coef_df.merge(who_variants_single_drug, on="mutation", how="left")
-    # assert len(final_df) == len(coef_df)
     return coef_df
     
 

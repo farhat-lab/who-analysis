@@ -25,7 +25,7 @@ _, config_file, drug = sys.argv
 kwargs = yaml.safe_load(open(config_file))    
 binary = kwargs["binary"]
 tiers_lst = kwargs["tiers_lst"]
-synonymous = kwargs["synonymous"]
+silent = kwargs["silent"]
 alpha = kwargs["alpha"]
 model_prefix = kwargs["model_prefix"]
 pheno_category_lst = kwargs["pheno_category_lst"]
@@ -59,10 +59,6 @@ if binary:
 
 print(f"Saving results to {out_dir}")
 
-# if os.path.isfile(os.path.join(out_dir, "LRT_results.csv")):
-#     print("LRT was already performed for this model")
-#     exit()
-
 if not os.path.isfile(os.path.join(out_dir, "model.sav")):
     print("There is no regression model for this analysis")
     exit()
@@ -89,15 +85,15 @@ if len(tiers_lst) == 2:
     tier1_mutations = pd.read_pickle(os.path.join(out_dir.replace("tiers=1+2", "tiers=1"), "model_matrix.pkl")).columns
     mutations_lst = list(set(mutations_lst) - set(tier1_mutations))
     
-# # if this is for a +synonymous model, only compute LRT for the synonymous because the script takes a while to run, so remove the nonsyn mutations
+# # if this is for a +silent model, only compute LRT for the silent because the script takes a while to run, so remove the nonsyn mutations
 # # LRT will have already been computed for these in the corresponding noSyn model
-# if synonymous:
+# if silent:
 #     nonsyn_mutations = pd.read_pickle(os.path.join(out_dir.replace("withSyn", "noSyn"), "model_matrix.pkl")).columns
 #     mutations_lst = list(set(mutations_lst) - set(nonsyn_mutations))
    
 # # only compute LRT for the pooled mutations because the unpooled mutation data will come from the unpooled models
-# if "poolSeparate" in model_prefix:
-#     unpooled_mutations = pd.read_pickle(os.path.join(out_dir.replace("poolSeparate", "unpooled"), "model_matrix.pkl")).columns
+# if "poolSeparate" in model_prefix or "poolLoF" in model_prefix:
+#     unpooled_mutations = pd.read_pickle(os.path.join(out_dir.replace("poolSeparate", "unpooled").replace("poolLoF", "unpooled"), "model_matrix.pkl")).columns
 #     mutations_lst = list(set(mutations_lst) - set(unpooled_mutations))
     
 # merge with eigenvectors

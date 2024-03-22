@@ -4,37 +4,30 @@ import glob, os, yaml, sparse, sys, shutil
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import tracemalloc, pickle
-who_variants_combined = pd.read_csv("analysis/who_confidence_2021.csv")
-lineages_combined = pd.read_csv("data/combined_lineages_samples.csv", low_memory=False)
+lineages_combined = pd.read_csv("lineages/combined_lineages_samples.csv", low_memory=False)
 
 # utils files are in a separate folder
 sys.path.append("utils")
 from data_utils import *
 from stats_utils import *
 
-
-############# CODE TO MAKE THE COMBINE WHO 2021 VARIANTS + CONFIDENCES FILE #############
-
-
-# who_variants = pd.read_csv("analysis/who_resistance_variants_all.csv")
-# variant_mapping = pd.read_csv("data/v1_to_v2_variants_mapping.csv", usecols=["gene_name", "variant", "raw_variant_mapping_data.variant_category"])
-# variant_mapping.columns = ["gene", "V1", "V2"]
-# variant_mapping["mutation"] = variant_mapping["gene"] + "_" + variant_mapping["V2"]
-
-# # combine with the new names to get a dataframe with the confidence leve,s and variant mappings between 2021 and 2022
-# who_variants_combined = who_variants.merge(variant_mapping[["V1", "mutation"]], left_on="variant", right_on="V1", how="inner")
-# del who_variants_combined["variant"]
-
-# # check that they have all the same variants
-# assert len(set(who_variants_combined["V1"]).symmetric_difference(set(who_variants["variant"]))) == 0
-
-# del who_variants_combined["genome_index"]
-# del who_variants_combined["gene"]
-# del who_variants_combined["V1"]
-
-# # some V1 mutations were combined into a single V2 mutation, so they may have multiple confidences listed. Keep the highest confidence instance
-# who_variants_combined = who_variants_combined.dropna().sort_values("confidence", ascending=True).drop_duplicates(subset=["drug", "mutation"], keep="first")
-# who_variants_combined.to_csv("analysis/who_confidence_2021.csv", index=False)
+drug_abbr_dict = {"Delamanid": "DLM",
+                  "Bedaquiline": "BDQ",
+                  "Clofazimine": "CFZ",
+                  "Ethionamide": "ETO",
+                  "Linezolid": "LZD",
+                  "Moxifloxacin": "MXF",
+                  "Capreomycin": "CAP",
+                  "Amikacin": "AMK",
+                  "Pretomanid": "PMD",
+                  "Pyrazinamide": "PZA",
+                  "Kanamycin": "KAN",
+                  "Levofloxacin": "LFX",
+                  "Streptomycin": "STM",
+                  "Ethambutol": "EMB",
+                  "Isoniazid": "INH",
+                  "Rifampicin": "RIF"
+                 }
 
 
 ########################## STEP 0: READ IN PARAMETERS FILE AND GET DIRECTORIES ##########################
@@ -43,8 +36,9 @@ from stats_utils import *
 # starting the memory monitoring
 tracemalloc.start()
 
-_, config_file, drug, drug_WHO_abbr = sys.argv
+_, config_file, drug = sys.argv
 
+drug_WHO_abbr = drug_abbr_dict[drug]
 kwargs = yaml.safe_load(open(config_file))
 
 tiers_lst = kwargs["tiers_lst"]
@@ -111,6 +105,12 @@ if atu_analysis:
     df_phenos = df_phenos.query("phenotypic_category == @model_suffix")
     print(f"Running model on {model_suffix} phenotypes")
     model_suffix = "_" + model_suffix.replace('-', '_')
+
+if os.path.isfile(os.path.join(out_dir, f"model_analysis{model_suffix}.csv")):
+    print("Regression was already run for this model")
+    exit()
+else:
+    print(f"Saving results to {out_dir}")
     
 # keep only unique MICs. Many samples have MICs tested in different media, so prioritize them according to the model hierarchy
 if not binary:
@@ -129,12 +129,6 @@ if not binary:
     # then normalize the MICs to the most common medium. This creates a new column: norm_MIC that should be used if not Pretomanid
     df_phenos, most_common_medium = normalize_MICs_return_dataframe(drug, df_phenos, cc_df)
     print(f"    Min MIC: {np.min(df_phenos[pheno_col].values)}, Max MIC: {np.max(df_phenos[pheno_col].values)} in {most_common_medium}")
-
-if os.path.isfile(os.path.join(out_dir, f"model_analysis{model_suffix}.csv")):
-    print("Regression was already run for this model")
-    exit()
-else:
-    print(f"Saving reuslts to {out_dir}")
     
 
 ############# STEP 2: GET THE MATRIX ON WHICH TO FIT THE DATA +/- EIGENVECTOR COORDINATES, DEPENDING ON THE PARAM #############
@@ -205,7 +199,7 @@ else:
     print(f"Regularization parameter: {model.alpha_}")
     
     
-########################## STEP 4: PERFORM PERMUTATION TEST TO GET SIGNIFICANCE AND BOOTSTRAPPING TO GET ODDS RATIO CONFIDENCE INTERVALS ##########################
+########################## STEP 4: PERFORM PERMUTATION TEST TO GET SIGNIFICANCE ##########################
 
 
 if not os.path.isfile(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv")):
@@ -228,7 +222,7 @@ else:
 ########################## STEP 4: ADD PERMUTATION TEST P-VALUES TO THE MAIN COEF DATAFRAME ##########################
     
     
-final_df = get_coef_and_confidence_intervals(alpha, binary, who_variants_combined, drug_WHO_abbr, coef_df, permute_df, bootstrap_df=None)
+final_df = get_coef_and_confidence_intervals(alpha, binary, drug_WHO_abbr, coef_df, permute_df, bootstrap_df=None)
 final_df.sort_values("coef", ascending=False).to_csv(os.path.join(out_dir, f"model_analysis{model_suffix}.csv"), index=False) 
 
 # returns a tuple: current, peak memory in bytes 

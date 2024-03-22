@@ -8,6 +8,24 @@ drug_gene_mapping = pd.read_csv("data/drug_gene_mapping.csv")
 sys.path.append("utils")
 from data_utils import *
 
+drug_abbr_dict = {"Delamanid": "DLM",
+                  "Bedaquiline": "BDQ",
+                  "Clofazimine": "CFZ",
+                  "Ethionamide": "ETO",
+                  "Linezolid": "LZD",
+                  "Moxifloxacin": "MXF",
+                  "Capreomycin": "CAP",
+                  "Amikacin": "AMK",
+                  "Pretomanid": "PMD",
+                  "Pyrazinamide": "PZA",
+                  "Kanamycin": "KAN",
+                  "Levofloxacin": "LFX",
+                  "Streptomycin": "STM",
+                  "Ethambutol": "EMB",
+                  "Isoniazid": "INH",
+                  "Rifampicin": "RIF"
+                 }
+
 
 ######################### STEP 0: READ IN PARAMETERS FILE AND MAKE OUTPUT DIRECTORIES #########################
 
@@ -15,8 +33,9 @@ from data_utils import *
 # starting the memory monitoring
 tracemalloc.start()
 
-_, config_file, drug, drug_WHO_abbr = sys.argv
+_, config_file, drug = sys.argv
 
+drug_WHO_abbr = drug_abbr_dict[drug]
 kwargs = yaml.safe_load(open(config_file))
 
 tiers_lst = kwargs["tiers_lst"]
@@ -42,8 +61,9 @@ missing_feature_thresh = kwargs["missing_feature_thresh"]
 amb_mode = kwargs["amb_mode"]
 AF_thresh = kwargs["AF_thresh"]
 impute = kwargs["impute"]
-synonymous = kwargs["synonymous"]
+silent = kwargs["silent"]
 pool_type = kwargs["pool_type"]
+assert pool_type in ['unpooled', 'poolLoF', 'poolSeparate']
 
 if amb_mode == "DROP":
     model_prefix = "dropAF"
@@ -54,7 +74,7 @@ elif amb_mode == "BINARY":
 else:
     raise ValueError(f"{amb_mode} is not a valid mode for handling intermediate AFs")
 
-if synonymous:
+if silent:
     model_prefix += "_withSyn"
 else:
     model_prefix += "_noSyn"
@@ -83,6 +103,10 @@ if not os.path.isdir(os.path.join(out_dir, "dropped_isolates")):
     os.makedirs(os.path.join(out_dir, "dropped_isolates"))
 
 print(f"\nSaving model results to {out_dir}")
+
+# model matrix already exists
+if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
+    exit()
 
 if binary:
     phenos_dir = os.path.join(input_data_dir, "phenotypes", f"drug_name={drug}")
@@ -117,7 +141,7 @@ if not os.path.isfile(phenos_file):
             df_phenos = df_phenos.loc[~df_phenos["phenotypic_category"].str.contains("CC")]
         
         if len(df_phenos) == 0:
-            print("There are no phenotypes for this analysis. Quitting this model")
+            print("There are no phenotypes for this analysis. Quitting this model\n")
             exit()
             
         print(f"    Phenotypic categories: {df_phenos.phenotypic_category.unique()}")
@@ -135,7 +159,7 @@ if not os.path.isfile(phenos_file):
             assert sum(df_phenos.groupby(["sample_id"]).count()[pheno_col].unique() != np.array([2])) == 0
             
             if len(drop_samples) == 0:
-                print("Phenotypes for all samples are the same for CC and CC-ATU designations. Quitting this model")
+                print("Phenotypes for all samples are the same for CC and CC-ATU designations. Quitting this model\n")
                 exit()
             else:
                 print(f"    {len(drop_samples)}/{len(df_phenos['sample_id'].unique())} isolates have different phenotypes using different CCs")
@@ -189,11 +213,11 @@ if binary and not atu_analysis:
     
 # this only happens for Pretomanid because there are no WHO phenotypes
 if len(df_phenos) == 0:
-    print(f"There are no {' and '.join(pheno_category_lst)} phenotypes for this model")
+    print(f"There are no {' and '.join(pheno_category_lst)} phenotypes for this model\n")
     exit()
 
 if "ALL" in pheno_category_lst and len(df_phenos.query("phenotypic_category=='ALL'")) == 0:
-    print("There are no ALL phenotypes for this model")
+    print("There are no ALL phenotypes for this model\n")
     exit()
 
     
@@ -221,10 +245,10 @@ df_model = df_model.loc[df_model["sample_id"].isin(df_phenos["sample_id"])]
 
 print(f"    {len(df_model.sample_id.unique())}/{len(df_phenos.sample_id.unique())} isolates have both genotypes and phenotypes")   
 
-# if synonymous variants are to be included, check that they are present and would make the model different from the corresponding noSyn model
-if synonymous:
+# if silent variants are to be included, check that they are present and would make the model different from the corresponding noSyn model
+if silent:
     if len(df_model.query("predicted_effect in ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant'] & variant_binary_status==1")) == 0:
-        print("There are no synonymous variants. Quitting this model")
+        print("There are no synonymous variants. Quitting this model\n")
         exit()
 # if not, drop them from the dataframe
 else:
@@ -239,10 +263,12 @@ df_model = df_model.sort_values("variant_binary_status", ascending=False).drop_d
 
     
 ######################### STEP 3: POOL LoF AND INFRAME MUTATIONS, IF INDICATED BY THE MODEL PARAMS #########################
-    
 
-if pool_type != 'unpooled':
-    # check if there is more than 1 mutation (actually present, so threshold on variant_allele_frequency) that would be affected by pooling. If the number of mutations ≤ 1, then the pooled model is the same as the unpooled
+        
+# options for pool_type are unpooled, poolSeparate, and poolALL
+if pool_type == "poolSeparate":
+
+    # check if there is more than 1 mutation present in the dataset (so threshold on variant_allele_frequency) that would be affected by pooling. If the number of mutations ≤ 1, then the pooled model is the same as the unpooled
     # do this because sometimes there is a single variant that will be pooled, and it will be renamed to the pooled variant, so when you check against the corresponding unpooled model, it will come up as different because the variant has been renamed. But it is still the exact same signal
 
     # get the number of unique LoF and inframe mutations per gene (because pooling is done on a per-gene basis) 
@@ -264,15 +290,28 @@ if pool_type != 'unpooled':
         shutil.rmtree(out_dir) # delete the entire directory
         exit()
         
-# options for pool_type are unpooled, poolSeparate, and poolALL
-if pool_type == "poolSeparate":
-    print("Pooling LOF and inframe mutations separately")        
+    print("Pooling LoF and inframe mutations separately")        
     df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation"], "LoF")
     df_model = pool_mutations(df_model, ["inframe_insertion", "inframe_deletion"], "inframe")
 
-elif pool_type == "poolALL":
-    print("Pooling LOF and inframe mutations together into a single feature")
-    df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation", "inframe_insertion", "inframe_deletion"], "LoF_all")
+elif pool_type == "poolLoF":
+
+    # get the number of unique LoF and inframe mutations per gene (because pooling is done on a per-gene basis) 
+    num_unique_LoF_by_gene = {}
+    
+    for gene in df_model.resolved_symbol.unique():
+        
+        num_unique_LoF_by_gene[gene] = df_model.query('resolved_symbol == @gene & predicted_effect in ["frameshift", "start_lost", "stop_gained", "feature_ablation"] & variant_allele_frequency > 0.75').variant_category.nunique()
+
+    # if all counts are less than or equal to 1 -- means that there is 0-1 mutations of each type, so pooling will not make a difference. Need at least 2 mutations for a difference. 
+    if np.max(list(num_unique_LoF_by_gene.values())) <= 1:
+        print(f"Pooling LoF mutations separately does not affect this model. Quitting this model...\n")
+        shutil.rmtree(out_dir) # delete the entire directory
+        exit()
+        
+    print("Pooling LoF mutations into a single feature")
+    df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation"], "LoF")
+
 
 
 ######################### STEP 4: PROCESS AMBIGUOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #########################

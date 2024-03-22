@@ -41,6 +41,10 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
     model_path = os.path.dirname(model_analysis_file)
     matrix = pd.read_pickle(os.path.join(model_path, "model_matrix.pkl"))
 
+    # lof features were renamed at some point, so ensure that they match
+    matrix.columns = matrix.columns.str.replace('lof', 'LoF')
+    matrix.to_pickle(os.path.join(model_path, "model_matrix.pkl"))
+
     # if the model is an encodeAF model, consider present as AFs > 0.25 and absent as AFs <= 0.25
     # normally, AFs > 0.75 are considered present (variant_binary_status = 1)
     if encodeAF:
@@ -110,8 +114,7 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
     assert res_df.Num_Isolates.min() > 0
 
     # check that there are no NaNs in the univariate statistics. Don't include LR+ upper and lower bounds because they can be NaN if LR+ = inf
-    assert len(res_df.loc[~res_df["mutation"].str.contains("PC")][pd.isnull(res_df[['Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'R_PPV', 'S_PPV', 'Sens', 'Spec', 'LR+', 'LR-',
-                                   'R_PPV_LB', 'R_PPV_UB', 'S_PPV_LB', 'S_PPV_UB', 'Sens_LB', 'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR-_LB', 'LR-_UB']]).any(axis=1)]) == 0
+    assert len(res_df.loc[~res_df["mutation"].str.contains("PC")].loc[pd.isnull(res_df[['Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'R_PPV', 'S_PPV', 'Sens', 'Spec', 'LR+', 'LR-', 'R_PPV_LB', 'R_PPV_UB', 'S_PPV_LB', 'S_PPV_UB', 'Sens_LB', 'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR-_LB', 'LR-_UB']]).any(axis=1)]) == 0
 
     # check confidence intervals. LB ≤ var ≤ UB, and no confidence intervals have width 0. When the probability is 0 or 1, there are numerical precision issues
     # i.e. python says 1 != 1. So ignore those cases when checking
@@ -125,11 +128,11 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
     res_df = res_df.sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first")
     del matrix
 
-    res_df[['mutation', 'predicted_effect', 'position', 'confidence', 'coef', 'Odds_Ratio', 'pval', 'BH_pval',
+    res_df[['mutation', 'predicted_effect', 'position', 'coef', 'Odds_Ratio', 'pval', 'BH_pval',
        'Bonferroni_pval', 'neutral_pval', 'BH_neutral_pval', 'Bonferroni_neutral_pval', 'Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'R_PPV', 'S_PPV', 'Sens', 'Spec',
        'LR+', 'LR-', 'R_PPV_LB', 'R_PPV_UB', 'S_PPV_LB', 'S_PPV_UB', 'Sens_LB',
        'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
-       ]].to_csv(os.path.join(model_analysis_file), index=False) 
+       ]].to_csv(os.path.join(model_analysis_file), index=False)
 
 
 
@@ -182,7 +185,7 @@ df_phenos = pd.read_csv(phenos_file)
 annotated_genos = get_annotated_genos(analysis_dir, drug)
     
 for model_path in analysis_paths:
-    for fName in glob.glob(os.path.join(model_path, "model_analysis*.csv")):
+    for fName in glob.glob(os.path.join(model_path, "model_analysis.csv")):
 
         if model_type == "AF":
             if "encodeAF" in model_path:

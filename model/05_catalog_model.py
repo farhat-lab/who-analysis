@@ -7,7 +7,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 warnings.filterwarnings("ignore")
 
-results_final = pd.read_csv("results/Regression_Final_Jan2024_Tier1.csv")
+# results_final = pd.read_csv("results/Regression_Final_Mar2024_Tier1.csv")
+results_final = pd.read_csv("results/Regression_Final_April2024_Tier1.csv")
 
 # utils files are in a separate folder
 sys.path.append("utils")
@@ -38,7 +39,7 @@ out_dir = os.path.join(analysis_dir, drug, "BINARY", f"tiers={'+'.join(tiers_lst
 print(f"Saving results to {out_dir}")
 assert os.path.isdir(out_dir)
 
-R_assoc = results_final.loc[results_final['REGRESSION FINAL CONFIDENCE GRADING'].str.contains('Assoc w R')].query("Drug==@drug & ~mutation.str.contains('inframe')")["mutation"].values
+R_assoc = results_final.loc[results_final['REGRESSION FINAL CONFIDENCE GRADING'].str.contains('Assoc w R')].query("Drug==@drug")["mutation"].values
 
 if len(R_assoc) == 0:
     print("There are no significant R-associated mutations for this model\n")

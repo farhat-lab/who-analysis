@@ -175,3 +175,26 @@ def remove_features_save_list(matrix, fName, dropNA=False):
 
     # return only the features with signal
     return matrix.loc[:, matrix.nunique() > 1]
+
+
+
+def add_grading_rules_regression(df):
+    '''
+    Up- or downgrade variants using the SOLO gradings. If the SOLO Initial grading != SOLO Final grading, take the SOLO Final grading as the grading for regression + grading rules
+    '''
+
+    df.loc[(df['SOLO FINAL CONFIDENCE GRADING'] != '3) Uncertain significance') & (df['SOLO INITIAL CONFIDENCE GRADING'] != df['SOLO FINAL CONFIDENCE GRADING']), 'REGRESSION + GRADING RULES'] = df['SOLO FINAL CONFIDENCE GRADING']
+    
+    # map to regression names
+    solo_to_reg_mapping = {"1) Assoc w R": "Assoc w R",
+                           "2) Assoc w R - Interim": "Assoc w R - Interim",
+                           "3) Uncertain significance": "Uncertain",
+                           "4) Not assoc w R - Interim": "Assoc w S - Interim",
+                           "5) Not assoc w R": "Neutral" # could be either Assoc w S or Neutral, but they will be pooled together in the comparison because we can't distinguish
+                          }
+    
+    df['REGRESSION + GRADING RULES'] = df['REGRESSION + GRADING RULES'].map(solo_to_reg_mapping)
+    df['REGRESSION + GRADING RULES'] = df['REGRESSION + GRADING RULES'].fillna(df['REGRESSION FINAL CONFIDENCE GRADING'])
+    assert sum(pd.isnull(df['REGRESSION + GRADING RULES'])) == 0
+
+    return df
