@@ -5,9 +5,6 @@ archive
 # scratch notebook
 sandbox*.ipynb
 
-# config_files -- they keep getting updated as models are run, so can cause merge conflicts
-config_files/
-
 # confidential information -- sample IDs
 data/sample_ids_mapping_20220922.csv
 data/missing_28samples.xlsx
