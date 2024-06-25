@@ -1,14 +1,11 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, sparse, sys, pickle, tracemalloc, warnings
+import glob, os, yaml, sparse, sys, argparse, pickle, tracemalloc, warnings
 import scipy.stats as st
 import sklearn.metrics
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 warnings.filterwarnings("ignore")
 
-# results_final = pd.read_csv("results/Regression_Final_Mar2024_Tier1.csv")
-results_final = pd.read_csv("results/Regression_Final_April2024_Tier1.csv")
+results_final = pd.read_csv("results/Regression_Final_June2024_Tier1.csv")
 
 # utils files are in a separate folder
 sys.path.append("utils")
@@ -19,12 +16,26 @@ from stats_utils import *
 # starting the memory monitoring
 tracemalloc.start()
 
-_, drug, AF_thresh = sys.argv
+parser = argparse.ArgumentParser()
+
+# Add a required string argument for the config file
+parser.add_argument("--drug", dest='drug', type=str, required=True)
+
+parser.add_argument('--AF', dest='AF_thresh', type=float, required=True)
+
+parser.add_argument('--remove-mut', dest='remove_mut', action='store_true', help='Remove mutations in Groups 1-2 regression and Groups 4-5 SOLO that are major discrepancies')
+
+parser.add_argument('--grading-rules', dest='grading_rules', action='store_true', help='Add mutations that would be upgraded by grading rules')
 
 analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 alpha = 0.05
-AF_thresh = float(AF_thresh)
 tiers_lst = ['1']
+
+cmd_line_args = parser.parse_args()
+drug = cmd_line_args.drug
+AF_thresh = cmd_line_args.AF_thresh
+remove_mut = cmd_line_args.remove_mut
+grading_rules = cmd_line_args.grading_rules
 
 # AF_thresh needs to be a float between 0 and 1
 if AF_thresh > 1:
@@ -39,7 +50,25 @@ out_dir = os.path.join(analysis_dir, drug, "BINARY", f"tiers={'+'.join(tiers_lst
 print(f"Saving results to {out_dir}")
 assert os.path.isdir(out_dir)
 
-R_assoc = results_final.loc[results_final['REGRESSION FINAL CONFIDENCE GRADING'].str.contains('Assoc w R')].query("Drug==@drug")["mutation"].values
+model_suffix = ''
+
+if grading_rules:
+    results_col = 'REGRESSION + GRADING RULES'
+    model_suffix += '_gradingRules'
+else:
+    results_col = 'REGRESSION FINAL CONFIDENCE GRADING'
+
+R_assoc = results_final.loc[results_final[results_col].str.contains('Assoc w R', case=True)].query("Drug==@drug")["mutation"].values
+
+if remove_mut:
+
+    remove_muts_lst = results_final.loc[(results_final[results_col].str.contains('Assoc w R', case=True)) & (results_final['SOLO FINAL CONFIDENCE GRADING'].str.contains('Not assoc w R', case=True))].query("Drug==@drug")["mutation"].values
+
+    print(f"Removed major discrepancies {','.join(remove_muts_lst)} from the regression classification list")
+    
+    R_assoc = list(set(R_assoc) - set(remove_muts_lst))
+    model_suffix += '_remove_discrepancies'
+
 
 if len(R_assoc) == 0:
     print("There are no significant R-associated mutations for this model\n")
@@ -61,10 +90,7 @@ df_genos.loc[(df_genos["variant_allele_frequency"] > AF_thresh), "variant_binary
 del df_genos["variant_allele_frequency"]
 
 lof_effect_list = ["frameshift", "start_lost", "stop_gained", "feature_ablation"]
-# inframe_effect_list = ["inframe_insertion", "inframe_deletion"]
-
 df_genos.loc[df_genos["predicted_effect"].isin(lof_effect_list), "pooled_variable"] = "LoF"
-# df_genos.loc[df_genos["predicted_effect"].isin(inframe_effect_list), "pooled_variable"] = "inframe"
 
 # get the pooled mutation column so that it's gene + inframe/LoF
 df_genos["pooled_mutation"] = df_genos["resolved_symbol"] + "_" + df_genos["pooled_variable"]
@@ -73,6 +99,7 @@ df_genos["pooled_mutation"] = df_genos["resolved_symbol"] + "_" + df_genos["pool
 pooled_matrix = df_genos.sort_values(by=["variant_binary_status"], ascending=[False], na_position="last").drop_duplicates(subset=["sample_id", "pooled_mutation"], keep="first")
 
 # keep only variants that are in the list of R-associated mutations
+# including variants that are components of pooled LoF variants 
 pooled_matrix = pooled_matrix.query("pooled_mutation in @R_assoc")
 unpooled_matrix = df_genos.query("mutation in @R_assoc")
 
@@ -81,9 +108,12 @@ unpooled_matrix = unpooled_matrix.drop_duplicates(["sample_id", "mutation"], kee
 
 # keep all isolates (i.e., no dropping due to NaNs)
 model_matrix = pd.concat([pooled_matrix, unpooled_matrix], axis=1)
+
+# some variants are not present because they were not in the dataset -- these are the "Selection evidence" variants that had no data-driven results because they're not in any isolate
+R_assoc = [variant for variant in R_assoc if variant in model_matrix.columns]
 assert model_matrix.shape[1] == len(R_assoc)
 
-# in this case, only 3 possible values -- 0 (ref), 1 (alt), and NaN
+# in this case, only 3 possible values -- 0 (ref), 1 (alt), and NaN. Don't need to drop NaNs because we're looking for presence/absence of R-assoc variants
 assert len(np.unique(model_matrix.values)) <= 3
 print(f"Full matrix: {model_matrix.shape}, unique values: {np.unique(model_matrix.values)}")
 
@@ -177,7 +207,7 @@ def get_stats_with_CI(df, pred_col, true_col):
 
 catalog_results = get_stats_with_CI(catalog_pred_df, "y_pred", "phenotype")
 catalog_results["Model"] = "Regression"
-catalog_results.set_index("Model").to_csv(os.path.join(out_dir, f"model_stats_AF{int(AF_thresh*100)}_withLoF.csv"))
+catalog_results.set_index("Model").to_csv(os.path.join(out_dir, f"model_stats_AF{int(AF_thresh*100)}_withLoF{model_suffix}.csv"))
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

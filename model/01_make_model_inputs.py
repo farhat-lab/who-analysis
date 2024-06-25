@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, sys, subprocess, shutil
+import glob, os, yaml, argparse, sys, subprocess, shutil
 import warnings
 warnings.filterwarnings("ignore")
 import tracemalloc
@@ -33,7 +33,15 @@ drug_abbr_dict = {"Delamanid": "DLM",
 # starting the memory monitoring
 tracemalloc.start()
 
-_, config_file, drug = sys.argv
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
+parser.add_argument('-drug', "--d", dest='drug', type=str, required=True)
+parser.add_argument('--MIC-single-medium', dest='keep_single_medium', action='store_true', help='If specified, keep only the most common media for the MIC models')
+
+cmd_line_args = parser.parse_args()
+config_file = cmd_line_args.config_file
+drug = cmd_line_args.drug
+keep_single_medium = cmd_line_args.keep_single_medium
 
 drug_WHO_abbr = drug_abbr_dict[drug]
 kwargs = yaml.safe_load(open(config_file))
@@ -56,14 +64,11 @@ if "ALL" in pheno_category_lst:
 else:
     phenos_name = "WHO"
 
-missing_isolate_thresh = kwargs["missing_isolate_thresh"]
-missing_feature_thresh = kwargs["missing_feature_thresh"]
 amb_mode = kwargs["amb_mode"]
 AF_thresh = kwargs["AF_thresh"]
-impute = kwargs["impute"]
 silent = kwargs["silent"]
 pool_type = kwargs["pool_type"]
-assert pool_type in ['unpooled', 'poolLoF', 'poolSeparate']
+assert pool_type in ['unpooled', 'poolLoF']
 
 if amb_mode == "DROP":
     model_prefix = "dropAF"
@@ -102,7 +107,7 @@ if not os.path.isdir(os.path.join(out_dir, "dropped_features")):
 if not os.path.isdir(os.path.join(out_dir, "dropped_isolates")):
     os.makedirs(os.path.join(out_dir, "dropped_isolates"))
 
-print(f"\nSaving model results to {out_dir}")
+print(f"\nSaving model input matrix to {out_dir}")
 
 # model matrix already exists
 if os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
@@ -196,17 +201,32 @@ else:
     df_phenos = pd.read_csv(phenos_file)
 
 # normalize MICs to the most common medium so that they are on the same MIC scale
+# need to do this step here and again in the next script because need to get the exact samples that are kept for the model so that model_matrix only contains the samples to fit the model on
 if not binary:
+    
     cc_df = pd.read_csv("data/drug_CC.csv")
-    # need to drop any media that can't be normalized now so that any samples that need to be exluded are done so here, and model_matrix.pkl will reflect those
-    df_phenos, most_common_medium = normalize_MICs_return_dataframe(drug, df_phenos, cc_df)
 
-    # no normalized value for Pretomanid because there are no WHO-approved critical concentrations, so we just use the most common one
-    if drug == "Pretomanid":
-        print(f"    Min MIC: {np.min(df_phenos['mic_value'].values)}, Max MIC: {np.max(df_phenos['mic_value'].values)} in {most_common_medium}")
+    if keep_single_medium or drug == 'Pretomanid':
+
+        # no normalized value for Pretomanid because there are no WHO-approved critical concentrations, so we just use the most common one
+        # or only keep the most common medium
+        df_phenos, most_common_medium = normalize_MICs_return_dataframe(drug, df_phenos, cc_df, keep_single_medium=keep_single_medium)
+
+        # non-normalized column name
+        mic_col = 'mic_value'
+
     else:
-        print(f"    Min MIC: {np.min(df_phenos['norm_MIC'].values)}, Max MIC: {np.max(df_phenos['norm_MIC'].values)} in {most_common_medium}")
-     
+        # first apply the media hierarchy to decide which of the measured MICs to keep for each isolate (for isolates with multiple MICs measured in different media)
+        df_phenos = process_multiple_MICs_different_media(df_phenos)
+        
+        # then, drop any media that can't be normalized and normalize to the scale of the most common medium
+        df_phenos, most_common_medium = normalize_MICs_return_dataframe(drug, df_phenos, cc_df, keep_single_medium=keep_single_medium)
+
+        # normalized column name
+        mic_col = 'norm_MIC'
+            
+    print(f"    Min MIC: {np.min(df_phenos[mic_col].values)}, Max MIC: {np.max(df_phenos[mic_col].values)} in {most_common_medium}")
+
 # get only isolates with the desired phenotypic category for the binary model
 if binary and not atu_analysis:
     df_phenos = df_phenos.query("phenotypic_category in @pheno_category_lst")
@@ -265,36 +285,8 @@ df_model = df_model.sort_values("variant_binary_status", ascending=False).drop_d
 ######################### STEP 3: POOL LoF AND INFRAME MUTATIONS, IF INDICATED BY THE MODEL PARAMS #########################
 
         
-# options for pool_type are unpooled, poolSeparate, and poolALL
-if pool_type == "poolSeparate":
-
-    # check if there is more than 1 mutation present in the dataset (so threshold on variant_allele_frequency) that would be affected by pooling. If the number of mutations ≤ 1, then the pooled model is the same as the unpooled
-    # do this because sometimes there is a single variant that will be pooled, and it will be renamed to the pooled variant, so when you check against the corresponding unpooled model, it will come up as different because the variant has been renamed. But it is still the exact same signal
-
-    # get the number of unique LoF and inframe mutations per gene (because pooling is done on a per-gene basis) 
-    num_unique_inframe_by_gene = {}
-    num_unique_LoF_by_gene = {}
-    
-    for gene in df_model.resolved_symbol.unique():
-    
-        num_unique_inframe_by_gene[gene] = df_model.query('resolved_symbol == @gene & predicted_effect in ["inframe_insertion", "inframe_deletion"] & variant_allele_frequency > 0.75').variant_category.nunique()
-    
-        num_unique_LoF_by_gene[gene] = df_model.query('resolved_symbol == @gene & predicted_effect in ["frameshift", "start_lost", "stop_gained", "feature_ablation"] & variant_allele_frequency > 0.75').variant_category.nunique()
-
-    # combine the counts into a single list
-    combined_counts = list(num_unique_inframe_by_gene.values()) + list(num_unique_LoF_by_gene.values())
-
-    # if all counts are less than or equal to 1 -- means that there is 0-1 mutations of each type, so pooling will not make a difference. Need at least 2 mutations for a difference. 
-    if np.max(combined_counts) <= 1:
-        print(f"Pooling LoF and inframe mutations separately does not affect this model. Quitting this model...\n")
-        shutil.rmtree(out_dir) # delete the entire directory
-        exit()
-        
-    print("Pooling LoF and inframe mutations separately")        
-    df_model = pool_mutations(df_model, ["frameshift", "start_lost", "stop_gained", "feature_ablation"], "LoF")
-    df_model = pool_mutations(df_model, ["inframe_insertion", "inframe_deletion"], "inframe")
-
-elif pool_type == "poolLoF":
+# options for pool_type are unpooled and poolLoF
+if pool_type == "poolLoF":
 
     # get the number of unique LoF and inframe mutations per gene (because pooling is done on a per-gene basis) 
     num_unique_LoF_by_gene = {}
@@ -317,54 +309,58 @@ elif pool_type == "poolLoF":
 ######################### STEP 4: PROCESS AMBIGUOUS ALLELES -- I.E. THOSE WITH 0.25 <= AF <= 0.75 #########################
 
 
-# set variants with AF <= the threshold as wild-type and AF > the threshold as alternative
-if amb_mode == "BINARY":
-    print(f"Binarizing ambiguous variants with AF threshold of {AF_thresh}")
-    df_genos.loc[(df_genos["variant_allele_frequency"] <= AF_thresh), "variant_binary_status"] = 0
-    df_genos.loc[(df_genos["variant_allele_frequency"] > AF_thresh), "variant_binary_status"] = 1
+# # set variants with AF <= the threshold as wild-type and AF > the threshold as alternative
+# if amb_mode == "BINARY":
+#     print(f"Binarizing ambiguous variants with AF threshold of {AF_thresh}")
+#     df_model.loc[(df_model["variant_allele_frequency"] <= AF_thresh), "variant_binary_status"] = 0
+#     df_model.loc[(df_model["variant_allele_frequency"] > AF_thresh), "variant_binary_status"] = 1
     
-# use ambiguous AF as the matrix value for variants with AF > 0.25. AF = 0.25 is considered absent. Below 0.25, the AF measurements aren't reliable
-elif amb_mode == "AF":
-    print("Encoding ambiguous variants with their AF")
-    # encode all variants with AF > 0.25 with their AF. Variants with AF <= 0.25 already have variant_binary_status = 0
-    df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_binary_status"] = df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_allele_frequency"].values
+# # use ambiguous AF as the matrix value for variants with AF > 0.25. AF = 0.25 is considered absent. Below 0.25, the AF measurements aren't reliable
+# elif amb_mode == "AF":
+#     print("Encoding ambiguous variants with their AF")
+#     # encode all variants with AF > 0.25 with their AF. Variants with AF <= 0.25 already have variant_binary_status = 0
+#     df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_binary_status"] = df_model.loc[df_model["variant_allele_frequency"] > 0.25, "variant_allele_frequency"].values
    
 # drop all isolates with ambiguous variants with ANY AF below the threshold. Then remove features that are no longer present
-# by default, AF <= 0.75 --> ABSENT. Later, when including "HETs", the threshold will be dropped to 0.25, so anything with AF <= 0.25 --> ABSENT, and AF > 0.25 = PRESENT
-elif amb_mode == "DROP":
+# elif amb_mode == "DROP":
 
-    # get all mutations that are present in the dataset somewhere.
-    # NOTE: doing this before dropping mutations with no signal does not affect the no signal category 
-    pre_dropAmb_mutations = df_model.query("variant_binary_status==1").reset_index(drop=True)["resolved_symbol"] + "_" + df_model.query("variant_binary_status==1").reset_index(drop=True)["variant_category"]
-    
-    drop_isolates = df_model.query("variant_allele_frequency > 0.25 & variant_allele_frequency <= 0.75").sample_id.unique()
-    print(f"    Dropped {len(drop_isolates)}/{len(df_model.sample_id.unique())} isolates with with any AFs in the range (0.25, {AF_thresh}]. Remainder are binary")
-    df_model = df_model.query("sample_id not in @drop_isolates")    
+# get all mutations that are present in the dataset somewhere.
+# NOTE: doing this before dropping mutations with no signal does not affect the no signal category 
+pre_dropAmb_mutations = df_model.query("variant_binary_status==1").reset_index(drop=True)["resolved_symbol"] + "_" + df_model.query("variant_binary_status==1").reset_index(drop=True)["variant_category"]
 
-    # save the dropped isolate IDs for counting later
-    if len(drop_isolates) > 0:
-        pd.Series(drop_isolates).to_csv(os.path.join(out_dir, "dropped_isolates/isolates_with_amb.txt"), sep="\t", header=None, index=False)    
-    
-    # get the features in the dataframe after dropping isolates with ambiguous allele fractions, then save to a file if there are any dropped features
-    post_dropAmb_mutations = df_model.query("variant_binary_status==1").reset_index(drop=True)["resolved_symbol"] + "_" + df_model.query("variant_binary_status==1").reset_index(drop=True)["variant_category"]
-    
-    # get the dropped features that are in pre_dropAmb_mutations but not in post_dropAmb_mutations, then write them to a file
-    dropped_feat = list(set(pre_dropAmb_mutations) - set(post_dropAmb_mutations))
-    
-    if len(dropped_feat) > 0:
-        print(f"    Dropped {len(dropped_feat)} features present only in samples with intermediate AFs")
-        pd.Series(dropped_feat).to_csv(os.path.join(out_dir, "dropped_features/isolates_with_amb.txt"), sep="\t", header=None, index=False)
+# AF <= 0.25 --> ABSENT, AF > 0.75 --> PRESENT
+drop_isolates = df_model.query("variant_allele_frequency > 0.25 & variant_allele_frequency <= 0.75").sample_id.unique()
+print(f"    Dropped {len(drop_isolates)}/{len(df_model.sample_id.unique())} isolates with with any AFs in the range (0.25, 0.75]. Remainder are binary")
+df_model = df_model.query("sample_id not in @drop_isolates")    
+
+# save the dropped isolate IDs for counting later
+if len(drop_isolates) > 0:
+    pd.Series(drop_isolates).to_csv(os.path.join(out_dir, "dropped_isolates/isolates_with_amb.txt"), sep="\t", header=None, index=False)    
+
+# get the features in the dataframe after dropping isolates with ambiguous allele fractions, then save to a file if there are any dropped features
+post_dropAmb_mutations = df_model.query("variant_binary_status==1").reset_index(drop=True)["resolved_symbol"] + "_" + df_model.query("variant_binary_status==1").reset_index(drop=True)["variant_category"]
+
+# get the dropped features that are in pre_dropAmb_mutations but not in post_dropAmb_mutations, then write them to a file
+dropped_feat = list(set(pre_dropAmb_mutations) - set(post_dropAmb_mutations))
+
+if len(dropped_feat) > 0:
+    print(f"    Dropped {len(dropped_feat)} features present only in samples with intermediate AFs")
+    pd.Series(dropped_feat).to_csv(os.path.join(out_dir, "dropped_features/isolates_with_amb.txt"), sep="\t", header=None, index=False)
+
+df_model.loc[(df_model["variant_allele_frequency"] <= 0.25), "variant_binary_status"] = 0
+df_model.loc[(df_model["variant_allele_frequency"] > 0.75), "variant_binary_status"] = 1
     
 # check after this step that the only NaNs left are truly missing data --> NaN in variant_binary_status must also be NaN in variant_allele_frequency
 assert len(df_model.loc[(~pd.isnull(df_model["variant_allele_frequency"])) & (pd.isnull(df_model["variant_binary_status"]))]) == 0
+assert len(df_model.loc[(pd.isnull(df_model["variant_allele_frequency"])) & (~pd.isnull(df_model["variant_binary_status"]))]) == 0
 
 # save isolates with missing variants for counting later
 isolates_with_missingness = df_model.loc[pd.isnull(df_model['variant_allele_frequency'])].sample_id.unique()
 
 if len(isolates_with_missingness) > 0:
-    print(f"Dropped {len(isolates_with_missingness)}/{df_model.sample_id.nunique()} isolates with any missing variants")
+    # remove isolates with missingness from the matrix after pivoting to better keep track of the associated features that are dropped
     pd.Series(isolates_with_missingness).to_csv(os.path.join(out_dir, "dropped_isolates/isolates_dropped.txt"), sep="\t", header=None, index=False)
-
+    
 
 ######################### STEP 5: PIVOT TO MATRIX AND DROP MISSINGNESS AND ANY FEATURES THAT ARE ALL 0 #########################
 

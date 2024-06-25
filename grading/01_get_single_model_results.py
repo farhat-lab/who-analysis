@@ -5,15 +5,14 @@ import glob, os, sys, yaml, subprocess, itertools, sparse, warnings
 from functools import reduce
 warnings.filterwarnings(action='ignore')
 
-drug_gene_mapping = pd.read_csv("../data/drug_gene_mapping.csv")
-samples_summary = pd.read_csv("../data/samples_summary.csv")
+drug_gene_mapping = pd.read_csv("./data/drug_gene_mapping.csv")
+samples_summary = pd.read_csv("./data/samples_summary.csv")
 
 # utils files are in a separate folder
-sys.path.append(os.path.join(os.path.dirname(os.getcwd()), "utils"))
+sys.path.append("utils")
 from stats_utils import *
 from data_utils import *
 
-# CHANGE ANALYSIS DIR BEFORE RUNNING THE NOTEBOOK!
 analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 
 drug_abbr_dict = {"Delamanid": "DLM",
@@ -51,17 +50,26 @@ def get_single_model_results(drug, tiers_lst, folder, model_prefix):
     model_permute = pd.read_csv(os.path.join(analysis_dir, drug, folder, model_prefix, "model_analysis.csv")).query("~mutation.str.contains('PC')")
     
     ################## 2. READ IN LRT RESULTS ##################
-    LRTresults = pd.read_csv(os.path.join(analysis_dir, drug, folder, model_prefix, "LRT_results.csv"))
-    LRTresults["mutation"] = LRTresults.mutation.str.replace("lof", "LoF")
+    LRT_results = pd.read_csv(os.path.join(analysis_dir, drug, folder, model_prefix, "LRT_results.csv"))
 
     # because the p-values are NaN for the FULL model row, they will be removed, so then the dataframes can be merged using inner
-    LRTresults = add_pval_corrections(LRTresults.iloc[1:, ])
+    LRT_results = add_pval_corrections(LRT_results.iloc[1:, ])
 
+    # # remove unpooled - silent models mutations if this is a pooledLoF or + silent model
+    # if 'dropAF_noSyn_unpooled' not in model_prefix:
+    #     unpooled_mutations = pd.read_csv(os.path.join(analysis_dir, drug, folder, model_prefix.replace('dropAF_withSyn_unpooled', 'dropAF_noSyn_unpooled').replace('dropAF_noSyn_poolLoF', 'dropAF_noSyn_unpooled'), "LRT_results.csv"))["mutation"].values
+    #     model_permute = model_permute.query("mutation not in @unpooled_mutations")
+    #     LRT_results = LRT_results.query("mutation not in @unpooled_mutations")
+    
     # check that all mutations are represented in both the LRT results and regression model results
-    assert len(set(model_permute["mutation"].values).symmetric_difference(LRTresults["mutation"].values)) == 0
+    if len(set(model_permute["mutation"].values).symmetric_difference(LRT_results["mutation"].values)) != 0:
+        print(drug, folder, model_prefix)
+        print(set(model_permute["mutation"].values) - set(LRT_results["mutation"].values))
+        print(set(LRT_results["mutation"].values) - set(model_permute["mutation"].values))
+        exit()
     
     # combine results into a single dataframe for easy searching. REMOVE BONFERRONI AND COEFS
-    combined_results = model_permute[model_permute.columns[~model_permute.columns.str.contains("|".join(["Bonferroni", "coef"]))]].merge(LRTresults[["mutation", "LRT_pval", "BH_LRT_pval", "LRT_neutral_pval", "BH_LRT_neutral_pval"]]
+    combined_results = model_permute[model_permute.columns[~model_permute.columns.str.contains("|".join(["Bonferroni", "coef"]))]].merge(LRT_results[["mutation", "LRT_pval", "BH_LRT_pval", "LRT_neutral_pval", "BH_LRT_neutral_pval"]]
                                                                                                                   , on="mutation", how="inner")
 
     combined_results["Tier"] = tiers_lst[-1]
@@ -69,11 +77,11 @@ def get_single_model_results(drug, tiers_lst, folder, model_prefix):
     # columns to return, in the desired order
     keep_cols = ['mutation', 'Tier', 'predicted_effect', 'position', 'Odds_Ratio',
                            #'OR_LB', 'OR_UB', 
-                 'pval', 'BH_pval', 'neutral_pval', 'BH_neutral_pval', 'LRT_pval', 'BH_LRT_pval', 'LRT_neutral_pval', 'BH_LRT_neutral_pval']
+                 'pval', 'BH_pval', 'neutral_pval', 'BH_neutral_pval', 'LRT_pval', 'BH_LRT_pval']
 
     keep_cols += ['Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 
-                  'R_PPV', 'S_PPV', 'Sens', 'Spec', 'LR+', 'LR-',
-                   'R_PPV_LB', 'R_PPV_UB', 'S_PPV_LB', 'S_PPV_UB', 'Sens_LB', 'Sens_UB', 'Spec_LB',
+                  'R_PPV', 'S_PPV', 'NPV', 'Sens', 'Spec', 'LR+', 'LR-',
+                   'R_PPV_LB', 'R_PPV_UB', 'S_PPV_LB', 'S_PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB', 'Sens_UB', 'Spec_LB',
                    'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB'
                    ]
 
@@ -99,42 +107,28 @@ def add_significance_category(df, drug, model_path):
         thresh = 0.01
     else:
         thresh = 0.05
+    
+    ################################################################ regular thresholds ################################################################
+    df.loc[(df["Odds_Ratio"] > 1) & (df["BH_pval"] <= thresh) & (df['Num_Isolates'] >= 5) & (df['R_PPV_LB'] >= 0.25) & (df["BH_LRT_pval"] <= thresh), col_name] = "Assoc w R"
+    df.loc[(df["Odds_Ratio"] < 1) & (df["BH_pval"] <= thresh) & (df['Num_Isolates'] >= 5) & (df['S_PPV_LB'] >= 0.25), col_name] = "Not assoc w R"
 
     ################################################################# relaxed thresholds for pncA #################################################################
-    # If a variant is significant in permutation test and LRT, make Interim.
-    df.loc[(df['mutation'].str.contains('pncA')) & (df["Odds_Ratio"] > 1) & (df["BH_pval"] <= thresh) & (df['Mut_R'] >= 2) & ((df["BH_LRT_pval"] <= thresh) | (df['R_PPV'] >= 0.5)), col_name] = "Assoc w R - Interim"
-    df.loc[(df['mutation'].str.contains('pncA')) & (df["Odds_Ratio"] < 1) & (df["BH_pval"] <= thresh) & (df['Mut_S'] >= 2) & ((df["BH_LRT_pval"] <= thresh) | (df['S_PPV'] >= 0.5)), col_name] = "Assoc w S - Interim"
-
-    # if they meet both LRT and PPV criteria, upgrade to Group 1/5
-    df.loc[(df['mutation'].str.contains('pncA')) & (df[col_name]=='Assoc R - Interim') & (df["BH_LRT_pval"] <= thresh) & (df['R_PPV'] >= 0.5), col_name] = "Assoc w R"
-    df.loc[(df['mutation'].str.contains('pncA')) & (df[col_name]=='Assoc S - Interim') & (df["BH_LRT_pval"] <= thresh) & (df['S_PPV'] >= 0.5), col_name] = "Assoc w S"
-
-    ################################################################ regular thresholds for other genes ################################################################
-    # If a variant is significant in permutation test and LRT, make Interim.
-    df.loc[(~df['mutation'].str.contains('pncA')) & (df["Odds_Ratio"] > 1) & (df["BH_pval"] <= thresh) & (df['Num_Isolates'] >= 5) & ((df["BH_LRT_pval"] <= thresh) | (df['R_PPV_LB'] >= 0.25)), col_name] = "Assoc w R - Interim"
-    df.loc[(~df['mutation'].str.contains('pncA')) & (df["Odds_Ratio"] < 1) & (df["BH_pval"] <= thresh) & (df['Num_Isolates'] >= 5) & ((df["BH_LRT_pval"] <= thresh) | (df['S_PPV_LB'] >= 0.25)) , col_name] = "Assoc w S - Interim"
-
-    # if they meet both LRT and PPV criteria, upgrade to Group 1/5
-    df.loc[(~df['mutation'].str.contains('pncA')) & (df[col_name]=="Assoc w R - Interim") & (df["BH_LRT_pval"] <= thresh) & (df['R_PPV_LB'] >= 0.25), col_name] = "Assoc w R"
-    df.loc[(~df['mutation'].str.contains('pncA')) & (df[col_name]=="Assoc w S - Interim") & (df["BH_LRT_pval"] <= thresh) & (df['S_PPV_LB'] >= 0.25), col_name] = "Assoc w S"
-
-    ################################################################ Neutral criteria ################################################################
-    # neutral mutations: not significant in regression AND significant in the neutral LRT test or the permutation neutral test AND present at high enough frequency
-    df.loc[(~df["predicted_effect"].isin(silent_lst)) & (df["BH_pval"] > thresh) & ((df["BH_neutral_pval"] <= thresh) | (df["BH_LRT_neutral_pval"] <= thresh)) & (df['Num_Isolates'] >= 5) , col_name] = "Neutral"
+    df.loc[(df['mutation'].str.contains('pncA')) & (df["Odds_Ratio"] > 1) & (df["BH_pval"] <= thresh) & (df['Mut_R'] >= 2) & (df['R_PPV'] >= 0.5) & (df["BH_LRT_pval"] <= thresh), col_name] = "Assoc w R"
+    df.loc[(df['mutation'].str.contains('pncA')) & (df["Odds_Ratio"] < 1) & (df["BH_pval"] <= thresh) & (df['Mut_S'] >= 2) & (df['S_PPV'] >= 0.5), col_name] = "Not assoc w R"
     
-    # for silent mutations, use raw p-values to determine neutrality.
-    df.loc[(df["predicted_effect"].isin(silent_lst)) & (df["pval"] > thresh) & ((df["neutral_pval"] <= thresh) | (df["LRT_neutral_pval"] <= thresh)) & (df['Num_Isolates'] >= 5) , col_name] = "Neutral"
-
+    ################################################################ Neutral criteria ################################################################
+    # Use threshold of 0.05 for all neutral tests for consistency with SOLO. For silent variants, the threshold of 0.01 is used in the above steps for non-Neutral
+    df.loc[(~df["predicted_effect"].isin(silent_lst)) & (df["BH_pval"] > 0.05) & (df["BH_neutral_pval"] <= 0.05) & (df['Num_Isolates'] >= 5), col_name] = "Neutral"
+    
+    # for silent mutations, use raw p-values to determine neutrality. Use FDR-corrected p-value from permutation test though (not permutation neutral)
+    df.loc[(df["predicted_effect"].isin(silent_lst)) & (df["BH_pval"] > 0.05) & (df["neutral_pval"] <= 0.05) & (df['Num_Isolates'] >= 5), col_name] = "Neutral"  
+    
     # fill in any variants without a grading with Uncertain
     df[col_name] = df[col_name].replace('nan', np.nan)
     df.loc[pd.isnull(df[col_name]), col_name] = "Uncertain"
     
     df[col_name] = df[col_name].astype(str)
     assert sum(pd.isnull(df[col_name])) == 0
-
-    # naming standardization with SOLO results
-    df["mutation"] = df.mutation.str.replace("lof", "LoF")
-    df["predicted_effect"] = df.predicted_effect.str.replace("lof", "LoF")
 
     return df
 
@@ -146,8 +140,8 @@ def export_binary_analyses(drugs_lst, read_folder, write_folder, analyses_lst, p
     pooled_model_variants boolean indicates whether to get the statistics for the non-lof, non-inframe mutations from the unpooled models or the pooled models
     '''
     
-    if not os.path.isdir(f"../results/{write_folder}"):
-        os.mkdir(f"../results/{write_folder}")
+    if not os.path.isdir(f"./results/{write_folder}"):
+        os.mkdir(f"./results/{write_folder}")
     
     for drug in np.sort(drugs_lst):
         
@@ -174,32 +168,40 @@ def export_binary_analyses(drugs_lst, read_folder, write_folder, analyses_lst, p
                 # exclude mutations that are already covered in earlier models
                 exclude_mutations = []
                 
-                # for models with synonymous mutations, keep only the data for the synonymous ones
+                # for models with synonymous mutations, keep only the results for the synonymous ones
                 # the data for nonsyn mutations will come from the noSyn models
                 if "withSyn" in model_path:
                     try:
                         exclude_mutations += list(pd.read_pickle(os.path.join(analysis_dir, drug, read_folder, model_path.replace("withSyn", "noSyn"), "model_matrix.pkl")).columns)
                     except:
                         pass
-                        
-                # select which model results to keep for mutations (non-LoF, non-inframe) tested in both the pooled and unpooled models
-                # if pooled_model_variants = True, keep the stats from the pooled model. else, keep the stats from the unpooled model
-                if pooled_model_variants:
 
-                    # no pooled + synonymous models
-                    if "unpooled" in model_path and "noSyn" in model_path:
-                        try:
-                            exclude_mutations += list(pd.read_pickle(os.path.join(analysis_dir, drug, read_folder, model_path.replace("unpooled", "poolSeparate"), "model_matrix.pkl")).columns)
-                        except:
-                            pass
+                # for models with LoF pooling, keep only the results for the pooled mutations
+                # the data for unpooled mutations will come from the unpooled models
+                if "poolLoF" in model_path:
+                    try:
+                        exclude_mutations += list(pd.read_pickle(os.path.join(analysis_dir, drug, read_folder, model_path.replace("poolLoF", "unpooled"), "model_matrix.pkl")).columns)
+                    except:
+                        pass
+                        
+                # # select which model results to keep for mutations (non-LoF, non-inframe) tested in both the pooled and unpooled models
+                # # if pooled_model_variants = True, keep the stats from the pooled model. else, keep the stats from the unpooled model
+                # if pooled_model_variants:
+
+                #     # no pooled + synonymous models
+                #     if "unpooled" in model_path and "noSyn" in model_path:
+                #         try:
+                #             exclude_mutations += list(pd.read_pickle(os.path.join(analysis_dir, drug, read_folder, model_path.replace("unpooled", "poolSeparate"), "model_matrix.pkl")).columns)
+                #         except:
+                #             pass
                             
-                else:
-                    # exclude mutations in the pooled model so that we keep the values estimated in the unpooled model
-                    if ("poolSeparate" in model_path or "poolLoF" in model_path) and "noSyn" in model_path:
-                        try:
-                            exclude_mutations += list(pd.read_pickle(os.path.join(analysis_dir, drug, read_folder, model_path.replace("poolSeparate", "unpooled").replace("poolLoF", "unpooled"), "model_matrix.pkl")).columns)
-                        except:
-                            pass
+                # else:
+                #     # exclude mutations in the pooled model so that we keep the values estimated in the unpooled model
+                #     if ("poolSeparate" in model_path or "poolLoF" in model_path) and "noSyn" in model_path:
+                #         try:
+                #             exclude_mutations += list(pd.read_pickle(os.path.join(analysis_dir, drug, read_folder, model_path.replace("poolSeparate", "unpooled").replace("poolLoF", "unpooled"), "model_matrix.pkl")).columns)
+                #         except:
+                #             pass
                             
                 add_analysis = add_analysis.query("mutation not in @exclude_mutations")
 
@@ -217,7 +219,7 @@ def export_binary_analyses(drugs_lst, read_folder, write_folder, analyses_lst, p
                 if len(add_analysis) > 0:
                     all_analyses[model_path.replace("phenos=", "").replace("/", ",").replace("tiers=", "T").replace("dropAF_", "").replace("encodeAF_", "").replace("binarizeAF", "")] = add_analysis
     
-        with pd.ExcelWriter(f"../results/{write_folder}/{drug}.xlsx") as file:
+        with pd.ExcelWriter(f"./results/{write_folder}/{drug}.xlsx") as file:
             for key, val in all_analyses.items():
                 val.to_excel(file, sheet_name=key, index=False)
                     
@@ -230,15 +232,12 @@ binary_analyses_lst = [
                         ########### Tier 1, WHO phenos ###########
                         "tiers=1/phenos=WHO/dropAF_noSyn_unpooled",
                         "tiers=1/phenos=WHO/dropAF_noSyn_poolLoF",
-                        # "tiers=1/phenos=WHO/dropAF_noSyn_poolSeparate",
                         "tiers=1/phenos=WHO/dropAF_withSyn_unpooled",
                         ########### Tier 1, ALL phenos ###########
                         "tiers=1/phenos=ALL/dropAF_noSyn_unpooled",
                         "tiers=1/phenos=ALL/dropAF_noSyn_poolLoF",
-                        # "tiers=1/phenos=ALL/dropAF_noSyn_poolSeparate",
                         "tiers=1/phenos=ALL/dropAF_withSyn_unpooled",
                       ]
 
 drugs_lst = list(drug_abbr_dict.keys())
-# export_binary_analyses(drugs_lst, "BINARY", "BINARY_POOL", binary_analyses_lst, pooled_model_variants=True)
 export_binary_analyses(drugs_lst, "BINARY", "BINARY", binary_analyses_lst, pooled_model_variants=False)

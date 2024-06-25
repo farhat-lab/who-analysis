@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats as st
 from scipy.stats import binomtest
-import sys, glob, os, yaml, tracemalloc, warnings
+import sys, glob, os, yaml, tracemalloc, warnings, argparse
 warnings.filterwarnings("ignore")
 
 # utils files are in a separate folder
@@ -40,11 +40,7 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
     # read in the matrix of inputs and the coefficient outputs
     model_path = os.path.dirname(model_analysis_file)
     matrix = pd.read_pickle(os.path.join(model_path, "model_matrix.pkl"))
-
-    # lof features were renamed at some point, so ensure that they match
-    matrix.columns = matrix.columns.str.replace('lof', 'LoF')
-    matrix.to_pickle(os.path.join(model_path, "model_matrix.pkl"))
-
+    
     # if the model is an encodeAF model, consider present as AFs > 0.25 and absent as AFs <= 0.25
     # normally, AFs > 0.75 are considered present (variant_binary_status = 1)
     if encodeAF:
@@ -101,7 +97,6 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
                    ] = "LoF_all"
 
     # fix LoF naming convention
-    res_df["mutation"] = res_df.mutation.str.replace("lof", "LoF")
     res_df.loc[(res_df["mutation"].str.contains("LoF")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "LoF"
     res_df.loc[(res_df["mutation"].str.contains("inframe")) & (~res_df["mutation"].str.contains("all")), "predicted_effect"] = "inframe"
     res_df.loc[res_df["mutation"].str.contains("all"), "predicted_effect"] = "LoF_all"
@@ -114,11 +109,11 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
     assert res_df.Num_Isolates.min() > 0
 
     # check that there are no NaNs in the univariate statistics. Don't include LR+ upper and lower bounds because they can be NaN if LR+ = inf
-    assert len(res_df.loc[~res_df["mutation"].str.contains("PC")].loc[pd.isnull(res_df[['Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'R_PPV', 'S_PPV', 'Sens', 'Spec', 'LR+', 'LR-', 'R_PPV_LB', 'R_PPV_UB', 'S_PPV_LB', 'S_PPV_UB', 'Sens_LB', 'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR-_LB', 'LR-_UB']]).any(axis=1)]) == 0
+    assert len(res_df.loc[~res_df["mutation"].str.contains("PC")].loc[pd.isnull(res_df[['Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'R_PPV', 'S_PPV', 'NPV', 'Sens', 'Spec', 'LR+', 'LR-', 'R_PPV_LB', 'R_PPV_UB', 'S_PPV_LB', 'S_PPV_UB', 'Sens_LB', 'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR-_LB', 'LR-_UB']]).any(axis=1)]) == 0
 
     # check confidence intervals. LB ≤ var ≤ UB, and no confidence intervals have width 0. When the probability is 0 or 1, there are numerical precision issues
     # i.e. python says 1 != 1. So ignore those cases when checking
-    for var in ["R_PPV", "S_PPV", "Sens", "Spec", "LR+", "LR-"]:
+    for var in ["R_PPV", "S_PPV", "NPV", "Sens", "Spec", "LR+", "LR-"]:
         assert len(res_df.loc[(~res_df[var].isin([0, 1])) & (res_df[var] < res_df[f"{var}_LB"])]) == 0
         assert len(res_df.loc[(~res_df[var].isin([0, 1])) & (res_df[var] > res_df[f"{var}_UB"])]) == 0
 
@@ -129,8 +124,8 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
     del matrix
 
     res_df[['mutation', 'predicted_effect', 'position', 'coef', 'Odds_Ratio', 'pval', 'BH_pval',
-       'Bonferroni_pval', 'neutral_pval', 'BH_neutral_pval', 'Bonferroni_neutral_pval', 'Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'R_PPV', 'S_PPV', 'Sens', 'Spec',
-       'LR+', 'LR-', 'R_PPV_LB', 'R_PPV_UB', 'S_PPV_LB', 'S_PPV_UB', 'Sens_LB',
+       'Bonferroni_pval', 'neutral_pval', 'BH_neutral_pval', 'Bonferroni_neutral_pval', 'Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'R_PPV', 'S_PPV', 'NPV', 'Sens', 'Spec',
+       'LR+', 'LR-', 'R_PPV_LB', 'R_PPV_UB', 'S_PPV_LB', 'S_PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB',
        'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
        ]].to_csv(os.path.join(model_analysis_file), index=False)
 
@@ -139,7 +134,13 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
 # starting the memory monitoring
 tracemalloc.start()
 
-_, model_type, drug = sys.argv
+parser = argparse.ArgumentParser()
+parser.add_argument('-drug', "--d", dest='drug', type=str, required=True)
+parser.add_argument('-model', "--m", dest='model_type', type=str, required=True)
+
+cmd_line_args = parser.parse_args()
+drug = cmd_line_args.drug
+model_type = cmd_line_args.model_type
 
 analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 

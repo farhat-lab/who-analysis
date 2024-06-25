@@ -112,43 +112,62 @@ def get_mic_midpoints(mic_df, pheno_col):
 
 
 
-def normalize_MICs_return_dataframe(drug, df, cc_df):
+def normalize_MICs_return_dataframe(drug, df, cc_df, keep_single_medium=False):
     '''
-    Normalize all MICs to the most commonly tested medium for a given drug
+    Normalize all MICs to the most commonly tested medium for a given drug.
+
+    If keep_single_medium is specified, then don't normalize MICs. Keep only MICs measured in the most common medium
     '''
 
     most_common_medium = df.medium.value_counts(sort=True, ascending=False).index.values[0]
     old_samples_lst = set(df.sample_id)
+
+    # for drug in cc_df.Drug.unique():
+    #     if len(cc_df.query("Drug==@drug & Medium.str.startswith('UKMYC')")) > 0:
+    #         assert cc_df.query("Drug==@drug & Medium.str.startswith('UKMYC')").Value.nunique() == 1
     
-    if drug in cc_df["Drug"].values:
+    if keep_single_medium:
 
-        single_drug_CC = cc_df.query("Drug==@drug").reset_index(drop=True)
-        most_common_medium_cc = single_drug_CC.query("Medium==@most_common_medium")["Value"].values[0]
-        
-        # if a medium can not be normalized, remove it 
-        remove_media_lst = []
-        
-        for medium in df.medium.unique():
-            if medium not in single_drug_CC["Medium"].values:
-                remove_media_lst.append(medium)
+        # if UKMYC5 or UKMYC6, need to include both. Previously verified that CCs are the same in both
+        if 'UKMYC' in most_common_medium:
+            most_common_medium = 'UKMYC'
+            df = df.query("medium.str.startswith(@most_common_medium)")
+        else:
+            df = df.query("medium == @most_common_medium")
 
-        df = df.query("medium not in @remove_media_lst").reset_index(drop=True)
-        
-        print(f"    Dropped {len(set(old_samples_lst)-set(df.sample_id))}/{len(old_samples_lst)} isolates in {remove_media_lst} without critical concentrations")
+        print(f"    Kept {df.sample_id.nunique()}/{len(old_samples_lst)} isolates in {most_common_medium} for {drug}")
 
-        critical_conc_dict = dict(zip(single_drug_CC["Medium"], single_drug_CC["Value"]))
-        df["medium_CC"] = df["medium"].map(critical_conc_dict)
-        
-        # no NaNs because the unnormalizable media were removed already
-        assert len(df.loc[pd.isnull(df["medium_CC"])]) == 0
-        
-        # normalize MICs: multiply the MIC by the ratio of the critical concentration in 7h10 to the critical concentration in the experimental media
-        df["norm_medium"] = most_common_medium
-        df["norm_MIC"] = df["mic_value"] * most_common_medium_cc / df["medium_CC"]
     else:
-        df = df.query("medium == @most_common_medium")
-        print(f"    Dropped {len(set(old_samples_lst)-set(df.sample_id))}/{len(old_samples_lst)} isolates that are not in {most_common_medium} because {drug} is not in the critical concentrations dataframe")
+        
+        if drug in cc_df["Drug"].values:
     
+            single_drug_CC = cc_df.query("Drug==@drug").reset_index(drop=True)
+            most_common_medium_cc = single_drug_CC.query("Medium==@most_common_medium")["Value"].values[0]
+            
+            # if a medium can not be normalized, remove it 
+            remove_media_lst = []
+            
+            for medium in df.medium.unique():
+                if medium not in single_drug_CC["Medium"].values:
+                    remove_media_lst.append(medium)
+    
+            df = df.query("medium not in @remove_media_lst").reset_index(drop=True)
+            
+            print(f"    Dropped {len(set(old_samples_lst)-set(df.sample_id))}/{len(old_samples_lst)} isolates in {remove_media_lst} without critical concentrations")
+    
+            critical_conc_dict = dict(zip(single_drug_CC["Medium"], single_drug_CC["Value"]))
+            df["medium_CC"] = df["medium"].map(critical_conc_dict)
+            
+            # no NaNs because the unnormalizable media were removed already
+            assert len(df.loc[pd.isnull(df["medium_CC"])]) == 0
+            
+            # normalize MICs: multiply the MIC by the ratio of the critical concentration in 7h10 to the critical concentration in the experimental media
+            df["norm_medium"] = most_common_medium
+            df["norm_MIC"] = df["mic_value"] * most_common_medium_cc / df["medium_CC"]
+        else:
+            df = df.query("medium == @most_common_medium")
+            print(f"    Dropped {len(set(old_samples_lst)-set(df.sample_id))}/{len(old_samples_lst)} isolates that are not in {most_common_medium} because {drug} is not in the critical concentrations dataframe")
+                
     return df, most_common_medium
 
         
@@ -158,10 +177,10 @@ def remove_features_save_list(matrix, fName, dropNA=False):
     if dropNA:
         init_samples = matrix.index.values
         matrix = matrix.dropna(axis=0)
-        next_samples = matrix.index.values
+        final_samples = matrix.index.values
 
-    # features that are the same everywhere, so drop them because there is no signal
-    drop_features = matrix.loc[:, matrix.nunique() == 1].columns
+    # features that are the same everywhere (keep NaNs here though if dropNA argument is False), so drop them because there is no signal
+    drop_features = matrix.loc[:, matrix.nunique(dropna=False) == 1].columns
 
     if len(drop_features) > 0:
         with open(fName, "w+") as file:
@@ -169,12 +188,12 @@ def remove_features_save_list(matrix, fName, dropNA=False):
                 file.write(feature + "\n")
                 
     if dropNA:
-        print(f"    Dropped {len(set(init_samples)-set(next_samples))}/{len(init_samples)} isolates with missingness and {len(drop_features)}/{matrix.shape[1]} associated features")
+        print(f"    Dropped {len(set(init_samples)-set(final_samples))}/{len(init_samples)} isolates with missingness and {len(drop_features)}/{matrix.shape[1]} associated features")
     else:
         print(f"    Dropped {len(drop_features)}/{matrix.shape[1]} features with no signal")
 
     # return only the features with signal
-    return matrix.loc[:, matrix.nunique() > 1]
+    return matrix.loc[:, matrix.nunique(dropna=False) > 1]
 
 
 
@@ -183,18 +202,11 @@ def add_grading_rules_regression(df):
     Up- or downgrade variants using the SOLO gradings. If the SOLO Initial grading != SOLO Final grading, take the SOLO Final grading as the grading for regression + grading rules
     '''
 
-    df.loc[(df['SOLO FINAL CONFIDENCE GRADING'] != '3) Uncertain significance') & (df['SOLO INITIAL CONFIDENCE GRADING'] != df['SOLO FINAL CONFIDENCE GRADING']), 'REGRESSION + GRADING RULES'] = df['SOLO FINAL CONFIDENCE GRADING']
+    df.loc[(df['REGRESSION GRADING + LOF UPGRADE'] == '3) Uncertain significance') & 
+           (df['SOLO INITIAL CONFIDENCE GRADING'] == '3) Uncertain significance') &
+           (df['SOLO FINAL CONFIDENCE GRADING'] != '3) Uncertain significance'), 'REGRESSION + GRADING RULES'] = df['SOLO FINAL CONFIDENCE GRADING']
     
-    # map to regression names
-    solo_to_reg_mapping = {"1) Assoc w R": "Assoc w R",
-                           "2) Assoc w R - Interim": "Assoc w R - Interim",
-                           "3) Uncertain significance": "Uncertain",
-                           "4) Not assoc w R - Interim": "Assoc w S - Interim",
-                           "5) Not assoc w R": "Neutral" # could be either Assoc w S or Neutral, but they will be pooled together in the comparison because we can't distinguish
-                          }
-    
-    df['REGRESSION + GRADING RULES'] = df['REGRESSION + GRADING RULES'].map(solo_to_reg_mapping)
-    df['REGRESSION + GRADING RULES'] = df['REGRESSION + GRADING RULES'].fillna(df['REGRESSION FINAL CONFIDENCE GRADING'])
+    df['REGRESSION + GRADING RULES'] = df['REGRESSION + GRADING RULES'].fillna(df['REGRESSION GRADING + LOF UPGRADE'])
     assert sum(pd.isnull(df['REGRESSION + GRADING RULES'])) == 0
 
     return df

@@ -297,14 +297,15 @@ def compute_univariate_stats(combined_df):
     # LR+ ranges from 1 to infinity. LR- ranges from 0 to 1
     final["Num_Isolates"] = final["Mut_R"] + final["Mut_S"]    
     final["R_PPV"] = final["Mut_R"] / (final["Mut_R"] + final["Mut_S"]) # PPV for R-associated variants
-    final["S_PPV"] = final["Mut_S"] / (final["Mut_R"] + final["Mut_S"]) # PPV for S-associated variants, basically the false discovery rate (1 - PPV), but different meaning
+    final["S_PPV"] = final["Mut_S"] / (final["Mut_R"] + final["Mut_S"]) # PPV for S-associated variants
+    final['NPV'] = final['NoMut_S'] / (final['NoMut_S'] + final['NoMut_R']) # NPV for R-assiciated variants. This checks if the absence of the variant is a valid marker of susceptibility
     
     final["Sens"] = final["Mut_R"] / (final["Mut_R"] + final["NoMut_R"])
     final["Spec"] = final["NoMut_S"] / (final["NoMut_S"] + final["Mut_S"])
     final["LR+"] = final["Sens"] / (1 - final["Spec"])
     final["LR-"] = (1 - final["Sens"]) / final["Spec"]
     
-    return final[["mutation", "Num_Isolates", "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", "R_PPV", "S_PPV", "Sens", "Spec", "LR+", "LR-"]]
+    return final[["mutation", "Num_Isolates", "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", "R_PPV", "S_PPV", "NPV", "Sens", "Spec", "LR+", "LR-"]]
     
 
 
@@ -328,6 +329,10 @@ def compute_exact_confidence_intervals(res_df, alpha):
             # S-PPV: Mut_S / (Mut_R + Mut_S)
             ci = st.binomtest(k=row["Mut_S"], n=row["Mut_R"] + row["Mut_S"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
             res_df.loc[i, ["S_PPV_LB", "S_PPV_UB"]] = [ci.low, ci.high]
+
+            # NPV: NoMut_S / (NoMut_S + NoMut_R)
+            ci = st.binomtest(k=row["NoMut_S"], n=row["NoMut_S"] + row["NoMut_R"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')
+            res_df.loc[i, ["NPV_LB", "NPV_UB"]] = [ci.low, ci.high]
             
             # Sensitivity: TP / (TP + FN)
             ci = st.binomtest(k=row["Mut_R"], n=row["Mut_R"] + row["NoMut_R"], p=0.5).proportion_ci(confidence_level=1-alpha, method='exact')

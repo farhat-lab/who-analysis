@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
-import glob, os, yaml, sparse, sys
+import glob, os, yaml, sparse, sys, argparse
 import scipy.stats as st
 import sklearn.metrics
 from sklearn.decomposition import PCA
@@ -20,7 +20,13 @@ from stats_utils import *
 # starting the memory monitoring
 tracemalloc.start()
 
-_, config_file, drug = sys.argv
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
+parser.add_argument('-drug', "--d", dest='drug', type=str, required=True)
+
+cmd_line_args = parser.parse_args()
+config_file = cmd_line_args.config_file
+drug = cmd_line_args.drug
 
 kwargs = yaml.safe_load(open(config_file))    
 binary = kwargs["binary"]
@@ -42,8 +48,8 @@ else:
 
 scaler = StandardScaler()
 
-# run likelihood ratio test only for BINARY models currently
-if not binary or atu_analysis:
+# run likelihood ratio test only for BINARY models
+if not binary:
     exit()
     
 if binary:
@@ -77,22 +83,26 @@ if not os.path.isfile(os.path.join(out_dir, "model_matrix.pkl")):
 else:
     matrix = pd.read_pickle(os.path.join(out_dir, "model_matrix.pkl"))
 
-print(matrix.shape)
 mutations_lst = matrix.columns
 
-# if this is for a tier 1 + 2 model, only compute LRT for tier 2 mutations because the script takes a while to run, so remove the tier 1 mutations
-if len(tiers_lst) == 2:
-    tier1_mutations = pd.read_pickle(os.path.join(out_dir.replace("tiers=1+2", "tiers=1"), "model_matrix.pkl")).columns
-    mutations_lst = list(set(mutations_lst) - set(tier1_mutations))
+# DON'T DO THIS BECAUSE YOU NEED TO PERFORM FDR CORRECTION ON THE FULL DATASET FOR CONSISTECY WITH FDR CORRECTION ON THE PERMUTATION TEST RESULTS
+
+# # if this is for a tier 1 + 2 model, only compute LRT for tier 2 mutations because the script takes a while to run, so remove the tier 1 mutations
+# if len(tiers_lst) == 2:
+#     print("Removed tier 1 variants already covered by the base model from the LRT computation")
+#     tier1_mutations = pd.read_pickle(os.path.join(out_dir.replace("tiers=1+2", "tiers=1"), "model_matrix.pkl")).columns
+#     mutations_lst = list(set(mutations_lst) - set(tier1_mutations))
     
 # # if this is for a +silent model, only compute LRT for the silent because the script takes a while to run, so remove the nonsyn mutations
 # # LRT will have already been computed for these in the corresponding noSyn model
 # if silent:
+#     print("Removed non-silent variants already covered by the base model from the LRT computation")
 #     nonsyn_mutations = pd.read_pickle(os.path.join(out_dir.replace("withSyn", "noSyn"), "model_matrix.pkl")).columns
 #     mutations_lst = list(set(mutations_lst) - set(nonsyn_mutations))
    
 # # only compute LRT for the pooled mutations because the unpooled mutation data will come from the unpooled models
 # if "poolSeparate" in model_prefix or "poolLoF" in model_prefix:
+#     print("Removed unpooled variants already covered by the base model from the LRT computation")
 #     unpooled_mutations = pd.read_pickle(os.path.join(out_dir.replace("poolSeparate", "unpooled").replace("poolLoF", "unpooled"), "model_matrix.pkl")).columns
 #     mutations_lst = list(set(mutations_lst) - set(unpooled_mutations))
     

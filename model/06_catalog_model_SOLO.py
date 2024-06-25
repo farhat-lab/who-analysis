@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, sparse, sys, pickle, tracemalloc, warnings
+import glob, os, yaml, sparse, sys, pickle, tracemalloc, warnings, argparse
 import scipy.stats as st
 import sklearn.metrics
 from sklearn.preprocessing import StandardScaler
@@ -16,15 +16,23 @@ from stats_utils import *
 # starting the memory monitoring
 tracemalloc.start()
 
-_, drug, AF_thresh, solo_col = sys.argv
+parser = argparse.ArgumentParser()
 
-solo_col = solo_col.upper()
-assert solo_col in ['INITIAL', 'FINAL']
+# Add a required string argument for the config file
+parser.add_argument("--drug", dest='drug', type=str, required=True)
+
+parser.add_argument('--AF', dest='AF_thresh', type=float, required=True)
+
+parser.add_argument('--grading-rules', dest='grading_rules', action='store_true', help='Add mutations that would be upgraded by grading rules')
 
 analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
 alpha = 0.05
-AF_thresh = float(AF_thresh)
 tiers_lst = ['1']
+
+cmd_line_args = parser.parse_args()
+drug = cmd_line_args.drug
+AF_thresh = cmd_line_args.AF_thresh
+grading_rules = cmd_line_args.grading_rules
 
 who_variants = pd.read_csv("results/WHO-catalog-V2.csv", header=[2])
 del who_variants['mutation']
@@ -44,6 +52,11 @@ else:
 out_dir = os.path.join(analysis_dir, drug, "BINARY", f"tiers={'+'.join(tiers_lst)}", f"phenos={phenos_name}")
 print(f"Saving results to {out_dir}")
 assert os.path.isdir(out_dir)
+
+if grading_rules:
+    solo_col = 'FINAL'
+else:
+    solo_col = 'INITIAL'
 
 who_variants = who_variants.loc[~pd.isnull(who_variants[f'{solo_col} CONFIDENCE GRADING'])].reset_index(drop=True)
 R_assoc = who_variants.loc[who_variants[f'{solo_col} CONFIDENCE GRADING'].str.contains('Assoc w R')].query("drug == @drug")["variant"].values
@@ -68,10 +81,7 @@ df_genos.loc[(df_genos["variant_allele_frequency"] > AF_thresh), "variant_binary
 del df_genos["variant_allele_frequency"]
 
 lof_effect_list = ["frameshift", "start_lost", "stop_gained", "feature_ablation"]
-# inframe_effect_list = ["inframe_insertion", "inframe_deletion"]
-
 df_genos.loc[df_genos["predicted_effect"].isin(lof_effect_list), "pooled_variable"] = "LoF"
-# df_genos.loc[df_genos["predicted_effect"].isin(inframe_effect_list), "pooled_variable"] = "inframe"
 
 # get the pooled mutation column so that it's gene + inframe/LoF
 df_genos["pooled_mutation"] = df_genos["resolved_symbol"] + "_" + df_genos["pooled_variable"]
@@ -88,6 +98,9 @@ unpooled_matrix = unpooled_matrix.drop_duplicates(["sample_id", "mutation"], kee
 
 # keep all isolates (i.e., no dropping due to NaNs)
 model_matrix = pd.concat([pooled_matrix, unpooled_matrix], axis=1)
+
+# some variants are not present because they were not in the dataset -- these are the "Selection evidence" variants that had no data-driven results because they're not in any isolate
+R_assoc = [variant for variant in R_assoc if variant in model_matrix.columns]
 assert model_matrix.shape[1] == len(R_assoc)
 
 # in this case, only 3 possible values -- 0 (ref), 1 (alt), and NaN

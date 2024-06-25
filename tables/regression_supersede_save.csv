@@ -1,0 +1,125 @@
+Drug,mutation,SOLO INITIAL CONFIDENCE GRADING,SOLO FINAL CONFIDENCE GRADING,REGRESSION FINAL CONFIDENCE GRADING
+Amikacin,eis_c.42G>C,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Bedaquiline,mmpL5_c.2079C>G,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Bedaquiline,mmpL5_c.777G>A,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Capreomycin,tlyA_p.Ala105fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Capreomycin,tlyA_p.His68fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Capreomycin,tlyA_p.Ser92fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Clofazimine,mmpL5_c.2475C>T,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Clofazimine,pepQ_c.54G>T,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Clofazimine,Rv0678_p.Asp47fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Delamanid,fbiC_c.1680C>T,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Ethambutol,embA_c.648A>G,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Ethambutol,embA_c.2280G>C,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Ethambutol,embB_c.201G>T,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Ethambutol,embB_c.2340G>A,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Ethambutol,embC_c.345G>A,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Ethambutol,embC_c.615C>T,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Ethambutol,embB_c.2151G>A,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Ethambutol,ubiA_c.642C>T,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Ethambutol,ubiA_c.675G>A,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Ethambutol,embC_c.2580G>A,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Ethambutol,embA_c.1272G>A,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Ethambutol,embB_c.588G>A,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Ethambutol,ubiA_c.219C>T,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Ethambutol,embB_c.3273G>T,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Ethambutol,embA_c.108G>A,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Ethambutol,embA_c.1738C>T,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Ethambutol,embB_c.1803C>T,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Ethionamide,ethA_p.Gly350fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,ethA_c.171C>T,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Ethionamide,ethA_p.Asn114fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Ethionamide,ethA_p.Ser399*,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,ethA_p.Tyr369fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,ethA_p.Leu295fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Ethionamide,ethA_p.Tyr276fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Ethionamide,ethA_p.Ser148fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,inhA_c.-770T>G,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,ethA_p.Trp256*,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Ethionamide,ethA_p.Met260fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,ethA_p.Lys448fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Ethionamide,ethA_p.Trp109*,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,ethA_p.Phe349fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,inhA_c.9A>C,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Ethionamide,mshA_c.231G>C,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Ethionamide,ethA_p.Leu225fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,ethA_p.Arg292*,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,ethA_deletion,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Ethionamide,ethA_p.Trp256fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,ethA_p.Leu478fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,ethA_p.Gln165*,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,inhA_c.-770T>C,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Ethionamide,ethA_p.Cys294*,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,ethA_p.Ser251fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Ethionamide,ethA_p.Cys253fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Ethionamide,inhA_c.-770T>A,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Ethionamide,inhA_c.-779G>T,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Isoniazid,inhA_c.-779G>T,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Isoniazid,katG_c.1233C>G,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Isoniazid,ahpC_c.495C>A,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Isoniazid,ahpC_c.444G>A,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Isoniazid,inhA_c.291C>T,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Isoniazid,katG_c.816C>T,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Isoniazid,inhA_p.Ser94Ala,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Isoniazid,katG_deletion,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Isoniazid,inhA_c.-770T>G,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Isoniazid,katG_p.Gly124fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Isoniazid,katG_p.Ile8fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Isoniazid,katG_p.Ala16fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Isoniazid,inhA_c.-770T>C,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Isoniazid,inhA_c.-770T>A,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Kanamycin,rrs_n.1402C>T,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Levofloxacin,gyrA_c.474C>T,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Levofloxacin,gyrA_c.1629C>T,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Levofloxacin,gyrB_p.Glu501Asp,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Levofloxacin,gyrA_c.1494C>T,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Levofloxacin,gyrB_p.Ala504Val,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Levofloxacin,gyrA_p.Gly88Ala,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Linezolid,rplC_c.201A>G,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Linezolid,rplC_c.456C>G,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Linezolid,rplC_c.213C>T,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Linezolid,rrl_n.2270G>T,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Moxifloxacin,gyrB_c.144G>A,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Moxifloxacin,gyrA_c.1629C>T,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Moxifloxacin,gyrA_c.474C>T,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Moxifloxacin,gyrB_c.1578G>A,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Moxifloxacin,gyrA_c.591G>A,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Moxifloxacin,gyrB_p.Asn499Thr,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Pyrazinamide,pncA_p.Ala79fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Pyrazinamide,pncA_p.Ala143fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Pyrazinamide,pncA_p.Arg29fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Pyrazinamide,pncA_p.Tyr41*,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Rifampicin,rpoB_c.1482G>A,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Rifampicin,rpoB_c.150C>A,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R
+Rifampicin,rpoB_p.Asn438del,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Rifampicin,rpoB_p.Leu430Pro,3) Uncertain significance,1) Assoc w R,1) Assoc w R
+Rifampicin,rpoB_p.Asp435Gly,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Rifampicin,rpoB_p.His445Asn,3) Uncertain significance,1) Assoc w R,1) Assoc w R
+Rifampicin,rpoB_p.Met434Ile,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Rifampicin,rpoB_p.Asp435Glu,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Rifampicin,rpoB_p.His445Pro,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Rifampicin,rpoB_p.His445Ser,3) Uncertain significance,1) Assoc w R,1) Assoc w R
+Rifampicin,rpoB_p.Ser441Met,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Rifampicin,rpoB_p.Arg448Gln,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Rifampicin,rpoB_p.Ser450Met,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Rifampicin,rpoB_p.His445Gly,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Rifampicin,rpoB_p.His445Gln,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Rifampicin,rpoB_p.Ser431Gly,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Rifampicin,rpoB_p.Leu430Arg,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Rifampicin,rpoB_p.Gln432Glu,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Streptomycin,gid_p.Gly192fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Streptomycin,gid_c.579G>C,3) Uncertain significance,4) Not assoc w R - Interim,4) Not assoc w R - Interim
+Streptomycin,gid_p.Ser136*,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Streptomycin,gid_p.Val54fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Streptomycin,gid_p.Gly129fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Streptomycin,gid_p.Glu60fs,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Streptomycin,rpsL_p.Lys88Gln,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Streptomycin,gid_p.Asp46fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Streptomycin,gid_p.Trp45*,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Streptomycin,gid_p.Gly30fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Streptomycin,gid_p.Arg206*,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Streptomycin,gid_p.Glu103*,3) Uncertain significance,2) Assoc w R - Interim,2) Assoc w R - Interim
+Streptomycin,gid_p.Leu74*,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Streptomycin,gid_p.Trp148*,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Streptomycin,gid_p.Gly164fs,3) Uncertain significance,2) Assoc w R - Interim,1) Assoc w R
+Streptomycin,rpsL_c.117C>T,3) Uncertain significance,4) Not assoc w R - Interim,5) Not assoc w R

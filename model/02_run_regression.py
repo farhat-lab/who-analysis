@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, sparse, sys, shutil
+import glob, os, yaml, sparse, sys, argparse, shutil
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import tracemalloc, pickle
@@ -36,7 +36,15 @@ drug_abbr_dict = {"Delamanid": "DLM",
 # starting the memory monitoring
 tracemalloc.start()
 
-_, config_file, drug = sys.argv
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
+parser.add_argument('-drug', "--d", dest='drug', type=str, required=True)
+parser.add_argument('--MIC-single-medium', dest='keep_single_medium', action='store_true', help='If specified, keep only the most common media for the MIC models')
+
+cmd_line_args = parser.parse_args()
+config_file = cmd_line_args.config_file
+drug = cmd_line_args.drug
+keep_single_medium = cmd_line_args.keep_single_medium
 
 drug_WHO_abbr = drug_abbr_dict[drug]
 kwargs = yaml.safe_load(open(config_file))
@@ -110,25 +118,33 @@ if os.path.isfile(os.path.join(out_dir, f"model_analysis{model_suffix}.csv")):
     print("Regression was already run for this model")
     exit()
 else:
-    print(f"Saving results to {out_dir}")
+    print(f"Saving model results to {out_dir}")
     
 # keep only unique MICs. Many samples have MICs tested in different media, so prioritize them according to the model hierarchy
 if not binary:
 
-    # there are no critical concentrations for Pretomanid, so keep only the most common medium and use un-normalized values because they're all the same medium
-    if drug == "Pretomanid":
-        pheno_col = "mic_value"
-    else:
-        pheno_col = "norm_MIC"
-    
     cc_df = pd.read_csv("data/drug_CC.csv")
 
-    # first apply the media hierarchy to decide which of the measured MICs to keep for each isolate (for isolates with multiple MICs measured in different media)
-    df_phenos = process_multiple_MICs_different_media(df_phenos)
+    if keep_single_medium or drug == 'Pretomanid':
 
-    # then normalize the MICs to the most common medium. This creates a new column: norm_MIC that should be used if not Pretomanid
-    df_phenos, most_common_medium = normalize_MICs_return_dataframe(drug, df_phenos, cc_df)
-    print(f"    Min MIC: {np.min(df_phenos[pheno_col].values)}, Max MIC: {np.max(df_phenos[pheno_col].values)} in {most_common_medium}")
+        # no normalized value for Pretomanid because there are no WHO-approved critical concentrations, so we just use the most common one
+        # or only keep the most common medium
+        df_phenos, most_common_medium = normalize_MICs_return_dataframe(drug, df_phenos, cc_df, keep_single_medium=keep_single_medium)
+
+        # non-normalized column name
+        mic_col = 'mic_value'
+
+    else:
+        # first apply the media hierarchy to decide which of the measured MICs to keep for each isolate (for isolates with multiple MICs measured in different media)
+        df_phenos = process_multiple_MICs_different_media(df_phenos)
+        
+        # then, drop any media that can't be normalized and normalize to the scale of the most common medium
+        df_phenos, most_common_medium = normalize_MICs_return_dataframe(drug, df_phenos, cc_df, keep_single_medium=keep_single_medium)
+
+        # normalized column name
+        mic_col = 'norm_MIC'
+            
+    print(f"    Min MIC: {np.min(df_phenos[mic_col].values)}, Max MIC: {np.max(df_phenos[mic_col].values)} in {most_common_medium}")
     
 
 ############# STEP 2: GET THE MATRIX ON WHICH TO FIT THE DATA +/- EIGENVECTOR COORDINATES, DEPENDING ON THE PARAM #############
@@ -153,10 +169,11 @@ if binary:
     y = df_phenos["phenotype"].values
     assert len(np.unique(y)) == 2
 else:
-    y = np.log2(df_phenos[pheno_col].values)
+    y = np.log2(df_phenos[mic_col].values)
 
 if len(y) != X.shape[0]:
     raise ValueError(f"Shapes of model inputs {X.shape} and outputs {len(y)} are incompatible")
+
 print(f"{X.shape[0]} samples and {X.shape[1]} variables in the model")
 
 
