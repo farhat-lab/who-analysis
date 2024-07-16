@@ -1,20 +1,25 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, sparse, sys, pickle, tracemalloc, warnings, argparse, shutil
+import glob, os, yaml, sparse, sys, argparse, pickle, tracemalloc, warnings, shutil
 import scipy.stats as st
 import sklearn.metrics
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 warnings.filterwarnings("ignore")
+
+analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
+who_variants = pd.read_csv("./results/WHO-catalog-V2.csv", header=[2])
+del who_variants['mutation']
+who_variants['tier'] = who_variants['tier'].astype(str)
+
+alpha = 0.05
+tiers_lst = ['1']
+who_variants = who_variants.query("tier in @tiers_lst").reset_index(drop=True)
+results_final = pd.read_csv("results/Regression_Final_June2024_Tier1.csv")
 
 # utils files are in a separate folder
 sys.path.append("utils")
 from data_utils import *
 from stats_utils import *
 
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
-alpha = 0.05
-tiers_lst = ['1']
 
 # starting the memory monitoring
 tracemalloc.start()
@@ -26,18 +31,18 @@ parser.add_argument("--drug", dest='drug', type=str, required=True)
 
 parser.add_argument('--AF', dest='AF_thresh', type=float, default=0.75, help='Alternative allele frequency threshold (exclusive) to consider variants present')
 
-parser.add_argument('--S-assoc', dest='S_assoc', action='store_true', help='Predict susceptible isolates with S-assoc mutations')
+parser.add_argument('--remove-mut', dest='remove_mut', action='store_true', help='Remove mutations in Groups 1-2 regression and Groups 4-5 SOLO that are major discrepancies')
+
+parser.add_argument('--grading-rules', dest='grading_rules', action='store_true', help='Add mutations that would be upgraded by grading rules')
+
+parser.add_argument('--S-assoc', dest='S_assoc', action='store_true', help='Predict susceptible isolates with S-assoc mutations that abrogate the effects of R-associated mutations')
 
 cmd_line_args = parser.parse_args()
 drug = cmd_line_args.drug
 AF_thresh = cmd_line_args.AF_thresh
+remove_mut = cmd_line_args.remove_mut
+grading_rules = cmd_line_args.grading_rules
 S_assoc = cmd_line_args.S_assoc
-
-who_variants = pd.read_csv("results/WHO-catalog-V2.csv", header=[2])
-del who_variants['mutation']
-who_variants['tier'] = who_variants['tier'].astype(str)
-
-who_variants = who_variants.query("tier in @tiers_lst").reset_index(drop=True)
 
 # AF_thresh needs to be a float between 0 and 1
 if AF_thresh > 1:
@@ -52,14 +57,24 @@ out_dir = os.path.join(analysis_dir, drug, "BINARY", f"tiers={'+'.join(tiers_lst
 print(f"Saving results to {out_dir}")
 assert os.path.isdir(out_dir)
 
-who_variants = who_variants.loc[~pd.isnull(who_variants['INITIAL CONFIDENCE GRADING'])].reset_index(drop=True)
-R_assoc = who_variants.loc[who_variants['INITIAL CONFIDENCE GRADING'].str.contains('Assoc w R')].query("drug == @drug")["variant"].values
-
 model_suffix = ''
 
-if len(R_assoc) == 0:
-    print("There are no significant R-associated mutations for this model\n")
-    exit()
+if grading_rules:
+    results_col = 'REGRESSION + GRADING RULES'
+    model_suffix += '_gradingRules'
+else:
+    results_col = 'REGRESSION FINAL CONFIDENCE GRADING'
+
+R_assoc = results_final.loc[results_final[results_col].str.contains('Assoc w R', case=True)].query("Drug==@drug")["mutation"].values
+
+if remove_mut:
+
+    remove_muts_lst = results_final.loc[(results_final[results_col].str.contains('Assoc w R', case=True)) & (results_final['SOLO FINAL CONFIDENCE GRADING'].str.contains('Not assoc w R', case=True))].query("Drug==@drug")["mutation"].values
+
+    print(f"Removed major discrepancies {','.join(remove_muts_lst)} from the regression classification list")
+    
+    R_assoc = list(set(R_assoc) - set(remove_muts_lst))
+    model_suffix += '_remove_discrepancies'
 
 if S_assoc:
     
@@ -81,6 +96,10 @@ if S_assoc:
 
 else:
     negating_muts = []
+
+if len(R_assoc) == 0:
+    print("There are no significant R-associated mutations for this model\n")
+    exit() 
 
 
 #################################################### STEP 1: GET GENOTYPES, CREATE LOF AND INFRAME FEATURES ####################################################
@@ -124,7 +143,7 @@ R_assoc = [variant for variant in R_assoc if variant in model_matrix.columns]
 negating_muts = [variant for variant in negating_muts if variant in model_matrix.columns]
 assert model_matrix.shape[1] == len(R_assoc) + len(negating_muts)
 
-# in this case, only 3 possible values -- 0 (ref), 1 (alt), and NaN
+# in this case, only 3 possible values -- 0 (ref), 1 (alt), and NaN. Don't need to drop NaNs because we're looking for presence/absence of R-assoc variants
 assert len(np.unique(model_matrix.values)) <= 3
 print(f"Full matrix: {model_matrix.shape}, unique values: {np.unique(model_matrix.values)}")
 
@@ -132,8 +151,8 @@ print(f"Full matrix: {model_matrix.shape}, unique values: {np.unique(model_matri
 #################################################### STEP 2: PERFORM CATALOG-BASED CLASSIFICATION USING R-ASSOCIATED MUTATIONS ONLY ####################################################
 
 
-print(f"Performing catalog-based classification with {len(R_assoc)} tiers={'+'.join(tiers_lst)} R-associated mutations by SOLO INITIAL at an AF > {AF_thresh}")    
 print(R_assoc)
+print(f"Performing catalog-based classification with {len(R_assoc)} tiers={'+'.join(tiers_lst)} R-associated mutations at an AF > {AF_thresh}")
 
 # can take the sum because variant_binary_status (the column being used) has been converted to binary everywhere
 catalog_pred_df = pd.DataFrame(model_matrix[R_assoc].sum(axis=1)).reset_index()
@@ -227,8 +246,8 @@ def get_stats_with_CI(df, pred_col, true_col):
     
 
 catalog_results = get_stats_with_CI(catalog_pred_df, "y_pred", "phenotype")
-catalog_results["Model"] = "SOLO INITIAL"
-catalog_results.set_index("Model").to_csv(os.path.join(out_dir, f"model_stats_AF{int(AF_thresh*100)}_SOLO_initial_withLoF{model_suffix}.csv"))
+catalog_results["Model"] = "Regression"
+catalog_results.set_index("Model").to_csv(os.path.join(out_dir, f"model_stats_AF{int(AF_thresh*100)}_withLoF{model_suffix}.csv"))
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

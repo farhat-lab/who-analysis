@@ -135,27 +135,27 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
 tracemalloc.start()
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-drug', "--d", dest='drug', type=str, required=True)
-parser.add_argument('-model', "--m", dest='model_type', type=str, required=True)
+parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
 
-cmd_line_args = parser.parse_args()
-drug = cmd_line_args.drug
-model_type = cmd_line_args.model_type
+cmd_line_args cmd_line_args = parser.parse_args()
+config_file = cmd_line_args.config_file
 
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
+kwargs = yaml.safe_load(open(config_file))
+analysis_dir = kwargs["output_dir"]
+binary = kwargs["binary"]
+atu_analysis = kwargs["atu_analysis"]
 
-# this is the intermediate folder
-model_type = model_type.upper()
-assert model_type in ["BINARY", "AF", "ATU", "MIC"]
+if not binary:
+    model_type = "MIC"
+else:
+    if atu_analysis:
+        folder = "ATU"
+    else:
+        folder = "BINARY"
 
 if model_type == "MIC":
     print("There are no univariate statistics to add for MIC models. Quitting this script.")
     exit()
-# folder in which to search (options are MIC, ATU, and BINARY)
-elif model_type == "ATU":
-    folder = "ATU"
-else:
-    folder = "BINARY"
 
 # get all models to compute univariate statistics for
 analysis_paths = []

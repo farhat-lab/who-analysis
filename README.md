@@ -7,44 +7,6 @@ This project uses `conda` to manage packages (install Anaconda <a href="https://
 ```conda env create -f environment.yaml```
 
 to create the environment. Run `conda activate <env_name>` to activate it and `conda deactivate` to deactivate once you are in it.
-    
-<!-- ## Genotype Annotations
-
-<ul>
-    <li>resolved_symbol: gene name</li>
-    <li>variant_category</li>
-    <ul>
-        <li>p: coding variants</li>
-        <li>c: synonymous or upstream variants</li>
-        <li>n: non-coding variants in <i>rrs/rrl</i></li>
-        <li>deletion: large-scale deletion of a gene</li>
-    </ul>
-    <li>Effect</li>
-    <ul>
-        <li>upstream_gene_variant</li>
-        <li>missense_variant, synonymous_variant, inframe_deletion, inframe_insertion, stop_lost: self-explanatory</li>
-        <li>lof: any frameshift, large-scale deletion, nonsense, or loss of start mutation</li>
-        <li>initiator_codon_variant: Valine start codon</li>
-        <li>stop_retained_variant: variant in the stop codon that did not change it</li>
-    </ul>
-</ul>
-
-## Phenotype Annotations
-
-<ul>
-    <li>Variant binary status</li>
-        <ul>
-            <li>1 if the variant meets QC and AF > 0.75</li>
-            <li>0 if the variant meets QC, and AF ≤ 0.25</li>
-            <li>NA if the variant does not meet QC or 0.25 $\leq$ AF $\leq$ 0.75</li>
-        </ul>
-    <li>Variant allele frequency</li>
-        <ul>
-            <li>AF if the variant meets QC and AF $\geq$ 0.25</li>
-            <li>0 if the variant meets QC and AF ≤ 0.25</li>
-            <li>NA if the variant does not meet QC</li>
-        </ul>
-</ul> -->
 
 ## <code>data/</code>
 
@@ -61,7 +23,7 @@ to create the environment. Run `conda activate <env_name>` to activate it and `c
 
 1. <code>pca_explained_var.npy</code>: Array of explained variances of the first 50 principal components.
 2. <code>pca_explained_var_ratio.npy</code>: Array of explained variance ratios (array sums to 1) of the first 50 principal components (PCs).
-3.<code>eigenvec_50PC.csv</code>: First 50 eigenvectors of the PCA.
+3.<code>eigenvec_50PC.csv</code>: First 50 eigenvectors of the PCA run on 6,190 single nucleotide variant sites.
 4. <code>minor_allele_counts.pkl.gz</code>: 52,567 (isolates) × 6,938 (positions) matrix of minor allele counts (binary encoding) across the full genome. Note that uncompressed, this file is almost 3 GB, so ensure that you have enough RAM to read it in.
 5. <code>mixed_site_counts.xlsx</code>: SNVs for PCA with the proportion of isolates containing an unfixed variant (25% < AF ≤ 75%). Used for filtering out sites at which more than 1% of isolates have an unfixed variant.
 6. <code>Vargas_PNAS_2023_homoplasy.xlsx</code>: List of 1,525 homoplasic sites in MTBC. Dataset S1 from <a href="https://www.pnas.org/doi/10.1073/pnas.2301394120" target="_blank">Vargas <i>et al., PNAS</i>, 2023</a>.
@@ -69,46 +31,40 @@ to create the environment. Run `conda activate <env_name>` to activate it and `c
 
 ## Running the Analysis
         
-### Preprocessing (<code>preprocessing/</code>):
+### 0. Preprocessing (<code>preprocessing/</code>):
     
 Before building any models, run the two scripts in the <code>preprocessing</code> directory in numerical order.
 
 1. <code>preprocessing/01_make_gene_drug_mapping.py</code> creates the file <code>data/drug_gene_mapping.csv</code>, which maps the input gene names to each drug, which facilitates constructing the input model matrices
 2. <code>preprocessing/02_samples_summary_andPCA.py</code> generates 50 eigenvectors for population structure correction and saves them to <code>PCA/eigenvec_50PC.csv</code>. Intermediate files that this script creates are a dataframe of minor allele counts (<code>data/minor_allele_counts.pkl;</code>) and an array of the explained variance ratios of each of the 50 principal components (<code>data/pca_explained_var.npy</code>). These files were too large to commit to this repository.
 
-### Model Scripts (<code>model/</code>)
+### 1. Model Scripts (<code>model/</code>)
 
-For every drug, run the bash script <code>run_regression.sh</code> with the following command line arguments: full drug name, the 3-letter abbreviation used in the 2021 WHO catalog, and the directory to which output files should be written. For example, for isoniazid, the arguments after the script name would be `run_regression.sh Isoniazid INH /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue`. This bash script runs the following scripts:
+#### Missing Data
+
+All samples with any missing data are excluded from models. This is done at the model-level, so a sample can be exluded from one model but not another for the same drug. <code>scikit-learn</code> can not fit models with NaNs, and imputation can introduce biases, so we decided to drop all samples with missingness.
+
+The following model scripts require the config file (`config.yaml`) and the full drug name to run the analysis on as arguments.
   
 1. <code>01_make_model_inputs.py</code>: create input matrices to fit a regression model.
 2. <code>02_run_regression.py</code> performs a Ridge (L2-penalized) regression and a permutation test to assess coefficient significance.
-3. <code<03_likelihood_ratio_test.py</code>: performs the likelihood ratio test for every mutation in the 
+3. <code>03_likelihood_ratio_test.py</code>: performs the likelihood ratio test for every mutation in the 
 4. <code>04_compute_univariate_statistics.py</code>: computes statistics like sensitivity, specificity, and positive predictive value for each mutation, with 95% exact binomial confidence intervals.
-5. <code>05_catalog_model.py</code>: uses the final regression catalog to get resistance predictions. Any isolate that contains a Group 1 or 2  
 
-After the above scripts are finished, run <code>run_unpooled_tests.sh</code> with only the full drug name and the 3-letter abbreviation used in the 2021 WHO catalog as additional command line arguments. These scripts run the LRT and AUC test. 
-
-4. <code>04_likelihood_ratio_test.py</code>: Performs LRT for all mutations in the unpooled models.
-5. <code>05_AUC_permutation_test.py</code>: Performs a test of how much a mutation contributes to AUC using a permutation test. 
-    
-Parameters in the yaml file:
+Parameters in the config file:
     
 <ul>
     <li><code>input_dir</code>: Directory where all input directories are stored. Contains subfolders "grm", "phenotypes", and "full_genotypes".</li>
     <li><code>output_dir</code>: Directory where model results will be written.</li>
     <li><code>binary</code>: boolean for whether to fit a binary or quantitative (MIC) model</li>
     <li><code>atu_analysis</code>: boolean for whether this is the normal binary analysis or a CC vs. CC-ATU analysis</li>
-    <li><code>atu_analysis_type</code>: string "CC" or "CC-ATU" denoting which model to run in this analysis. Only used if <code>atu_analysis = True</code></li>
-    <li><code>tiers_lst</code>: list of tiers to include in the model</li>
-    <li><code>pheno_category_lst</code>: list of phenotype categories to include. The list can include the strings WHO and ALL. Only used if <code>binary = True</code> and <code>atu_analysis = False</code></li>
-    <li><code>synonymous</code>: boolean for whether synonymous variants should be included</li>
-    <li><code>pool_type</code>: one of 3 strings (<code>poolSeparate</code>, <code>poolALL</code>, or <code>unpooled</code>). The first pools features into 2 aggregate features: "LOF" and "inframe". The second pools both into a combined feature "LOF_all," and the third disaggregates all features.</li>
-    <li><code>amb_mode</code>: how to handle mutations with intermediate AF. Options are DROP, AF, and BINARY. </li>
-    <li><code>missing_isolate_thresh</code>: threshold for missing isolates (0-1). i.e. if an isolate has more than N% of variants missing, drop it.</li>
-    <li><code>missing_feature_thresh</code>: threshold for missing variants (0-1), i.e. if a variant has more than N% of isolates missing, drop it.</li>
+    <li><code>atu_analysis_type</code>: string "CC" or "CC-ATU" denoting which model to run in this analysis. Only used if <code>atu_analysis = True</code>. We did not run ATU analyses for this work. </li>
+    <li><code>tiers_lst</code>: list of integers tiers to include in the model. We only run tier 1 models in this work. </li>
+    <li><code>pheno_category_lst</code>: list of phenotype categories to include. The list can include the strings "WHO" and "ALL." Only used if <code>binary = True</code> and <code>atu_analysis = False</code></li>
+    <li><code>silent</code>: boolean for whether silent variants (synonymous, initiator codon, and stop retained variants) should be included</li>
+    <li><code>pool_type</code>: one of 2 strings (<code>poolSeparate</code> or <code>unpooled</code>). The first pools features into 2 aggregate features: "LoF" and "inframe". The second leaes all variants disaggregated</li>
+    <li><code>amb_mode</code>: how to handle mutations with intermediate AF. Options are DROP, AF, and BINARY.</li>
     <li><code>AF_thresh</code>: Only used if <code>amb_mode</code> = BINARY. Variants with AF > the threshold will be assigned to 1, the others to 0.</li>
-    <li><code>drop_isolates_before_variants</code>: boolean to drop isolates with lot of missingness before variants. If this is set to False, the one with more missingness will be dropped first.</li>
-    <li><code>impute</code>: boolean for whether missing values should be imputed (if False, then they will be dropped)</li>
     <li><code>num_PCs</code>: number of principal components (>= 0)</li>
     <li><code>num_bootstrap</code>: number of bootstrap samples</li>
     <li><code>alpha</code>: significance level</li>
@@ -130,12 +86,27 @@ For all models, we dropped isolates containing unfixed variants.
 8. MIC, - silent variants, <b>pool</b> LoF mutations
 9. MIC, <b>+ silent</b> variants, all variants unpooled
 
-### Final Analysis
+For a single drug, the scripts can be run as follows:
 
-TODO
+```
+drug='Delamanid'
 
-### Missing Data
+python3 -u model/01_make_model_inputs.py -c config.yaml -d $drug
+python3 -u model/02_run_regression.py -c config.yaml -d $drug
+python3 -u model/03_likelihood_ratio_test.py -c config.yaml -d $drug
+python3 -u model/04_compute_univariate_stats.py -c config.yaml
+```
 
-All samples with any missing data are excluded from models. This is done at the model-level, so a sample can be exluded from one model but not another for the same drug. <code>scikit-learn</code> can not fit models with NaNs, and imputation can introduce biases, so we decided to drop all samples with missingness.
+The drug argument is not required for the last script because it computes univariate statistics for all the models it finds in the specified folders.
 
-Matrix from Sacha after removing sites close to PE/PPE genes and applying the 1% variant frequency threshold: 6,938 sites.
+### 2. Grading Algorithm
+
+After running the scripts in `/model`, run the two numbered scripts in `/grading` to run the grading algorithm. The algorithm will be run on all the models found in the specified folders.
+
+1. <code>01_get_single_model_results.py</code>: Combines results from all the permutation test, LRT, and univarite statistics into a single table for each (model, drug) pair. Reuslts of all logistic regression models for a single drug are written to a single Excel file in a new `/results` directory in the home directory of the repository. The only required argument is `config.yaml` to get the directory in which the model results are stored.
+2. <code>02_combine_WHO_ALL_results.py<code>: Integrates results from different models and gets a consensus grading for each (drug, variant) pair. Writes it to an output file. Required arguments: `config.yaml` and an output file to store the regression-based catalog at.
+
+### 3. Resistance Predictions
+
+1. <code>catalog_model.py</code>: Uses the final regression catalog to get resistance predictions. Any isolate that contains a Group 1 or 2 mutations is predicted resistance.
+2. <code>catalog_model_SOLO.py<code>: Does the same as the above script for the "SOLO INITIAL" results. The "SOLO FINAL" results were taken from Table 3 of the WHO report.

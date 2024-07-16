@@ -13,8 +13,6 @@ sys.path.append("utils")
 from stats_utils import *
 from data_utils import *
 
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
-
 drug_abbr_dict = {"Delamanid": "DLM",
                   "Bedaquiline": "BDQ",
                   "Clofazimine": "CFZ",
@@ -34,6 +32,16 @@ drug_abbr_dict = {"Delamanid": "DLM",
                  }
 
 silent_lst = ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
+
+cmd_line_args cmd_line_args = parser.parse_args()
+config_file = cmd_line_args.config_file
+
+kwargs = yaml.safe_load(open(config_file))
+analysis_dir = kwargs["output_dir"]
 
 
 ################################# Write Final Dataframes for the Binary Analysis to an Excel File #################################
@@ -183,25 +191,6 @@ def export_binary_analyses(drugs_lst, read_folder, write_folder, analyses_lst, p
                         exclude_mutations += list(pd.read_pickle(os.path.join(analysis_dir, drug, read_folder, model_path.replace("poolLoF", "unpooled"), "model_matrix.pkl")).columns)
                     except:
                         pass
-                        
-                # # select which model results to keep for mutations (non-LoF, non-inframe) tested in both the pooled and unpooled models
-                # # if pooled_model_variants = True, keep the stats from the pooled model. else, keep the stats from the unpooled model
-                # if pooled_model_variants:
-
-                #     # no pooled + synonymous models
-                #     if "unpooled" in model_path and "noSyn" in model_path:
-                #         try:
-                #             exclude_mutations += list(pd.read_pickle(os.path.join(analysis_dir, drug, read_folder, model_path.replace("unpooled", "poolSeparate"), "model_matrix.pkl")).columns)
-                #         except:
-                #             pass
-                            
-                # else:
-                #     # exclude mutations in the pooled model so that we keep the values estimated in the unpooled model
-                #     if ("poolSeparate" in model_path or "poolLoF" in model_path) and "noSyn" in model_path:
-                #         try:
-                #             exclude_mutations += list(pd.read_pickle(os.path.join(analysis_dir, drug, read_folder, model_path.replace("poolSeparate", "unpooled").replace("poolLoF", "unpooled"), "model_matrix.pkl")).columns)
-                #         except:
-                #             pass
                             
                 add_analysis = add_analysis.query("mutation not in @exclude_mutations")
 

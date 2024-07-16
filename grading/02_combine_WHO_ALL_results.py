@@ -18,9 +18,16 @@ sys.path.append("utils")
 from stats_utils import *
 from data_utils import *
 
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
+parser.add_argument("-o", "--output", dest='out_fName', type=str, required=True, help='Full path to a file name where to store the final catalog results')
 
-_, out_fName = sys.argv
+cmd_line_args cmd_line_args = parser.parse_args()
+config_file = cmd_line_args.config_file
+out_fName = cmd_line_args.out_fName
+
+kwargs = yaml.safe_load(open(config_file))
+analysis_dir = kwargs["output_dir"]
 
 drug_abbr_dict = {"Delamanid": "DLM",
                   "Bedaquiline": "BDQ",

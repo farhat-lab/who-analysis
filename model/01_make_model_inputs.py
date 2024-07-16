@@ -35,7 +35,7 @@ tracemalloc.start()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
-parser.add_argument('-drug', "--d", dest='drug', type=str, required=True)
+parser.add_argument('-d', "--drug", dest='drug', type=str, required=True)
 parser.add_argument('--MIC-single-medium', dest='keep_single_medium', action='store_true', help='If specified, keep only the most common media for the MIC models')
 
 cmd_line_args = parser.parse_args()
