@@ -58,7 +58,7 @@ alpha = kwargs["alpha"]
 num_PCs = kwargs["num_PCs"]
 
 # read in the eigenvector dataframe and keep only the PCs for the model
-eigenvec_df = pd.read_csv("PCA/eigenvec_100PC.csv", usecols=["sample_id"] + [f"PC{num+1}" for num in np.arange(num_PCs)]).set_index("sample_id")
+eigenvec_df = pd.read_csv("PCA/eigenvec_50PC.csv", usecols=["sample_id"] + [f"PC{num+1}" for num in np.arange(num_PCs)]).set_index("sample_id")
 
 # double check. If running CC vs. CC-ATU analysis, they are binary phenotypes
 if atu_analysis:

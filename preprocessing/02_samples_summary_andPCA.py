@@ -22,7 +22,7 @@ tracemalloc.start()
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", dest='input_data_dir', type=str, required=True, help='Directory in which raw data files are stored')
 parser.add_argument('--mixed-sites-thresh', dest='mixed_sites_prop_thresh', type=float, default=0.01, help='Sites where the proportion of isolates with mixed alleles exceeds this threshold will be dropped. Default = 0.01 (1%)')
-parser.add_argument('--PC', dest='num_PCs', type=int, default=100, help='Number of principal components to use in PCA. Default = 100')
+parser.add_argument('--PC', dest='num_PCs', type=int, default=50, help='Number of principal components to use in PCA. Default = 100')
 
 cmd_line_args = parser.parse_args()
 input_data_dir = cmd_line_args.input_data_dir
@@ -48,9 +48,10 @@ mic_drugs = os.listdir(mic_dir)
 
 drugs_for_analysis = list(set(geno_drugs).intersection(set(pheno_drugs)).intersection(set(mic_drugs)))
 print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
-minor_alleles_file = "PCA/minor_allele_counts.pkl"
+minor_alleles_file = "PCA/minor_allele_counts.pkl.gz"
 
 if not os.path.isfile(minor_alleles_file):
+    
     print("Creating matrix of minor allele counts")
     snp_files = [pd.read_csv(os.path.join(snp_dir, fName), usecols=[0, 1, 2]) for fName in os.listdir(snp_dir)]
     print(f"{len(snp_files)} SNP files")
@@ -77,9 +78,9 @@ if not os.path.isfile(minor_alleles_file):
 
     # drop any columns that are 0 (major allele everywhere)
     minor_allele_counts = minor_allele_counts[minor_allele_counts.columns[~((minor_allele_counts == 0).all())]]
-    minor_allele_counts.to_pickle(minor_alleles_file)
+    minor_allele_counts.to_pickle(minor_alleles_file, compression='gzip')
 else:
-    minor_allele_counts = pd.read_pickle(minor_alleles_file)
+    minor_allele_counts = pd.read_pickle(minor_alleles_file, compression='gzip')
 
 print(f"Minor Allele Counts shape: {minor_allele_counts.shape}")
 

@@ -39,7 +39,7 @@ atu_analysis = kwargs["atu_analysis"]
 atu_analysis_type = kwargs["atu_analysis_type"]
 analysis_dir = kwargs["output_dir"]
 num_PCs = kwargs["num_PCs"]
-eigenvec_df = pd.read_csv("PCA/eigenvec_100PC.csv", usecols=["sample_id"] + [f"PC{num+1}" for num in np.arange(num_PCs)]).set_index("sample_id")
+eigenvec_df = pd.read_csv("PCA/eigenvec_50PC.csv", usecols=["sample_id"] + [f"PC{num+1}" for num in np.arange(num_PCs)]).set_index("sample_id")
 
 if "ALL" in pheno_category_lst:
     phenos_name = "ALL"
