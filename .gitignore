@@ -21,3 +21,4 @@ PCA/eigenvec_*.csv
 # extra semi-duplicate files used for testing
 bash_scripts/dup*.sh
 temp/
+run*.sh
