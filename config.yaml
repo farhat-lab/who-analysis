@@ -4,17 +4,14 @@ amb_mode: DROP
 atu_analysis: false
 atu_analysis_type: CC
 binary: true
-drop_isolates_before_variants: false
-impute: false
-input_dir: /n/data1/hms/dbmi/farhat/ye12/who
-missing_feature_thresh: 0.25
-missing_isolate_thresh: 0.01
+input_data_dir: example_data
+model_prefix: dropAF_noSyn_unpooled
 num_PCs: 50
 num_bootstrap: 1000
-output_dir: /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue
+output_dir: analysis_dir
 pheno_category_lst:
 - WHO
 pool_type: unpooled
-synonymous: false
+silent: false
 tiers_lst:
 - '1'

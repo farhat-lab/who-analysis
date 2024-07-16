@@ -19,10 +19,8 @@ coll2014.rename(columns={"#lineage": "Lineage"}, inplace=True)
 # starting the memory monitoring -- this script needs ~125 GB
 tracemalloc.start()
 
-# input_data_dir = /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue-raw-data
-# mixed_sites_prop_thresh = 0.01
-# num_PCs = 100
 _, input_data_dir, mixed_sites_prop_thresh, num_PCs = sys.argv
+
 mixed_sites_prop_thresh = float(mixed_sites_prop_thresh)
 num_PCs = int(num_PCs)
 
@@ -31,16 +29,16 @@ num_PCs = int(num_PCs)
 
 
 snp_dir = os.path.join(input_data_dir, "grm")
-# genos_dir = os.path.join(input_data_dir, "full_genotypes")
-# phenos_dir = os.path.join(input_data_dir, "phenotypes")
-# mic_dir = os.path.join(input_data_dir, "mic")
+genos_dir = os.path.join(input_data_dir, "full_genotypes")
+phenos_dir = os.path.join(input_data_dir, "phenotypes")
+mic_dir = os.path.join(input_data_dir, "mic")
 
-# pheno_drugs = os.listdir(phenos_dir)
-# geno_drugs = os.listdir(genos_dir)
-# mic_drugs = os.listdir(mic_dir)
+pheno_drugs = os.listdir(phenos_dir)
+geno_drugs = os.listdir(genos_dir)
+mic_drugs = os.listdir(mic_dir)
 
-# drugs_for_analysis = list(set(geno_drugs).intersection(set(pheno_drugs)).intersection(set(mic_drugs)))
-# print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
+drugs_for_analysis = list(set(geno_drugs).intersection(set(pheno_drugs)).intersection(set(mic_drugs)))
+print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
 minor_alleles_file = "PCA/minor_allele_counts.pkl"
 
 if not os.path.isfile(minor_alleles_file):
@@ -204,6 +202,7 @@ summary_df = pd.DataFrame(columns=["Drug", "Genos", "SNP_Matrix", "ALL_Phenos", 
 i = 0
 
 print("Counting data for each drug")
+
 for drug in drugs_for_analysis:
     
     # get all CSV files containing binary phenotypes
@@ -268,4 +267,4 @@ summary_df.sort_values("Drug", ascending=True).to_csv("data/samples_summary.csv"
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
 tracemalloc.stop()
-# print(f"{script_memory} GB")
+print(f"{script_memory} GB")

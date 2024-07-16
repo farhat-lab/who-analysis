@@ -1,10 +1,18 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, sparse, sys, argparse, pickle, tracemalloc, warnings
+import glob, os, yaml, sparse, sys, argparse, pickle, tracemalloc, warnings, shutil
 import scipy.stats as st
 import sklearn.metrics
 warnings.filterwarnings("ignore")
 
+analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
+who_variants = pd.read_csv("./results/WHO-catalog-V2.csv", header=[2])
+del who_variants['mutation']
+who_variants['tier'] = who_variants['tier'].astype(str)
+
+alpha = 0.05
+tiers_lst = ['1']
+who_variants = who_variants.query("tier in @tiers_lst").reset_index(drop=True)
 results_final = pd.read_csv("results/Regression_Final_June2024_Tier1.csv")
 
 # utils files are in a separate folder
@@ -21,21 +29,20 @@ parser = argparse.ArgumentParser()
 # Add a required string argument for the config file
 parser.add_argument("--drug", dest='drug', type=str, required=True)
 
-parser.add_argument('--AF', dest='AF_thresh', type=float, required=True)
+parser.add_argument('--AF', dest='AF_thresh', type=float, default=0.75, help='Alternative allele frequency threshold (exclusive) to consider variants present')
 
 parser.add_argument('--remove-mut', dest='remove_mut', action='store_true', help='Remove mutations in Groups 1-2 regression and Groups 4-5 SOLO that are major discrepancies')
 
 parser.add_argument('--grading-rules', dest='grading_rules', action='store_true', help='Add mutations that would be upgraded by grading rules')
 
-analysis_dir = '/n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue'
-alpha = 0.05
-tiers_lst = ['1']
+parser.add_argument('--S-assoc', dest='S_assoc', action='store_true', help='Predict susceptible isolates with S-assoc mutations')
 
 cmd_line_args = parser.parse_args()
 drug = cmd_line_args.drug
 AF_thresh = cmd_line_args.AF_thresh
 remove_mut = cmd_line_args.remove_mut
 grading_rules = cmd_line_args.grading_rules
+S_assoc = cmd_line_args.S_assoc
 
 # AF_thresh needs to be a float between 0 and 1
 if AF_thresh > 1:
@@ -69,10 +76,30 @@ if remove_mut:
     R_assoc = list(set(R_assoc) - set(remove_muts_lst))
     model_suffix += '_remove_discrepancies'
 
+if S_assoc:
+    
+    # mutations that abrogate the effects of an R-associated mutation: only for BDQ, CFZ, AMK, and KAN. Checked that they have "Abrogates" in the Comment column
+    negating_muts = who_variants.dropna(subset="Comment").query("drug==@drug & Comment.str.contains('Abrogates')").variant.values
+    print(f"{len(negating_muts)} resistance-abrogating mutations for {drug}")
+
+    model_suffix += '_R_abrogating_muts'
+    
+    if len(negating_muts) == 0:
+        
+        # copy the statistics for the model without R abrogating mutations
+        shutil.copy(os.path.join(out_dir, f"model_stats_AF{int(AF_thresh*100)}_withLoF{model_suffix.replace('_R_abrogating_muts', '')}.csv"),
+                    os.path.join(out_dir, f"model_stats_AF{int(AF_thresh*100)}_withLoF{model_suffix}.csv")
+                   )
+        
+        # then exit
+        exit()
+
+else:
+    negating_muts = []
 
 if len(R_assoc) == 0:
     print("There are no significant R-associated mutations for this model\n")
-    exit()    
+    exit() 
 
 
 #################################################### STEP 1: GET GENOTYPES, CREATE LOF AND INFRAME FEATURES ####################################################
@@ -100,8 +127,10 @@ pooled_matrix = df_genos.sort_values(by=["variant_binary_status"], ascending=[Fa
 
 # keep only variants that are in the list of R-associated mutations
 # including variants that are components of pooled LoF variants 
-pooled_matrix = pooled_matrix.query("pooled_mutation in @R_assoc")
-unpooled_matrix = df_genos.query("mutation in @R_assoc")
+pooled_matrix = pooled_matrix.query("pooled_mutation in @R_assoc | pooled_mutation in @negating_muts")
+unpooled_matrix = df_genos.query("mutation in @R_assoc | mutation in @negating_muts")
+
+del df_genos
 
 pooled_matrix = pooled_matrix.pivot(index="sample_id", columns="pooled_mutation", values="variant_binary_status")
 unpooled_matrix = unpooled_matrix.drop_duplicates(["sample_id", "mutation"], keep=False).pivot(index="sample_id", columns="mutation", values="variant_binary_status")
@@ -111,7 +140,8 @@ model_matrix = pd.concat([pooled_matrix, unpooled_matrix], axis=1)
 
 # some variants are not present because they were not in the dataset -- these are the "Selection evidence" variants that had no data-driven results because they're not in any isolate
 R_assoc = [variant for variant in R_assoc if variant in model_matrix.columns]
-assert model_matrix.shape[1] == len(R_assoc)
+negating_muts = [variant for variant in negating_muts if variant in model_matrix.columns]
+assert model_matrix.shape[1] == len(R_assoc) + len(negating_muts)
 
 # in this case, only 3 possible values -- 0 (ref), 1 (alt), and NaN. Don't need to drop NaNs because we're looking for presence/absence of R-assoc variants
 assert len(np.unique(model_matrix.values)) <= 3
@@ -131,6 +161,16 @@ catalog_pred_df["y_pred"] = (catalog_pred_df["y_pred"] > 0).astype(int)
 
 assert catalog_pred_df["y_pred"].nunique() == 2
 catalog_pred_df = catalog_pred_df.merge(df_phenos[["sample_id", "phenotype"]], on="sample_id").drop_duplicates("sample_id")
+
+negated_resistance = pd.DataFrame(model_matrix[negating_muts].sum(axis=1)).reset_index()
+negated_resistance.columns = ['sample_id', 'susceptible']
+
+# merge with the dataframe of negated resistance
+catalog_pred_df = catalog_pred_df.merge(negated_resistance, on='sample_id')
+
+# isolates where susceptible != 0 should all be predicted susceptible
+catalog_pred_df.loc[catalog_pred_df['susceptible'] > 0, 'y_pred'] = 0
+assert len(catalog_pred_df.query("susceptible > 0 & y_pred==1")) == 0
 
 
 def get_stats_with_CI(df, pred_col, true_col):

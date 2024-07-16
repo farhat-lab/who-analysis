@@ -2,7 +2,7 @@
 #SBATCH -c 1
 #SBATCH -t 0-11:59
 #SBATCH -p short
-#SBATCH --mem=150G
+#SBATCH --mem=50G
 #SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
 #SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
 #SBATCH --mail-type=ALL
@@ -67,17 +67,20 @@ drug_array=(
 
 for k in ${!drug_array[@]}; do
 
-    python3 -u model/05_catalog_model.py --drug "${drug_array[$k]}" --AF 0.75
-    python3 -u model/05_catalog_model.py --drug "${drug_array[$k]}" --AF 0.25
+    python3 -u model/05_catalog_model.py --drug "${drug_array[$k]}" --S-assoc
+    python3 -u model/05_catalog_model.py --drug "${drug_array[$k]}" --AF 0.25 --S-assoc
 
     # use regression + GR column
-    python3 -u model/05_catalog_model.py --drug "${drug_array[$k]}" --AF 0.75 --grading-rules
-    python3 -u model/05_catalog_model.py --drug "${drug_array[$k]}" --AF 0.25 --grading-rules
+    python3 -u model/05_catalog_model.py --drug "${drug_array[$k]}" --grading-rules --S-assoc
+    python3 -u model/05_catalog_model.py --drug "${drug_array[$k]}" --AF 0.25 --grading-rules --S-assoc
+
+    python3 -u model/06_catalog_model_SOLO.py --drug "${drug_array[$k]}" --S-assoc
+    python3 -u model/06_catalog_model_SOLO.py --drug "${drug_array[$k]}" --AF 0.25 --S-assoc
 
 done
 
-python3 -u model/05_catalog_model.py --drug "Isoniazid" --AF 0.75 --remove-mut
-python3 -u model/05_catalog_model.py --drug "Isoniazid" --AF 0.75 --remove-mut --grading-rules
+python3 -u model/05_catalog_model.py --drug "Isoniazid" --remove-mut --S-assoc
+python3 -u model/05_catalog_model.py --drug "Isoniazid" --remove-mut --grading-rules --S-assoc
 
-python3 -u model/05_catalog_model.py --drug "Capreomycin" --AF 0.75 --remove-mut
-python3 -u model/05_catalog_model.py --drug "Capreomycin" --AF 0.75 --remove-mut --grading-rules
+python3 -u model/05_catalog_model.py --drug "Capreomycin" --remove-mut --S-assoc
+python3 -u model/05_catalog_model.py --drug "Capreomycin" --remove-mut --grading-rules --S-assoc

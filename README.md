@@ -64,25 +64,27 @@ to create the environment. Run `conda activate <env_name>` to activate it and `c
 1. <code>pca_explained_var.npy</code>: Array of explained variances of the first 100 principal components.
 2. <code>pca_explained_var_ratio.npy</code>: Array of explained variance ratios (array sums to 1) of the first 100 principal components.
 3. <code>Vargas_PNAS_2023_homoplasy.xlsx</code>: List of 1,525 homoplasic sites in MTBC. Dataset S1 from <a href="https://www.pnas.org/doi/10.1073/pnas.2301394120" target="_blank">Vargas <i>et al., PNAS</i>, 2023</a>.
-4. <code>mixed_site_counts.xlsx</code>: SNVs for PCA with the proportion of isolates containing an unfixed variant (25% < AF ≤ 75%). Used for filtering out sites at which more than 1% of isolates have an unfixed variant. 
+4. <code>mixed_site_counts.xlsx</code>: SNVs for PCA with the proportion of isolates containing an unfixed variant (25% < AF ≤ 75%). Used for filtering out sites at which more than 1% of isolates have an unfixed variant.
+5. Figures for the manuscript showing different isolates in principal coordinate space, colored by lineage.
 
 ## Running the Analysis
         
-### Primary Model Features:
+### Preprocessing (<code>preprocessing/</code>):
     
-    
-### Model Scripts
+Before building any models, run the two scripts in the <code>preprocessing</code> directory in numerical order.
 
-Before building any models, run <code>00_samples_summary_andPCA.py</code>.
+1. <code>preprocessing/01_make_gene_drug_mapping.py</code> creates the file <code>data/drug_gene_mapping.csv</code>, which maps the input gene names to each drug, which facilitates constructing the input model matrices
+2. <code>preprocessing/02_samples_summary_andPCA.py</code> generates 100 eigenvectors for population structure correction and saves them to <code>PCA/eigenvec_100PC.csv</code>. Intermediate files that this script creates are a dataframe of minor allele counts (<code>data/minor_allele_counts.pkl;</code>) and an array of the explained variance ratios of each of the 100 principal components (<code>data/pca_explained_var.npy</code>). These files were too large to commit to this repository.
 
-The first script generates the eigenvectors for population structure correction and stores the coordinates of every sample in <code>data/eigenvec_10PC.csv</code>. 10 principal coordinates were saved, but only 5 were used in the models. Intermediate files that this script creates are a dataframe of minor allele counts (<code>data/minor_allele_counts.npz</code>) and an array of the explained variance ratios of each of the 10 principal components (<code>data/pca_explained_var.npy</code>). The script also creates the <code>data/samples_summary.csv</code> file to see how many samples there are for each drug (this was primarily used for debugging).
-
+### Model Scripts (<code>model/</code>)
 
 For every drug, run the bash script <code>run_regression.sh</code> with the following command line arguments: full drug name, the 3-letter abbreviation used in the 2021 WHO catalog, and the directory to which output files should be written. For example, for isoniazid, the arguments after the script name would be `run_regression.sh Isoniazid INH /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue`. This bash script runs the following scripts:
   
 1. <code>01_make_model_inputs.py</code>: create input matrices to fit a regression model.
-2. <code>02_run_regression.py</code> performs a Ridge (L2-penalized) regression, bootstrapping to get coefficient confidence intervals, and a permutation test to assess coefficient significance. 
-3. <code>03_compute_univariate_statistics.py</code> 
+2. <code>02_run_regression.py</code> performs a Ridge (L2-penalized) regression and a permutation test to assess coefficient significance.
+3. <code<03_likelihood_ratio_test.py</code>: performs the likelihood ratio test for every mutation in the 
+4. <code>04_compute_univariate_statistics.py</code>: computes statistics like sensitivity, specificity, and positive predictive value for each mutation, with 95% exact binomial confidence intervals.
+5. <code>05_catalog_model.py</code>: uses the final regression catalog to get resistance predictions. Any isolate that contains a Group 1 or 2  
 
 After the above scripts are finished, run <code>run_unpooled_tests.sh</code> with only the full drug name and the 3-letter abbreviation used in the 2021 WHO catalog as additional command line arguments. These scripts run the LRT and AUC test. 
 
@@ -119,13 +121,13 @@ Some of the parameters above were kept constant throughout all analyses, but the
 For all models, we dropped isolates containing unfixed variants.
 
 1. WHO, - silent variants, all variants unpooled.
-2. WHO, - silent variants, <b>pool</b> LoF and inframe mutations SEPARATELY
+2. WHO, - silent variants, <b>pool</b> LoF mutations
 3. WHO, <b>+ silent</b> variants, all variants unpooled
 4. <b>ALL</b>, - silent variants, all variants unpooled
-5. ALL, - silent variants, <b>pool</b> LoF and inframe mutations SEPARATELY
+5. ALL, - silent variants, <b>pool</b> LoF mutations
 6. ALL, <b>+ silent</b> variants, all variants unpooled
 7. MIC, - silent variants, all variants unpooled
-8. MIC, - silent variants, <b>pool</b> LoF and inframe mutations SEPARATELY
+8. MIC, - silent variants, <b>pool</b> LoF mutations
 9. MIC, <b>+ silent</b> variants, all variants unpooled
 
 ### Final Analysis
@@ -136,24 +138,4 @@ TODO
 
 All samples with any missing data are excluded from models. This is done at the model-level, so a sample can be exluded from one model but not another for the same drug. <code>scikit-learn</code> can not fit models with NaNs, and imputation can introduce biases, so we decided to drop all samples with missingness.
 
-<!-- Isolates with a lot of missingness are far more common than features with a lot of missingness because most of the sequenced regions have high mappability, except the ribosomal regions. 
-    
-A threshold of <b>1%</b> is used to drop isolates, i.e. if more than 1% of an isolate's features for a given analysis are NA, then drop the isolate. 
-Similarly, if more than <b>25%</b> of the isolates in a given analysis are missing that feature, then drop the feature. 
-
-Then, all remaining features with anything missing are dropped. Imputation can be done instead by setting the argument `impute` to True. This will impute every element in the matrix that is missing by averaging the feature, stratified by resistance phenotype.  -->
-
-
 Matrix from Sacha after removing sites close to PE/PPE genes and applying the 1% variant frequency threshold: 6,938 sites.
-
-
-6614/6938 sites do not have low AF in more than 1.0% of isolates 
-
-
-6491/6614 sites are not in drug-resistance regions 
-
-
-6190/6491 sites are not homoplastic 
-
-
-Final size: (52567, 6190) 
