@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, tracemalloc, itertools, sys
+import glob, os, yaml, tracemalloc, itertools, sys, argparse
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from Bio import Seq, SeqIO
@@ -19,10 +19,19 @@ coll2014.rename(columns={"#lineage": "Lineage"}, inplace=True)
 # starting the memory monitoring -- this script needs ~125 GB
 tracemalloc.start()
 
-_, input_data_dir, mixed_sites_prop_thresh, num_PCs = sys.argv
+parser = argparse.ArgumentParser()
+parser.add_argument("-i", dest='input_data_dir', type=str, required=True, help='Directory in which raw data files are stored')
+parser.add_argument('--mixed-sites-thresh', dest='mixed_sites_prop_thresh', type=float, default=0.01, help='Sites where the proportion of isolates with mixed alleles exceeds this threshold will be dropped. Default = 0.01 (1%)')
+parser.add_argument('--PC', dest='num_PCs', type=int, default=100, help='Number of principal components to use in PCA. Default = 100')
 
-mixed_sites_prop_thresh = float(mixed_sites_prop_thresh)
-num_PCs = int(num_PCs)
+cmd_line_args = parser.parse_args()
+input_data_dir = cmd_line_args.input_data_dir
+mixed_sites_prop_thresh = cmd_line_args.mixed_sites_prop_thresh
+num_PCs = cmd_line_args.num_PCs
+
+# convert to proportion if not
+if mixed_sites_prop_thresh > 1:
+    mixed_sites_prop_thresh /= 100
 
 
 ################## STEP 1: CREATE THE MINOR ALLELE COUNTS DATAFRAME ##################
@@ -111,7 +120,7 @@ minor_allele_counts = minor_allele_counts[keep_sites]
 ################################################### GET HOMPLASIC SITES ###################################################
 
 
-homoplasy = pd.read_excel("PCA/Vargas_homoplasy.xlsx")
+homoplasy = pd.read_excel("PCA/Vargas_PNAS_2023_homoplasy.xlsx")
 if len(homoplasy) == 1:
     homoplasy = homoplasy[list(homoplasy.keys())[0]]
     
@@ -126,7 +135,6 @@ print(minor_allele_counts.shape)
 ############################## STEP 2: COMPUTE THE GENETIC RELATEDNESS MATRIX, WHICH IS THE COVARIANCE OF THE MINOR ALLELE COUNTS DATAFRAME. SAVE EIGENVECTORS ##############################
 
 
-# rows are samples, columns are sites. Don't need to standard-scale because the matrix is binary and values are on the same scale already
 grm = np.cov(minor_allele_counts.values)
 grm = pd.DataFrame(grm)
 print(f"GRM shape: {grm.shape}. Performing PCA with {num_PCs} principal components")
@@ -135,7 +143,6 @@ minor_allele_counts_samples = minor_allele_counts.index.values
 del minor_allele_counts
 
 # scale the covariance matrix before fitting PCA because the different pairs of SNPs will have very different variances. 
-# this prevents a few SNPs from dominating the PCA -- i.e. PCA will consider other SNPs and resolve sublineages, not just major lineages
 scaler = StandardScaler()
 pca = PCA(n_components=num_PCs)
 pca.fit(scaler.fit_transform(grm))

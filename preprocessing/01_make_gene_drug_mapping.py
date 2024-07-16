@@ -1,9 +1,12 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, subprocess, sparse, sys, tracemalloc
+import glob, os, yaml, subprocess, sparse, sys, tracemalloc, argparse
 
-# /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue-raw-data
-_, input_data_dir = sys.argv
+parser = argparse.ArgumentParser()
+parser.add_argument("-i", dest='input_data_dir', type=str, required=True, help='Directory in which raw data files are stored')
+
+cmd_line_args = parser.parse_args()
+input_data_dir = cmd_line_args.input_data_dir
 
 # starting the memory monitoring
 tracemalloc.start()
