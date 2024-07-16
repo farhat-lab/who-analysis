@@ -59,13 +59,13 @@ to create the environment. Run `conda activate <env_name>` to activate it and `c
 
 ## <code>PCA/</code>
 
-* Note: The minor allele counts file (<code>minor_allele_counts.pkl</code>) eigenvectors (<code>eigenvec_100PC.csv</code>) were not committed to the repository because these file are too large.
-   
 1. <code>pca_explained_var.npy</code>: Array of explained variances of the first 100 principal components.
-2. <code>pca_explained_var_ratio.npy</code>: Array of explained variance ratios (array sums to 1) of the first 100 principal components.
-3. <code>Vargas_PNAS_2023_homoplasy.xlsx</code>: List of 1,525 homoplasic sites in MTBC. Dataset S1 from <a href="https://www.pnas.org/doi/10.1073/pnas.2301394120" target="_blank">Vargas <i>et al., PNAS</i>, 2023</a>.
-4. <code>mixed_site_counts.xlsx</code>: SNVs for PCA with the proportion of isolates containing an unfixed variant (25% < AF ≤ 75%). Used for filtering out sites at which more than 1% of isolates have an unfixed variant.
-5. Figures for the manuscript showing different isolates in principal coordinate space, colored by lineage.
+2. <code>pca_explained_var_ratio.npy</code>: Array of explained variance ratios (array sums to 1) of the first 100 principal components (PCs).
+3.<code>eigenvec_100PC.csv</code>: First 100 eigenvectors of the PCA. Only the first 50 PCs were used as additional covariates in the regression models.
+4. <code>minor_allele_counts.pkl.gz</code>: 52,567 (isolates) × 6,938 (positions) matrix of minor allele counts (binary encoding) across the full genome. Note that uncompressed, this file is almost 3 GB, so ensure that you have enough RAM to read it in.
+5. <code>mixed_site_counts.xlsx</code>: SNVs for PCA with the proportion of isolates containing an unfixed variant (25% < AF ≤ 75%). Used for filtering out sites at which more than 1% of isolates have an unfixed variant.
+6. <code>Vargas_PNAS_2023_homoplasy.xlsx</code>: List of 1,525 homoplasic sites in MTBC. Dataset S1 from <a href="https://www.pnas.org/doi/10.1073/pnas.2301394120" target="_blank">Vargas <i>et al., PNAS</i>, 2023</a>.
+7. Figures for the manuscript showing different isolates in principal coordinate space, colored by lineage.
 
 ## Running the Analysis
         
