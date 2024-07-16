@@ -7,6 +7,7 @@ sandbox*.ipynb
 
 # not necessary, intermediates when putting data together
 data/sample_ids_mapping_20220922.csv
+data/missing_28samples.xlsx
 lineages/20240129_lineages.csv
 
 # extra semi-duplicate files used for testing
