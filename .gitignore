@@ -5,18 +5,9 @@ archive
 # scratch notebook
 sandbox*.ipynb
 
-# confidential information -- sample IDs
+# not necessary, intermediates when putting data together
 data/sample_ids_mapping_20220922.csv
-data/missing_28samples.xlsx
 lineages/20240129_lineages.csv
-lineages/combined_lineages_samples.csv
-
-# files too big
-data/*.pkl
-data/eigenvec_*.csv
-data/lineages*.csv
-PCA/*.pkl
-PCA/eigenvec_*.csv
 
 # extra semi-duplicate files used for testing
 bash_scripts/dup*.sh
