@@ -32,7 +32,6 @@ kwargs = yaml.safe_load(open(config_file))
 binary = kwargs["binary"]
 tiers_lst = kwargs["tiers_lst"]
 silent = kwargs["silent"]
-alpha = kwargs["alpha"]
 model_prefix = kwargs["model_prefix"]
 pheno_category_lst = kwargs["pheno_category_lst"]
 atu_analysis = kwargs["atu_analysis"]

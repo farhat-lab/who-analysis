@@ -216,8 +216,11 @@ def perform_permutation_test(model, X, y, num_reps, binary=True, fit_type="SGD",
 
 
 
-def get_coef_and_confidence_intervals(alpha, binary, drug_WHO_abbr, coef_df, permute_df=None, bootstrap_df=None):
-
+def get_coef_and_confidence_intervals(binary, drug_WHO_abbr, coef_df, permute_df=None, bootstrap_df=None, alpha=0.05):
+    '''
+    Alpha is only used to determine the confidence level of the confidence intervals. Permutation test significance is not determined at this stage. 
+    '''
+    
     # add confidence intervals for the coefficients for all mutation. first check ordering of mutations
     if bootstrap_df is not None:
         ci = (1-alpha)*100

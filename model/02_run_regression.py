@@ -54,7 +54,6 @@ binary = kwargs["binary"]
 atu_analysis = kwargs["atu_analysis"]
 pool_type = kwargs["pool_type"]
 analysis_dir = kwargs["output_dir"]
-alpha = kwargs["alpha"]
 num_PCs = kwargs["num_PCs"]
 
 # read in the eigenvector dataframe and keep only the PCs for the model
@@ -227,19 +226,11 @@ if not os.path.isfile(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv
 else:
     permute_df = pd.read_csv(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv"))
 
-# if not os.path.isfile(os.path.join(out_dir, f"coef_bootstrapping{model_suffix}.csv")):
-#     print(f"Peforming bootstrapping with {num_bootstrap} replicates")
-#     bootstrap_df = perform_bootstrapping(model, X, y, num_bootstrap, binary=binary)
-#     bootstrap_df.columns = matrix.columns
-#     bootstrap_df.to_csv(os.path.join(out_dir, f"coef_bootstrapping{model_suffix}.csv"), index=False)
-# else:
-#     bootstrap_df = pd.read_csv(os.path.join(out_dir, f"coef_bootstrapping{model_suffix}.csv"))
-
     
 ########################## STEP 4: ADD PERMUTATION TEST P-VALUES TO THE MAIN COEF DATAFRAME ##########################
     
     
-final_df = get_coef_and_confidence_intervals(alpha, binary, drug_WHO_abbr, coef_df, permute_df, bootstrap_df=None)
+final_df = get_coef_and_confidence_intervals(binary, drug_WHO_abbr, coef_df, permute_df, bootstrap_df=None)
 final_df.sort_values("coef", ascending=False).to_csv(os.path.join(out_dir, f"model_analysis{model_suffix}.csv"), index=False) 
 
 # returns a tuple: current, peak memory in bytes 
