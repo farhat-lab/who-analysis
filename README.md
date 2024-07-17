@@ -8,7 +8,10 @@ to create the environment, which should take no more than 30 munutes. Run `conda
 
 Or if you prefer, run the following to install all the packages without creating an environment.
 
-```conda install --file requirements.txt```
+```
+conda install --file requirements.txt -c conda-forge -c bioconda
+pip install fast-lineage-caller=0.3.1
+```
 
 # Required Computing Resources
 
