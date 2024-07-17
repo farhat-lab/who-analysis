@@ -1,14 +1,12 @@
-# WHO <i>M. tuberculosis</i> Resistance Mutation Catalog, 2022
+# Create Environment
 
-## Create Environment
-
-This project uses `conda` to manage packages (install Anaconda <a href="https://www.anaconda.com/" target="_blank">here</a>). All packages are found in the `environment.yaml` file. Change the last line of this file to reflect the path to your Anaconda distribution and the environment name you want to use. Then run
+This project uses `conda` to manage packages (install Anaconda <a href="https://www.anaconda.com/" target="_blank">here</a>). All packages are found in the `environment.yaml` file. <b>Change the first and last line of this file to reflect the environment name you wish to use and the path to your Anaconda directory.</b> Then run
 
 ```conda env create -f environment.yaml```
 
 to create the environment. Run `conda activate <env_name>` to activate it and `conda deactivate` to deactivate once you are in it.
 
-## <code>data/</code>
+# <code>data/</code>
 
 1. <code>drug_CC.csv</code>: Critical concentrations for each drug used for binarization of MIC data.
 2. <code>drug_gene_mapping.csv</code>: Names of genes and tiers used to build models for each drug.
@@ -19,7 +17,7 @@ to create the environment. Run `conda activate <env_name>` to activate it and `c
 7. <code>samples_summary.csv</code>: Dataframe of the number of samples across drugs. Includes columns for the numbers of samples with genotypes, binary phenotypes, SNP counts, MICs, lineages, and the numbers of (sample, gene) pairs with LOF and inframe mutations (to see how many get pooled).
 8. <code>v1_to_v2_variants_mapping.csv</code>: File mapping the variant names between the <a href="https://www.who.int/publications/i/item/9789240028173" target="_blank">first</a> and <a href="https://www.who.int/publications/i/item/9789240082410" target="_blank">second</a> versions of the catalog.
 
-## <code>PCA/</code>
+# <code>PCA/</code>
 
 1. <code>pca_explained_var.npy</code>: Array of explained variances of the first 50 principal components.
 2. <code>pca_explained_var_ratio.npy</code>: Array of explained variance ratios (array sums to 1) of the first 50 principal components (PCs).
@@ -29,22 +27,39 @@ to create the environment. Run `conda activate <env_name>` to activate it and `c
 6. <code>Vargas_PNAS_2023_homoplasy.xlsx</code>: List of 1,525 homoplasic sites in MTBC. Dataset S1 from <a href="https://www.pnas.org/doi/10.1073/pnas.2301394120" target="_blank">Vargas <i>et al., PNAS</i>, 2023</a>.
 7. Figures for the manuscript showing different isolates in principal coordinate space, colored by lineage.
 
-## Running the Analysis
+
+# Running the Analysis
+
+## Model Results
+
+Individual model results are in the `/model_results` directory. If you wish to rerun the models, please write them to a new directory.
+
+The genotype and phenotype tables can be downloaded from the releases page because the files are very large. These were created by concatenating individual CSV files from this <a href="https://github.com/GTB-tbsequencing/mutation-catalogue-2023/tree/main/Input%20data%20files%20for%20Solo%20algorithms/2023-04-25T06_00_10.443990_jr_b741dc136e079fa8583604a4915c0dc751724ae9880f06e7c2eacc939e086536" taget="_blank">repository</a>.
+
+Each genotype, phenotype, and MIC table for each drug are in a subfolder with that drug's name. The genotypes tables contain only tier 1 genes from the 2nd edition of the WHO mutation catalog.
+
+If you wosj to run the entire analysis, please follow the instructions in the next sections.
+
+## Raw Data
+
+Due to their large size, the raw genotypes, phenotypes, and MICs are available to download from the releases page of this repository. Each drug has a separate folder, which contains `genos_1.csv.gz`, `phenos_binary.csv`, and `phenos_mic.csv`.
+
+To use this data, create a new directory and update the <code>output_dir</code> parameter in the `config.yaml` file (more about this later) to this same directory name. <b>Place each drug folder into this output directory. Keep the 3 files for each drug in separate drug-specific subfolders as in the release.</b>
+
+When you run the scripts, they will write the results to the same `output_dir` where the raw data are. The scripts will skip analyses that have already been done, so DO NOT use the `/model_results` directory as the output directory because the scripts will not rerun anything.
         
-### 0. Preprocessing (<code>preprocessing/</code>):
+## 0. Preprocessing (<code>preprocessing/</code>):
     
 Before building any models, run the two scripts in the <code>preprocessing</code> directory in numerical order.
 
 1. <code>preprocessing/01_make_gene_drug_mapping.py</code> creates the file <code>data/drug_gene_mapping.csv</code>, which maps the input gene names to each drug, which facilitates constructing the input model matrices
 2. <code>preprocessing/02_samples_summary_andPCA.py</code> generates 50 eigenvectors for population structure correction and saves them to <code>PCA/eigenvec_50PC.csv</code>. Intermediate files that this script creates are a dataframe of minor allele counts (<code>data/minor_allele_counts.pkl;</code>) and an array of the explained variance ratios of each of the 50 principal components (<code>data/pca_explained_var.npy</code>). These files were too large to commit to this repository.
 
-### 1. Model Scripts (<code>model/</code>)
+## 1. Model Scripts (<code>model/</code>)
 
-#### Missing Data
+All samples with any missing variants or unfixed variants were excluded from models. This is done at the model-level, so a sample can be exluded from one model but not another for the same drug. <code>scikit-learn</code> can not fit models with NaNs, and imputation can introduce biases, so we decided to drop all samples with missingness.
 
-All samples with any missing data are excluded from models. This is done at the model-level, so a sample can be exluded from one model but not another for the same drug. <code>scikit-learn</code> can not fit models with NaNs, and imputation can introduce biases, so we decided to drop all samples with missingness.
-
-The following model scripts require the config file (`config.yaml`) and the full drug name to run the analysis on as arguments.
+The following model scripts require the config file (`config.yaml`) and the full drug name (first letter capitalized) to run the analysis on as arguments.
   
 1. <code>01_make_model_inputs.py</code>: create input matrices to fit a regression model.
 2. <code>02_run_regression.py</code> performs a Ridge (L2-penalized) regression and a permutation test to assess coefficient significance.
@@ -70,11 +85,7 @@ Parameters in the config file:
     <li><code>alpha</code>: significance level</li>
 </ul>
 
-Some of the parameters above were kept constant throughout all analyses, but they remained as parameters if they need to be toggled in the future. 
-
-### All Tier 1-Only Models (9 per drug):
-
-For all models, we dropped isolates containing unfixed variants.
+Some of the parameters above were kept constant throughout all analyses, but they remained as parameters if they need to be toggled in the future. We fit 9 models per drug: 
 
 1. WHO, - silent variants, all variants unpooled.
 2. WHO, - silent variants, <b>pool</b> LoF mutations
@@ -99,14 +110,14 @@ python3 -u model/04_compute_univariate_stats.py -c config.yaml
 
 The drug argument is not required for the last script because it computes univariate statistics for all the models it finds in the specified folders.
 
-### 2. Grading Algorithm
+## 2. Grading Algorithm (`/grading`)
 
 After running the scripts in `/model`, run the two numbered scripts in `/grading` to run the grading algorithm. The algorithm will be run on all the models found in the specified folders.
 
 1. <code>01_get_single_model_results.py</code>: Combines results from all the permutation test, LRT, and univarite statistics into a single table for each (model, drug) pair. Reuslts of all logistic regression models for a single drug are written to a single Excel file in a new `/results` directory in the home directory of the repository. The only required argument is `config.yaml` to get the directory in which the model results are stored.
-2. <code>02_combine_WHO_ALL_results.py<code>: Integrates results from different models and gets a consensus grading for each (drug, variant) pair. Writes it to an output file. Required arguments: `config.yaml` and an output file to store the regression-based catalog at.
+2. <code>02_combine_WHO_ALL_results.py</code>: Integrates results from different models and gets a consensus grading for each (drug, variant) pair. Writes it to an output file. Required arguments: `config.yaml` and an output file to store the regression-based catalog at.
 
-### 3. Resistance Predictions
+## 3. Resistance Predictions (`/prediction`)
 
-1. <code>catalog_model.py</code>: Uses the final regression catalog to get resistance predictions. Any isolate that contains a Group 1 or 2 mutations is predicted resistance.
-2. <code>catalog_model_SOLO.py<code>: Does the same as the above script for the "SOLO INITIAL" results. The "SOLO FINAL" results were taken from Table 3 of the WHO report.
+1. <code>catalog_model.py</code>: Uses the final regression catalog (created from <code>02_combine_WHO_ALL_results.py</code>) to get resistance predictions. Any isolate that contains a Group 1 or 2 mutations is predicted resistance.
+2. <code>catalog_model_SOLO.py</code>: Does the same as the above script for the "SOLO INITIAL" results. The "SOLO FINAL" results were taken from Table 3 of the WHO report.
