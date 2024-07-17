@@ -34,7 +34,7 @@ to create the environment. Run `conda activate <env_name>` to activate it and `c
 5. <code>mixed_site_counts.xlsx</code>: SNVs for PCA with the proportion of isolates containing an unfixed variant (25% < AF ≤ 75%). Used for filtering out sites at which more than 1% of isolates have an unfixed variant.
 6. <code>Vargas_PNAS_2023_homoplasy.xlsx</code>: List of 1,525 homoplasic sites in MTBC. Dataset S1 from <a href="https://www.pnas.org/doi/10.1073/pnas.2301394120" target="_blank">Vargas <i>et al., PNAS</i>, 2023</a>.
 
-# Running the Analysis
+# Running the Grading Algorithm
 
 ## Raw Data
 
