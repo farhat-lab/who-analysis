@@ -6,6 +6,10 @@ This project uses `conda` to manage packages (install Anaconda <a href="https://
 
 to create the environment, which should take no more than 30 munutes. Run `conda activate <env_name>` to activate it and `conda deactivate` to deactivate once you are in it.
 
+Or if you prefer, run the following to install all the packages without creating an environment.
+
+```conda install --file requirements.txt```
+
 # Required Computing Resources
 
 <ul>
