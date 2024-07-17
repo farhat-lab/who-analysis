@@ -112,6 +112,8 @@ After running the scripts in `/model`, run the two numbered scripts in `/grading
 1. <code>01_get_single_model_results.py</code>: Combines results from all the permutation test, LRT, and univarite statistics into a single table for each (model, drug) pair. Reuslts of all logistic regression models for a single drug are written to a single Excel file in a new `/results` directory in the home directory of the repository. The only required argument is `config.yaml` to get the directory in which the model results are stored.
 2. <code>02_combine_WHO_ALL_results.py</code>: Integrates results from different models and gets a consensus grading for each (drug, variant) pair. Writes it to an output file. Required arguments: `config.yaml` and an output file to store the regression-based catalog at.
 
+<b>The regression-based catalog results from this work are in the file `/results/Regression_Final_June2024_Tier1.csv`</b>
+
 ## 3. Resistance Predictions (`/prediction`)
 
 1. <code>catalog_model.py</code>: Uses the final regression catalog (created from <code>02_combine_WHO_ALL_results.py</code>) to get resistance predictions. Any isolate that contains a Group 1 or 2 mutations is predicted resistance.
