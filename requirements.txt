@@ -28,7 +28,6 @@ dbus=1.13.6=h5008d03_3
 docutils=0.19=py39hf3d152e_1
 et_xmlfile=1.1.0=pyhd8ed1ab_0
 expat=2.5.0=hcb278e6_1
-fast-lineage-caller=0.3.1=pypi_0
 font-ttf-dejavu-sans-mono=2.37=hab24e00_0
 font-ttf-inconsolata=3.000=h77eed37_0
 font-ttf-source-code-pro=2.038=h77eed37_0
