@@ -8,7 +8,11 @@ to create the environment. Run `conda activate <env_name>` to activate it and `c
 
 # Required Computing Resources
 
-The genotypes matrices in this work are very large, and depending on the drug, can require up to 100 GB of RAM to run. All models were run on 1 CPU core. A single model can take anywhere from a few minutes to a few hours to run. Drugs with smaller datasets, such as Delamanid, will run much faster than drugs with many variants and samples, such as Ethambutol.
+<ul>
+        <li>The genotypes matrices in this work are very large, and depending on the drug, can require up to 100 GB of RAM to run.</li>
+        <li>All models were run on 1 CPU core. A single model can take anywhere from a few minutes to a few hours to run.</li>
+        <li>Drugs with smaller datasets, such as Delamanid, will run much faster than drugs with many variants and samples, such as Ethambutol.</li>
+</ul>
 
 # <code>data/</code>
 
