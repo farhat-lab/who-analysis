@@ -1,7 +1,7 @@
-# Post-Model Fitting Analysis Steps
+# Analysis Notebooks
 
-## 1. Lineage Analysis for Significant Principal Components
+All code to generate the results in the work are the 3 iPython notebooks in this directory:
 
-Principal components may have significant coefficients / odds ratios in the logistic regression models. Run the script <code>lineage_PC_analysis.py</code> to plot up to 2 significant eigenvectors, with isolates colored by their primary lineage (1-6 + <i>M. bovis</i>). 
-
-The resulting two-dimensional plot shows the eigenvectors with the largest magnitudes of odds ratios. The eigenvectors represent the directions of variance and separate the data points.
+1. <code>data_figures.ipynb</code>: Code to generate descriptive figures of the input training data.
+2. <code>grading_results_figures.ipynb</code>: Code to generate figures of the results of the grading algorithm.
+3. <code>in_text_results.ipynb</code>: Code to compute other summary statistics within the manuscript text.
