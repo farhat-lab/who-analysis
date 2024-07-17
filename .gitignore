@@ -14,3 +14,4 @@ lineages/20240129_lineages.csv
 bash_scripts/dup*.sh
 temp/
 run*.sh
+config_files/*
