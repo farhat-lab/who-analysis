@@ -6,6 +6,10 @@ This project uses `conda` to manage packages (install Anaconda <a href="https://
 
 to create the environment. Run `conda activate <env_name>` to activate it and `conda deactivate` to deactivate once you are in it.
 
+# Required Computing Resources
+
+The genotypes matrices in this work are very large, and depending on the drug, can require up to 100 GB of RAM to run. All models were run on 1 CPU core. A single model can take anywhere from a few minutes to a few hours to run. Drugs with smaller datasets, such as Delamanid, will run much faster than drugs with many variants and samples, such as Ethambutol.
+
 # <code>data/</code>
 
 1. <code>drug_CC.csv</code>: Critical concentrations for each drug used for binarization of MIC data.
@@ -30,27 +34,17 @@ to create the environment. Run `conda activate <env_name>` to activate it and `c
 
 # Running the Analysis
 
-## Model Results
-
-Individual model results are in the `/model_results` directory. If you wish to rerun the models, please write them to a new directory.
-
-The genotype and phenotype tables can be downloaded from the releases page because the files are very large. These were created by concatenating individual CSV files from this <a href="https://github.com/GTB-tbsequencing/mutation-catalogue-2023/tree/main/Input%20data%20files%20for%20Solo%20algorithms/2023-04-25T06_00_10.443990_jr_b741dc136e079fa8583604a4915c0dc751724ae9880f06e7c2eacc939e086536" taget="_blank">repository</a>.
-
-Each genotype, phenotype, and MIC table for each drug are in a subfolder with that drug's name. The genotypes tables contain only tier 1 genes from the 2nd edition of the WHO mutation catalog.
-
-If you wosj to run the entire analysis, please follow the instructions in the next sections.
-
 ## Raw Data
 
-Due to their large size, the raw genotypes, phenotypes, and MICs are available to download from the releases page of this repository. Each drug has a separate folder, which contains `genos_1.csv.gz`, `phenos_binary.csv`, and `phenos_mic.csv`.
+Due to their large size, the raw genotypes, phenotypes, and MICs are available to download from the releases page of this repository. Each drug has a separate folder, which contains `genos_1.csv.gz`, `phenos_binary.csv`, and `phenos_mic.csv`. These were created by concatenating individual CSV files from this <a href="https://github.com/GTB-tbsequencing/mutation-catalogue-2023/tree/main/Input%20data%20files%20for%20Solo%20algorithms/2023-04-25T06_00_10.443990_jr_b741dc136e079fa8583604a4915c0dc751724ae9880f06e7c2eacc939e086536" taget="_blank">repository</a>.
 
 To use this data, create a new directory and update the <code>output_dir</code> parameter in the `config.yaml` file (more about this later) to this same directory name. <b>Place each drug folder into this output directory. Keep the 3 files for each drug in separate drug-specific subfolders as in the release.</b>
 
-When you run the scripts, they will write the results to the same `output_dir` where the raw data are. The scripts will skip analyses that have already been done, so DO NOT use the `/model_results` directory as the output directory because the scripts will not rerun anything.
+When you run the scripts, they will write the results to the same `output_dir` where the raw data are. The scripts will skip analyses that have already been done, so if a step is interrupted, it will pick up at the next one by detecting which steps have already completed based on the files that have been created.
         
 ## 0. Preprocessing (<code>preprocessing/</code>):
     
-Before building any models, run the two scripts in the <code>preprocessing</code> directory in numerical order.
+Before running any models, run the two scripts in the <code>preprocessing</code> directory in numerical order.
 
 1. <code>preprocessing/01_make_gene_drug_mapping.py</code> creates the file <code>data/drug_gene_mapping.csv</code>, which maps the input gene names to each drug, which facilitates constructing the input model matrices
 2. <code>preprocessing/02_samples_summary_andPCA.py</code> generates 50 eigenvectors for population structure correction and saves them to <code>PCA/eigenvec_50PC.csv</code>. Intermediate files that this script creates are a dataframe of minor allele counts (<code>data/minor_allele_counts.pkl;</code>) and an array of the explained variance ratios of each of the 50 principal components (<code>data/pca_explained_var.npy</code>). These files were too large to commit to this repository.
