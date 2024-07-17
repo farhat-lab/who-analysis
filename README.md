@@ -40,7 +40,7 @@ to create the environment, which should take no more than 30 munutes. Run `conda
 
 Due to their large size, the raw genotypes, phenotypes, and MICs are available to download from the releases page of this repository. Each drug has a separate folder, which contains `genos_1.csv.gz`, `phenos_binary.csv`, and `phenos_mic.csv`. These were created by concatenating individual CSV files from this <a href="https://github.com/GTB-tbsequencing/mutation-catalogue-2023/tree/main/Input%20data%20files%20for%20Solo%20algorithms/2023-04-25T06_00_10.443990_jr_b741dc136e079fa8583604a4915c0dc751724ae9880f06e7c2eacc939e086536" taget="_blank">repository</a>.
 
-To use this data, create a new directory and update the <code>output_dir</code> parameter in the `config.yaml` file (more about this later) to this same directory name. <b>Place each drug folder into this output directory. Keep the 3 files for each drug in separate drug-specific subfolders as in the release.</b>
+To use this data, create a new directory (for example, "analysis_dir") and update the <code>output_dir</code> parameter in the `config.yaml` file (more about this later) to this same directory name. <b>Place each drug folder into this output directory. Keep the 3 files for each drug in separate drug-specific subfolders as in the release.</b>
 
 When you run the scripts, they will write the results to the same `output_dir` where the raw data are. The scripts will skip analyses that have already been done, so if a step is interrupted, it will pick up at the next one by detecting which steps have already completed based on the files that have been created.
         
