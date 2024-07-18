@@ -146,16 +146,13 @@ binary = kwargs["binary"]
 atu_analysis = kwargs["atu_analysis"]
 
 if not binary:
-    model_type = "MIC"
+    print("There are no univariate statistics to add for MIC models. Quitting this script")
+    exit()
 else:
     if atu_analysis:
         folder = "ATU"
     else:
         folder = "BINARY"
-
-if model_type == "MIC":
-    print("There are no univariate statistics to add for MIC models. Quitting this script.")
-    exit()
 
 # get all models to compute univariate statistics for
 analysis_paths = []
@@ -186,16 +183,16 @@ df_phenos = pd.read_csv(phenos_file)
 annotated_genos = get_annotated_genos(analysis_dir, drug)
     
 for model_path in analysis_paths:
+    
     for fName in glob.glob(os.path.join(model_path, "model_analysis.csv")):
 
-        if model_type == "AF":
-            if "encodeAF" in model_path:
-                print(model_path)
-                compute_statistics_single_model(fName, df_phenos, annotated_genos, encodeAF=True, alpha=0.05)
-        else:
-            if "dropAF" in model_path:
-                print(model_path)
-                compute_statistics_single_model(fName, df_phenos, annotated_genos, encodeAF=False, alpha=0.05)        
+        if "encodeAF" in model_path:
+            print(model_path)
+            compute_statistics_single_model(fName, df_phenos, annotated_genos, encodeAF=True, alpha=0.05)
+        
+        elif "dropAF" in model_path:
+            print(model_path)
+            compute_statistics_single_model(fName, df_phenos, annotated_genos, encodeAF=False, alpha=0.05)        
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9
