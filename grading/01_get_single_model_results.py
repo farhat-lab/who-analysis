@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import scipy.stats as st
-import glob, os, sys, yaml, subprocess, itertools, sparse, warnings
+import glob, os, sys, yaml, subprocess, itertools, sparse, warnings, argparse
 from functools import reduce
 warnings.filterwarnings(action='ignore')
 
@@ -34,16 +34,6 @@ drug_abbr_dict = {"Delamanid": "DLM",
 silent_lst = ['synonymous_variant', 'stop_retained_variant', 'initiator_codon_variant']
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
-
-cmd_line_args cmd_line_args = parser.parse_args()
-config_file = cmd_line_args.config_file
-
-kwargs = yaml.safe_load(open(config_file))
-analysis_dir = kwargs["output_dir"]
-
-
 ################################# Write Final Dataframes for the Binary Analysis to an Excel File #################################
 
 
@@ -63,12 +53,6 @@ def get_single_model_results(drug, tiers_lst, folder, model_prefix):
     # because the p-values are NaN for the FULL model row, they will be removed, so then the dataframes can be merged using inner
     LRT_results = add_pval_corrections(LRT_results.iloc[1:, ])
 
-    # # remove unpooled - silent models mutations if this is a pooledLoF or + silent model
-    # if 'dropAF_noSyn_unpooled' not in model_prefix:
-    #     unpooled_mutations = pd.read_csv(os.path.join(analysis_dir, drug, folder, model_prefix.replace('dropAF_withSyn_unpooled', 'dropAF_noSyn_unpooled').replace('dropAF_noSyn_poolLoF', 'dropAF_noSyn_unpooled'), "LRT_results.csv"))["mutation"].values
-    #     model_permute = model_permute.query("mutation not in @unpooled_mutations")
-    #     LRT_results = LRT_results.query("mutation not in @unpooled_mutations")
-    
     # check that all mutations are represented in both the LRT results and regression model results
     if len(set(model_permute["mutation"].values).symmetric_difference(LRT_results["mutation"].values)) != 0:
         print(drug, folder, model_prefix)
@@ -207,13 +191,24 @@ def export_binary_analyses(drugs_lst, read_folder, write_folder, analyses_lst, p
 
                 if len(add_analysis) > 0:
                     all_analyses[model_path.replace("phenos=", "").replace("/", ",").replace("tiers=", "T").replace("dropAF_", "").replace("encodeAF_", "").replace("binarizeAF", "")] = add_analysis
-    
-        with pd.ExcelWriter(f"./results/{write_folder}/{drug}.xlsx") as file:
-            for key, val in all_analyses.items():
-                val.to_excel(file, sheet_name=key, index=False)
+
+        if len(all_analyses) > 0:
+            
+            with pd.ExcelWriter(f"./results/{write_folder}/{drug}.xlsx") as file:
+                for key, val in all_analyses.items():
+                    val.to_excel(file, sheet_name=key, index=False)
                     
         print(f"Finished {len(all_analyses)} analyses for {drug}")
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
+
+cmd_line_args = parser.parse_args()
+config_file = cmd_line_args.config_file
+
+kwargs = yaml.safe_load(open(config_file))
+analysis_dir = kwargs["output_dir"]
 
 # write Excel files of full results from pooled models and unpooled models
 # these are saved to separate files, then they will be merged in the next script
@@ -228,5 +223,6 @@ binary_analyses_lst = [
                         "tiers=1/phenos=ALL/dropAF_withSyn_unpooled",
                       ]
 
-drugs_lst = list(drug_abbr_dict.keys())
+drugs_lst = os.listdir(analysis_dir)
+print(f"Grading mutations for {len(drugs_lst)} drugs: {','.join(drugs_lst)}")
 export_binary_analyses(drugs_lst, "BINARY", "BINARY", binary_analyses_lst, pooled_model_variants=False)
