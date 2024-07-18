@@ -8,7 +8,10 @@ to create the environment, which should take no more than 30 munutes. Run `conda
 
 Or if you prefer, run the following to install all the packages without creating an environment.
 
-```conda install --file requirements.txt```
+```
+conda install --file requirements.txt -c conda-forge -c bioconda
+pip install fast-lineage-caller==0.3.1
+```
 
 # Required Computing Resources
 
@@ -52,8 +55,8 @@ When you run the scripts, they will write the results to the same `output_dir` w
     
 Before running any models, run the two scripts in the <code>preprocessing</code> directory in numerical order.
 
-1. <code>preprocessing/01_make_gene_drug_mapping.py</code> creates the file <code>data/drug_gene_mapping.csv</code>, which maps the input gene names to each drug, which facilitates constructing the input model matrices
-2. <code>preprocessing/02_samples_summary_andPCA.py</code> generates 50 eigenvectors for population structure correction and saves them to <code>PCA/eigenvec_50PC.csv</code>. Intermediate files that this script creates are a dataframe of minor allele counts (<code>data/minor_allele_counts.pkl;</code>) and an array of the explained variance ratios of each of the 50 principal components (<code>data/pca_explained_var.npy</code>). These files were too large to commit to this repository.
+1. <code>preprocessing/01_make_gene_drug_mapping.py</code> creates the file <code>data/drug_gene_mapping.csv</code>, which maps the input gene names to each drug, which facilitates constructing the input model matrices.
+2. <code>preprocessing/02_samples_summary_andPCA.py</code> generates 50 eigenvectors for population structure correction and saves them to <code>PCA/eigenvec_50PC.csv</code>. Intermediate files that this script creates are a dataframe of minor allele counts (<code>data/minor_allele_counts.pkl.gz</code>) and an array of the explained variance ratios of each of the 50 principal components (<code>data/pca_explained_var.npy</code>).
 
 ## 1. Model Scripts (<code>model/</code>)
 
@@ -69,7 +72,7 @@ The following model scripts require the config file (`config.yaml`) and the full
 Parameters in the config file:
     
 <ul>
-    <li><code>input_dir</code>: Directory where all input directories are stored. Contains subfolders "grm", "phenotypes", and "full_genotypes".</li>
+    <li><code>input_dir</code>: Directory where all input directories are stored. Contains subfolders "grm", "phenotypes", and "full_genotypes". This parameter is not used because the data have already been combined into individual `genos_1.csv.gz`, `phenos_binary.csv`, and `phenos_mic.csv` files for each drug. </li>
     <li><code>output_dir</code>: Directory where model results will be written.</li>
     <li><code>binary</code>: boolean for whether to fit a binary or quantitative (MIC) model</li>
     <li><code>atu_analysis</code>: boolean for whether this is the normal binary analysis or a CC vs. CC-ATU analysis</li>
