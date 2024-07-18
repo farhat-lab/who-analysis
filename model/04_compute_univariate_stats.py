@@ -137,7 +137,7 @@ tracemalloc.start()
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
 
-cmd_line_args cmd_line_args = parser.parse_args()
+cmd_line_args = parser.parse_args()
 config_file = cmd_line_args.config_file
 
 kwargs = yaml.safe_load(open(config_file))
