@@ -1,0 +1,17 @@
+AF_thresh: 0.75
+alpha: 0.05
+amb_mode: DROP
+atu_analysis: false
+atu_analysis_type: CC
+binary: false
+input_data_dir: example_data
+model_prefix: dropAF_noSyn_poolLoF
+num_PCs: 50
+num_bootstrap: 1000
+output_dir: analysis_dir
+pheno_category_lst:
+- WHO
+pool_type: poolLoF
+silent: false
+tiers_lst:
+- '1'
