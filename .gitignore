@@ -13,5 +13,3 @@ lineages/20240129_lineages.csv
 # extra semi-duplicate files used for testing
 bash_scripts/dup*.sh
 temp/
-run*.sh
-config_files/*
