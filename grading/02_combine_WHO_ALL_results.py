@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import scipy.stats as st
-import glob, os, sys, yaml, subprocess, itertools, sparse, warnings
+import glob, os, sys, yaml, subprocess, itertools, sparse, warnings, argparse
 from functools import reduce
 warnings.filterwarnings(action='ignore')
 
@@ -17,17 +17,6 @@ who_variants.rename(columns={'drug': 'Drug', 'variant': 'mutation', 'effect': 'p
 sys.path.append("utils")
 from stats_utils import *
 from data_utils import *
-
-parser = argparse.ArgumentParser()
-parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
-parser.add_argument("-o", "--output", dest='out_fName', type=str, required=True, help='Full path to a file name where to store the final catalog results')
-
-cmd_line_args cmd_line_args = parser.parse_args()
-config_file = cmd_line_args.config_file
-out_fName = cmd_line_args.out_fName
-
-kwargs = yaml.safe_load(open(config_file))
-analysis_dir = kwargs["output_dir"]
 
 drug_abbr_dict = {"Delamanid": "DLM",
                   "Bedaquiline": "BDQ",
@@ -55,8 +44,13 @@ cols_lst = ['Odds_Ratio', 'pval', 'BH_pval', 'neutral_pval', 'BH_neutral_pval', 
 
 def get_results_single_pheno_group(drug, excel_dir):
 
-    full_results_excel = pd.read_excel(f"./results/{excel_dir}/{drug}.xlsx", sheet_name=None)
-    
+    results_fName = f"./results/{excel_dir}/{drug}.xlsx"
+
+    if not os.path.isfile(results_fName):
+        return None, None
+
+    full_results_excel = pd.read_excel(results_fName, sheet_name=None)
+        
     # don't need these columns
     del_cols = ["Phenos", "pool_type", "silent"]
     
@@ -76,11 +70,16 @@ def get_results_single_pheno_group(drug, excel_dir):
             print(name)
 
     # keep the first instance of each mutation because the models are ordered unpooled, poolLoF, silent/unpooled, so preferentially keep the earliest instances
-    # no ALL phenotypes for Pretomanid
-    if drug != 'Pretomanid':
+    # pd.concat() fails if the list is empty, so check first
+    if len(ALL_combined) > 0:
         ALL_combined = pd.concat(ALL_combined).drop_duplicates("mutation", keep='first')
-        
-    WHO_combined = pd.concat(WHO_combined).drop_duplicates("mutation", keep='first')
+    else:
+        ALL_combined = None
+
+    if len(WHO_combined) > 0:
+        WHO_combined = pd.concat(WHO_combined).drop_duplicates("mutation", keep='first')
+    else:
+        WHO_combined = None
 
     return WHO_combined, ALL_combined
 
@@ -93,6 +92,9 @@ def clean_WHO_results_write_to_csv(drug, in_folder, out_folder, tiers_lst=[1]):
     '''
     
     WHO_results_single_drug, ALL_results_single_drug = get_results_single_pheno_group(drug, in_folder)
+
+    if WHO_results_single_drug is None or ALL_results_single_drug is None:
+        return None
 
     WHO_results_single_drug = pd.concat([WHO_results_single_drug[["mutation", "predicted_effect"]], 
                                          WHO_results_single_drug[cols_lst], 
@@ -123,6 +125,9 @@ def combine_WHO_ALL_results_write_to_csv(drug, in_folder, out_folder, tiers_lst=
     
     WHO_results_single_drug, ALL_results_single_drug = get_results_single_pheno_group(drug, in_folder)
 
+    if WHO_results_single_drug is None or ALL_results_single_drug is None:
+        return None
+        
     # full list of mutations tested in both models
     all_mutations = list(set(WHO_results_single_drug.mutation).union(set(ALL_results_single_drug.mutation)))
 
@@ -315,16 +320,32 @@ def complete_reason_column(df, WHO_col='Initial confidence grading WHO dataset',
     return df
 
 
-drugs_lst = list(drug_abbr_dict.keys())
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
+parser.add_argument("-o", "--output", dest='out_fName', type=str, required=True, help='Full path to a file name where to store the final catalog results')
+
+cmd_line_args = parser.parse_args()
+config_file = cmd_line_args.config_file
+out_fName = cmd_line_args.out_fName
+
+kwargs = yaml.safe_load(open(config_file))
+analysis_dir = kwargs["output_dir"]
+
+drugs_lst = os.listdir(analysis_dir)
 write_results_for_all_drugs(drugs_lst, "BINARY", "FINAL", tiers_lst=[1])
 
 # read in all single drug results, add Reason column
 results_all_drugs = []
 
 for drug in drugs_lst:
-    df = pd.read_csv(f"./results/FINAL/{drug}.csv")
-    df['Drug'] = drug
-    results_all_drugs.append(df)
+    
+    results_fName = f"./results/FINAL/{drug}.csv"
+
+    if os.path.isfile(results_fName):
+        df = pd.read_csv(results_fName)
+        df['Drug'] = drug
+        results_all_drugs.append(df)
 
 results_all_drugs = pd.concat(results_all_drugs, axis=0)
 results_all_drugs = complete_reason_column(results_all_drugs)
