@@ -8,10 +8,7 @@ to create the environment, which should take no more than 30 munutes. Run `conda
 
 Or if you prefer, run the following to install all the packages without creating an environment.
 
-```
-conda install --file requirements.txt -c conda-forge -c bioconda
-pip install fast-lineage-caller==0.3.1
-```
+```conda install --file requirements.txt```
 
 # Required Computing Resources
 
@@ -99,18 +96,7 @@ Some of the parameters above were kept constant throughout all analyses, but the
 8. MIC, - silent variants, <b>pool</b> LoF mutations
 9. MIC, <b>+ silent</b> variants, all variants unpooled
 
-For a single drug, the scripts can be run as follows:
-
-```
-drug='Delamanid'
-
-python3 -u model/01_make_model_inputs.py -c config.yaml -d $drug
-python3 -u model/02_run_regression.py -c config.yaml -d $drug
-python3 -u model/03_likelihood_ratio_test.py -c config.yaml -d $drug
-python3 -u model/04_compute_univariate_stats.py -c config.yaml
-```
-
-The drug argument is not required for the last script because it computes univariate statistics for all the models it finds in the specified folders.
+The appropriate parameters in config files are in the `/config_files` directory. An example script to run all drug models and the grading algorithm is given in `run.sh`.
 
 ## 2. Grading Algorithm (`/grading`)
 
