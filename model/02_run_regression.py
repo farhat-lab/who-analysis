@@ -114,7 +114,7 @@ if atu_analysis:
     model_suffix = "_" + model_suffix.replace('-', '_')
 
 if os.path.isfile(os.path.join(out_dir, f"model_analysis{model_suffix}.csv")):
-    print("Regression was already run for this model")
+    print("Regression was already run for this model\n")
     exit()
 else:
     print(f"Saving model results to {out_dir}")
