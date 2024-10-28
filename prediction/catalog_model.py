@@ -27,7 +27,7 @@ tracemalloc.start()
 parser = argparse.ArgumentParser()
 
 # Add a required string argument for the config file
-parser.add_argument("--drug", dest='drug', type=str, required=True)
+parser.add_argument('-d', "--drug", dest='drug', type=str, required=True)
 
 parser.add_argument('--AF', dest='AF_thresh', type=float, default=0.75, help='Alternative allele frequency threshold (exclusive) to consider variants present')
 
@@ -35,14 +35,11 @@ parser.add_argument('--remove-mut', dest='remove_mut', action='store_true', help
 
 parser.add_argument('--grading-rules', dest='grading_rules', action='store_true', help='Add mutations that would be upgraded by grading rules')
 
-parser.add_argument('--S-assoc', dest='S_assoc', action='store_true', help='Predict susceptible isolates with S-assoc mutations that abrogate the effects of R-associated mutations')
-
 cmd_line_args = parser.parse_args()
 drug = cmd_line_args.drug
 AF_thresh = cmd_line_args.AF_thresh
 remove_mut = cmd_line_args.remove_mut
 grading_rules = cmd_line_args.grading_rules
-S_assoc = cmd_line_args.S_assoc
 
 # AF_thresh needs to be a float between 0 and 1
 if AF_thresh > 1:
@@ -61,7 +58,7 @@ model_suffix = ''
 
 if grading_rules:
     results_col = 'REGRESSION + GRADING RULES'
-    model_suffix += '_gradingRules'
+    model_suffix += '_GR'
 else:
     results_col = 'REGRESSION FINAL CONFIDENCE GRADING'
 
@@ -76,26 +73,20 @@ if remove_mut:
     R_assoc = list(set(R_assoc) - set(remove_muts_lst))
     model_suffix += '_remove_discrepancies'
 
-if S_assoc:
-    
+# only apply epistasis to these drugs because LoF mutations in mmpL5 and eis were found to be negatively associated with R in the data.
+# in theory, this would hold for Clofazimine too, but the data doesn't support an association between mmpL5 LoF and CFZ S (yet)    
+if drug in ['Bedaquiline', 'Amikacin', 'Kanamycin']:
+
     # mutations that abrogate the effects of an R-associated mutation: only for BDQ, CFZ, AMK, and KAN. Checked that they have "Abrogates" in the Comment column
     negating_muts = who_variants.dropna(subset="Comment").query("drug==@drug & Comment.str.contains('Abrogates')").variant.values
-    print(f"{len(negating_muts)} resistance-abrogating mutations for {drug}")
-
-    model_suffix += '_R_abrogating_muts'
+    assert len(negating_muts) != 0
     
-    if len(negating_muts) == 0:
-        
-        # copy the statistics for the model without R abrogating mutations
-        shutil.copy(os.path.join(out_dir, f"model_stats_AF{int(AF_thresh*100)}_withLoF{model_suffix.replace('_R_abrogating_muts', '')}.csv"),
-                    os.path.join(out_dir, f"model_stats_AF{int(AF_thresh*100)}_withLoF{model_suffix}.csv")
-                   )
-        
-        # then exit
-        exit()
-
+    print(f"{len(negating_muts)} resistance-abrogating mutations for {drug}")
+    
 else:
+    print(f"No epistasis for {drug}")
     negating_muts = []
+        
 
 if len(R_assoc) == 0:
     print("There are no significant R-associated mutations for this model\n")
@@ -247,7 +238,7 @@ def get_stats_with_CI(df, pred_col, true_col):
 
 catalog_results = get_stats_with_CI(catalog_pred_df, "y_pred", "phenotype")
 catalog_results["Model"] = "Regression"
-catalog_results.set_index("Model").to_csv(os.path.join(out_dir, f"model_stats_AF{int(AF_thresh*100)}_withLoF{model_suffix}.csv"))
+catalog_results.set_index("Model").to_csv(os.path.join(out_dir, f"model_stats_AF{int(AF_thresh*100)}{model_suffix}.csv"))
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

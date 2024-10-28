@@ -4,7 +4,6 @@ import glob, os, yaml, sys, argparse, shutil
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV, Ridge, RidgeCV
 import tracemalloc, pickle
-lineages_combined = pd.read_csv("lineages/combined_lineages_samples.csv", low_memory=False)
 
 # utils files are in a separate folder
 sys.path.append("utils")
@@ -40,11 +39,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
 parser.add_argument('-d', "--drug", dest='drug', type=str, required=True)
 parser.add_argument('--MIC-single-medium', dest='keep_single_medium', action='store_true', help='If specified, keep only the most common media for the MIC models')
+parser.add_argument('--PC', dest='num_PCs', type=int, default=50)
+parser.add_argument('--N', dest='num_reps', type=int, default=1000, help='Number of replicates for the permutation test and bootstrapping of odds ratios')
 
 cmd_line_args = parser.parse_args()
 config_file = cmd_line_args.config_file
 drug = cmd_line_args.drug
 keep_single_medium = cmd_line_args.keep_single_medium
+num_PCs = cmd_line_args.num_PCs
+num_reps = cmd_line_args.num_reps
 
 drug_WHO_abbr = drug_abbr_dict[drug]
 kwargs = yaml.safe_load(open(config_file))
@@ -54,10 +57,9 @@ binary = kwargs["binary"]
 atu_analysis = kwargs["atu_analysis"]
 pool_type = kwargs["pool_type"]
 analysis_dir = kwargs["output_dir"]
-num_PCs = kwargs["num_PCs"]
 
 # read in the eigenvector dataframe and keep only the PCs for the model
-eigenvec_df = pd.read_csv("PCA/eigenvec_50PC.csv", usecols=["sample_id"] + [f"PC{num+1}" for num in np.arange(num_PCs)]).set_index("sample_id")
+eigenvec_df = pd.read_csv("PCA/eigenvec_500PC.csv", usecols=["sample_id"] + [f"PC{num+1}" for num in np.arange(num_PCs)]).set_index("sample_id")
 
 # double check. If running CC vs. CC-ATU analysis, they are binary phenotypes
 if atu_analysis:
@@ -71,7 +73,6 @@ else:
     phenos_name = "WHO"
         
 model_prefix = kwargs["model_prefix"]
-num_bootstrap = kwargs["num_bootstrap"]
 
 if binary:
     if atu_analysis:
@@ -219,8 +220,8 @@ else:
 
 
 if not os.path.isfile(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv")):
-    print(f"Peforming permutation test with {num_bootstrap} replicates")
-    permute_df = perform_permutation_test(model, X, y, num_bootstrap, binary=binary, fit_type='OLS', progress_bar=False)
+    print(f"Peforming permutation test with {num_reps} replicates")
+    permute_df = perform_permutation_test(model, X, y, num_reps, binary=binary, fit_type='OLS', progress_bar=False)
     permute_df.columns = matrix.columns
     permute_df.to_csv(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv"), index=False)
 else:

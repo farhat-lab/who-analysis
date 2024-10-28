@@ -23,10 +23,12 @@ tracemalloc.start()
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
 parser.add_argument('-d', "--drug", dest='drug', type=str, required=True)
+parser.add_argument('--PC', dest='num_PCs', type=int, default=50)
 
 cmd_line_args = parser.parse_args()
 config_file = cmd_line_args.config_file
 drug = cmd_line_args.drug
+num_PCs = cmd_line_args.num_PCs
 
 kwargs = yaml.safe_load(open(config_file)) 
 binary = kwargs["binary"]
@@ -37,8 +39,8 @@ pheno_category_lst = kwargs["pheno_category_lst"]
 atu_analysis = kwargs["atu_analysis"]
 atu_analysis_type = kwargs["atu_analysis_type"]
 analysis_dir = kwargs["output_dir"]
-num_PCs = kwargs["num_PCs"]
-eigenvec_df = pd.read_csv("PCA/eigenvec_50PC.csv", usecols=["sample_id"] + [f"PC{num+1}" for num in np.arange(num_PCs)]).set_index("sample_id")
+
+eigenvec_df = pd.read_csv("PCA/eigenvec_500PC.csv", usecols=["sample_id"] + [f"PC{num+1}" for num in np.arange(num_PCs)]).set_index("sample_id")
 
 if "ALL" in pheno_category_lst:
     phenos_name = "ALL"
