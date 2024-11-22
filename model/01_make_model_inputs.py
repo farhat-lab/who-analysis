@@ -36,17 +36,23 @@ tracemalloc.start()
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
 parser.add_argument('-d', "--drug", dest='drug', type=str, required=True)
+parser.add_argument('--tier2', dest='include_tier2', action='store_true', help='If specified, include tiuer 2 genes in the models')
 parser.add_argument('--MIC-single-medium', dest='keep_single_medium', action='store_true', help='If specified, keep only the most common media for the MIC models')
 
 cmd_line_args = parser.parse_args()
 config_file = cmd_line_args.config_file
 drug = cmd_line_args.drug
+include_tier2 = cmd_line_args.include_tier2
 keep_single_medium = cmd_line_args.keep_single_medium
 
 drug_WHO_abbr = drug_abbr_dict[drug]
 kwargs = yaml.safe_load(open(config_file))
 
-tiers_lst = kwargs["tiers_lst"]
+if include_tier2:
+    tiers_lst = ["1", "2"]
+else:
+    tiers_lst = ["1"]
+    
 binary = kwargs["binary"]
 atu_analysis = kwargs["atu_analysis"]
 input_data_dir = kwargs["input_data_dir"]
@@ -250,10 +256,10 @@ tier2_genos_file = os.path.join(analysis_dir, drug, "genos_2.csv.gz")
 
 if not os.path.isfile(tier1_genos_file):
     print("Creating master genotype dataframes...")
-    create_master_genos_files(drug, genos_dir, analysis_dir, include_tier2=False)
+    create_master_genos_files(drug, genos_dir, analysis_dir, include_tier2=True)
         
 # this only happens for Pretomanid because there are no Tier 2 genes
-if "2" in tiers_lst and not os.path.isfile(tier2_genos_file):
+if include_tier2 and not os.path.isfile(tier2_genos_file):
     print("There are no tier 2 genes. Quitting this model")
     exit()
 

@@ -1,7 +1,7 @@
 Drug,mutation,WHO_Odds_Ratio,WHO_BH_pval,Initial confidence grading WHO dataset,ALL_Odds_Ratio,ALL_BH_pval,Initial confidence grading ALL dataset,REGRESSION FINAL CONFIDENCE GRADING,SOLO INITIAL CONFIDENCE GRADING,SOLO FINAL CONFIDENCE GRADING,Reference,MIC_coef,MIC_BH_pval
-Isoniazid,ahpC_c.-57C>T,1.164790956926929,0.0,Assoc w R,1.165729648658151,0.0,Assoc w R,1) Assoc w R,3) Uncertain significance,3) Uncertain significance,Xpert,0.0455426102853527,0.4527457627118644
-Isoniazid,ahpC_c.-48G>A,1.167728861568771,0.0,Assoc w R,1.161256035007798,0.0,Assoc w R,1) Assoc w R,3) Uncertain significance,3) Uncertain significance,Experimental,0.0187195930928269,0.5312432432432432
-Isoniazid,ahpC_c.-52C>T,1.138867607446718,0.0,Assoc w R,1.136985126359181,0.0,Assoc w R,1) Assoc w R,3) Uncertain significance,3) Uncertain significance,Experimental,0.0385747712137776,0.5312432432432432
-Isoniazid,ahpC_c.-54C>T,1.125293942608238,0.0,Assoc w R,1.133065937805609,0.0,Assoc w R,1) Assoc w R,3) Uncertain significance,3) Uncertain significance,Experimental,0.032118506161215,0.5312432432432432
-Isoniazid,ahpC_c.-76T>A,1.137971214081964,0.0,Assoc w R,1.097432941738294,0.0,Assoc w R,1) Assoc w R,3) Uncertain significance,3) Uncertain significance,Xpert,0.0567214663045032,0.4693846153846154
-Isoniazid,ahpC_c.-72C>T,1.045262055610354,0.0140949152542372,Uncertain,1.081046114284803,0.0,Assoc w R,2) Assoc w R - Interim,3) Uncertain significance,3) Uncertain significance,Experimental,0.1141907524303715,0.0204324324324324
+Isoniazid,ahpC_c.-57C>T,1.158951272082172,0.0,Assoc w R,1.165863136905473,0.0,Assoc w R,1) Assoc w R,3) Uncertain significance,3) Uncertain significance,Xpert,0.046365879815776,0.4935544041450777
+Isoniazid,ahpC_c.-48G>A,1.167372019180711,0.0,Assoc w R,1.162905157004185,0.0,Assoc w R,1) Assoc w R,3) Uncertain significance,3) Uncertain significance,Experimental,0.0178140507000485,0.5293012048192771
+Isoniazid,ahpC_c.-52C>T,1.138477090818692,0.0,Assoc w R,1.140173683813526,0.0,Assoc w R,1) Assoc w R,3) Uncertain significance,3) Uncertain significance,Experimental,0.0392286428939354,0.5293012048192771
+Isoniazid,ahpC_c.-54C>T,1.124465251419886,0.0,Assoc w R,1.130568463976345,0.0,Assoc w R,1) Assoc w R,3) Uncertain significance,3) Uncertain significance,Experimental,0.030262419252503,0.5293012048192771
+Isoniazid,ahpC_c.-76T>A,1.138470858633493,0.0,Assoc w R,1.098705608684972,0.0,Assoc w R,1) Assoc w R,3) Uncertain significance,3) Uncertain significance,Xpert,0.057982984799786,0.4040689655172414
+Isoniazid,ahpC_c.-72C>T,1.044938864138755,0.0048802816901408,Uncertain,1.082337318993566,0.0,Assoc w R,2) Assoc w R - Interim,3) Uncertain significance,3) Uncertain significance,Experimental,0.1103294409519867,0.0

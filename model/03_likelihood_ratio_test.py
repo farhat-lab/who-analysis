@@ -23,16 +23,23 @@ tracemalloc.start()
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
 parser.add_argument('-d', "--drug", dest='drug', type=str, required=True)
+parser.add_argument('--tier2', dest='include_tier2', action='store_true', help='If specified, include tiuer 2 genes in the models')
 parser.add_argument('--PC', dest='num_PCs', type=int, default=50)
 
 cmd_line_args = parser.parse_args()
 config_file = cmd_line_args.config_file
 drug = cmd_line_args.drug
+include_tier2 = cmd_line_args.include_tier2
 num_PCs = cmd_line_args.num_PCs
 
 kwargs = yaml.safe_load(open(config_file)) 
 binary = kwargs["binary"]
-tiers_lst = kwargs["tiers_lst"]
+
+if include_tier2:
+    tiers_lst = ["1", "2"]
+else:
+    tiers_lst = ["1"]
+    
 silent = kwargs["silent"]
 model_prefix = kwargs["model_prefix"]
 pheno_category_lst = kwargs["pheno_category_lst"]

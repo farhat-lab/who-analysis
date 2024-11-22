@@ -13,7 +13,6 @@ who_variants['tier'] = who_variants['tier'].astype(str)
 alpha = 0.05
 tiers_lst = ['1']
 who_variants = who_variants.query("tier in @tiers_lst").reset_index(drop=True)
-results_final = pd.read_csv("results/Regression_Final_June2024_Tier1.csv")
 
 # utils files are in a separate folder
 sys.path.append("utils")
@@ -26,7 +25,8 @@ tracemalloc.start()
 
 parser = argparse.ArgumentParser()
 
-# Add a required string argument for the config file
+parser.add_argument('-i', dest='input_file', type=str, required=True, help='Catalog file to get mutations from')
+
 parser.add_argument('-d', "--drug", dest='drug', type=str, required=True)
 
 parser.add_argument('--AF', dest='AF_thresh', type=float, default=0.75, help='Alternative allele frequency threshold (exclusive) to consider variants present')
@@ -36,10 +36,14 @@ parser.add_argument('--remove-mut', dest='remove_mut', action='store_true', help
 parser.add_argument('--grading-rules', dest='grading_rules', action='store_true', help='Add mutations that would be upgraded by grading rules')
 
 cmd_line_args = parser.parse_args()
+input_file = cmd_line_args.input_file 
 drug = cmd_line_args.drug
 AF_thresh = cmd_line_args.AF_thresh
 remove_mut = cmd_line_args.remove_mut
 grading_rules = cmd_line_args.grading_rules
+
+# read in the regression-derived catalog
+results_final = pd.read_csv(input_file)
 
 # AF_thresh needs to be a float between 0 and 1
 if AF_thresh > 1:
@@ -67,6 +71,10 @@ R_assoc = results_final.loc[results_final[results_col].str.contains('Assoc w R',
 if remove_mut:
 
     remove_muts_lst = results_final.loc[(results_final[results_col].str.contains('Assoc w R', case=True)) & (results_final['SOLO FINAL CONFIDENCE GRADING'].str.contains('Not assoc w R', case=True))].query("Drug==@drug")["mutation"].values
+
+    if len(remove_muts_lst) == 0:
+        print(f"No major discrepancies for {drug}. Quitting this script")
+        exit()
 
     print(f"Removed major discrepancies {','.join(remove_muts_lst)} from the regression classification list")
     
@@ -110,7 +118,7 @@ del df_genos["variant_allele_frequency"]
 lof_effect_list = ["frameshift", "start_lost", "stop_gained", "feature_ablation"]
 df_genos.loc[df_genos["predicted_effect"].isin(lof_effect_list), "pooled_variable"] = "LoF"
 
-# get the pooled mutation column so that it's gene + inframe/LoF
+# get the pooled mutation column so that it's {gene}_LoF
 df_genos["pooled_mutation"] = df_genos["resolved_symbol"] + "_" + df_genos["pooled_variable"]
 
 # variant_binary_status is NaN for missing variants (low-quality), so drop those samples
@@ -238,7 +246,7 @@ def get_stats_with_CI(df, pred_col, true_col):
 
 catalog_results = get_stats_with_CI(catalog_pred_df, "y_pred", "phenotype")
 catalog_results["Model"] = "Regression"
-catalog_results.set_index("Model").to_csv(os.path.join(out_dir, f"model_stats_AF{int(AF_thresh*100)}{model_suffix}.csv"))
+catalog_results.set_index("Model").to_csv(os.path.join(out_dir, f"model_stats_AF{int(AF_thresh*100)}{model_suffix}_V2.csv"))
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

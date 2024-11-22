@@ -11,13 +11,18 @@ from stats_utils import *
 
 
 
-def get_annotated_genos(analysis_dir, drug):
+def get_annotated_genos(analysis_dir, drug, include_tier2=False):
     '''
     This function gets annotations (predicted effect and position) for mutations to merge them into the final analysis dataframes
     '''
  
-    genos_files = glob.glob(os.path.join(analysis_dir, drug, "genos*.csv.gz"))
+    if not include_tier2:
+        genos_files = glob.glob(os.path.join(analysis_dir, drug, "genos_1.csv.gz"))
+    else:
+        genos_files = glob.glob(os.path.join(analysis_dir, drug, "genos*.csv.gz"))
+
     print(f"{len(genos_files)} genotypes files")
+        
     df_genos = pd.concat([pd.read_csv(fName, compression="gzip", low_memory=False, 
                                       usecols=["resolved_symbol", "variant_category", "predicted_effect", "position"]
                                      ) for fName in genos_files]).drop_duplicates()
@@ -137,10 +142,12 @@ tracemalloc.start()
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
 parser.add_argument('-d', "--drug", dest='drug', type=str, required=True)
-
+parser.add_argument('--tier2', dest='include_tier2', action='store_true', help='If specified, include tiuer 2 genes in the models')
+    
 cmd_line_args = parser.parse_args()
 config_file = cmd_line_args.config_file
 drug = cmd_line_args.drug
+include_tier2 = cmd_line_args.include_tier2
 
 kwargs = yaml.safe_load(open(config_file))
 analysis_dir = kwargs["output_dir"]
@@ -165,19 +172,23 @@ for tier in os.listdir(os.path.join(analysis_dir, drug, folder)):
     if "tiers" in tier and os.path.isdir(os.path.join(analysis_dir, drug, folder, tier)):
         tiers_path = os.path.join(analysis_dir, drug, folder, tier)
 
-        # level_1 = phenotypes (if it exists) 
-        for level_1 in os.listdir(tiers_path):
-            level1_path = os.path.join(analysis_dir, drug, folder, tier, level_1)
-
-            if os.path.isfile(os.path.join(level1_path, "model_matrix.pkl")):
-                analysis_paths.append(level1_path)
-
-            # level_2 = model names
-            for level_2 in os.listdir(level1_path):
-                level2_path = os.path.join(analysis_dir, drug, folder, tier, level_1, level_2)
-
-                if os.path.isfile(os.path.join(level2_path, "model_matrix.pkl")):
-                    analysis_paths.append(level2_path)
+        # skip processing tier 2 variants if not specified by the argument
+        if not include_tier2 and "2" in tier:
+            continue
+        else:
+            # level_1 = phenotypes (if it exists) 
+            for level_1 in os.listdir(tiers_path):
+                level1_path = os.path.join(analysis_dir, drug, folder, tier, level_1)
+    
+                if os.path.isfile(os.path.join(level1_path, "model_matrix.pkl")):
+                    analysis_paths.append(level1_path)
+    
+                # level_2 = model names
+                for level_2 in os.listdir(level1_path):
+                    level2_path = os.path.join(analysis_dir, drug, folder, tier, level_1, level_2)
+    
+                    if os.path.isfile(os.path.join(level2_path, "model_matrix.pkl")):
+                        analysis_paths.append(level2_path)
                             
                         
 phenos_file = os.path.join(analysis_dir, drug, f"phenos_{folder.lower()}.csv")    

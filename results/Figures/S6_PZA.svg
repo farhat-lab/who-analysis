@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2024-06-27T00:57:34.136587</dc:date>
+    <dc:date>2024-11-20T10:51:51.067132</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -43,30 +43,30 @@ L 77.749062 7.2
 L 77.749062 21.06 
 L 38.689063 21.06 
 L 38.689063 7.2 
-" clip-path="url(#p203cde9780)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p091fc078b9)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 38.689063 21.06 
 L 77.749062 21.06 
 L 77.749062 34.92 
 L 38.689063 34.92 
 L 38.689063 21.06 
-" clip-path="url(#p203cde9780)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p091fc078b9)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 38.689063 34.92 
 L 77.749062 34.92 
 L 77.749062 48.78 
 L 38.689063 48.78 
 L 38.689063 34.92 
-" clip-path="url(#p203cde9780)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p091fc078b9)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
    </g>
    <g id="matplotlib.axis_1">
     <g id="xtick_1">
      <g id="line2d_1">
       <defs>
-       <path id="m8bef1b1429" d="M 0 0 
+       <path id="mda3e2a0fdc" d="M 0 0 
 L 0 3.5 
 " style="stroke: #000000; stroke-width: 0.8"/>
       </defs>
       <g>
-       <use xlink:href="#m8bef1b1429" x="77.749062" y="48.78" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#mda3e2a0fdc" x="77.749062" y="48.78" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_1">
@@ -290,12 +290,12 @@ z
     <g id="ytick_1">
      <g id="line2d_2">
       <defs>
-       <path id="m6cdc2636f6" d="M 0 0 
+       <path id="mf00508db7a" d="M 0 0 
 L -3.5 0 
 " style="stroke: #000000; stroke-width: 0.8"/>
       </defs>
       <g>
-       <use xlink:href="#m6cdc2636f6" x="38.689063" y="14.13" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#mf00508db7a" x="38.689063" y="14.13" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_2">
@@ -312,7 +312,7 @@ L -3.5 0
     <g id="ytick_2">
      <g id="line2d_3">
       <g>
-       <use xlink:href="#m6cdc2636f6" x="38.689063" y="27.99" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#mf00508db7a" x="38.689063" y="27.99" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_3">
@@ -352,7 +352,7 @@ z
     <g id="ytick_3">
      <g id="line2d_4">
       <g>
-       <use xlink:href="#m6cdc2636f6" x="38.689063" y="41.85" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#mf00508db7a" x="38.689063" y="41.85" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_4">
@@ -446,19 +446,19 @@ L 116.809062 7.2
 L 116.809062 21.06 
 L 77.749062 21.06 
 L 77.749062 7.2 
-" clip-path="url(#p2fb462145f)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p93e49dce7d)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 77.749062 21.06 
 L 116.809062 21.06 
 L 116.809062 34.92 
 L 77.749062 34.92 
 L 77.749062 21.06 
-" clip-path="url(#p2fb462145f)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p93e49dce7d)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 77.749062 34.92 
 L 116.809062 34.92 
 L 116.809062 48.78 
 L 77.749062 48.78 
 L 77.749062 34.92 
-" clip-path="url(#p2fb462145f)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p93e49dce7d)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
    </g>
    <g id="matplotlib.axis_3"/>
    <g id="patch_8">
@@ -515,25 +515,25 @@ L 155.869063 7.2
 L 155.869063 21.06 
 L 116.809062 21.06 
 L 116.809062 7.2 
-" clip-path="url(#pab9f41f811)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#pd24c69412a)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 116.809062 21.06 
 L 155.869063 21.06 
 L 155.869063 34.92 
 L 116.809062 34.92 
 L 116.809062 21.06 
-" clip-path="url(#pab9f41f811)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#pd24c69412a)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 116.809062 34.92 
 L 155.869063 34.92 
 L 155.869063 48.78 
 L 116.809062 48.78 
 L 116.809062 34.92 
-" clip-path="url(#pab9f41f811)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#pd24c69412a)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
    </g>
    <g id="matplotlib.axis_4">
     <g id="xtick_2">
      <g id="line2d_5">
       <g>
-       <use xlink:href="#m8bef1b1429" x="155.869063" y="48.78" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#mda3e2a0fdc" x="155.869063" y="48.78" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_11">
@@ -730,19 +730,19 @@ L 194.929063 7.2
 L 194.929063 21.06 
 L 155.869063 21.06 
 L 155.869063 7.2 
-" clip-path="url(#p14338531ba)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p473383cee9)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 155.869063 21.06 
 L 194.929063 21.06 
 L 194.929063 34.92 
 L 155.869063 34.92 
 L 155.869063 21.06 
-" clip-path="url(#p14338531ba)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p473383cee9)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 155.869063 34.92 
 L 194.929063 34.92 
 L 194.929063 48.78 
 L 155.869063 48.78 
 L 155.869063 34.92 
-" clip-path="url(#p14338531ba)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p473383cee9)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
    </g>
    <g id="matplotlib.axis_5"/>
    <g id="patch_18">
@@ -799,25 +799,25 @@ L 233.989062 7.2
 L 233.989062 21.06 
 L 194.929063 21.06 
 L 194.929063 7.2 
-" clip-path="url(#pa265d8593a)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p91dea85256)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 194.929063 21.06 
 L 233.989062 21.06 
 L 233.989062 34.92 
 L 194.929063 34.92 
 L 194.929063 21.06 
-" clip-path="url(#pa265d8593a)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p91dea85256)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 194.929063 34.92 
 L 233.989062 34.92 
 L 233.989062 48.78 
 L 194.929063 48.78 
 L 194.929063 34.92 
-" clip-path="url(#pa265d8593a)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p91dea85256)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
    </g>
    <g id="matplotlib.axis_6">
     <g id="xtick_3">
      <g id="line2d_6">
       <g>
-       <use xlink:href="#m8bef1b1429" x="233.989062" y="48.78" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#mda3e2a0fdc" x="233.989062" y="48.78" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_18">
@@ -997,19 +997,19 @@ L 273.049062 7.2
 L 273.049062 21.06 
 L 233.989062 21.06 
 L 233.989062 7.2 
-" clip-path="url(#p29f6f2d701)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p62b63ccfdf)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 233.989062 21.06 
 L 273.049062 21.06 
 L 273.049062 34.92 
 L 233.989062 34.92 
 L 233.989062 21.06 
-" clip-path="url(#p29f6f2d701)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p62b63ccfdf)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 233.989062 34.92 
 L 273.049062 34.92 
 L 273.049062 48.78 
 L 233.989062 48.78 
 L 233.989062 34.92 
-" clip-path="url(#p29f6f2d701)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p62b63ccfdf)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
    </g>
    <g id="matplotlib.axis_7"/>
    <g id="patch_28">
@@ -1066,25 +1066,25 @@ L 312.109062 7.2
 L 312.109062 21.06 
 L 273.049062 21.06 
 L 273.049062 7.2 
-" clip-path="url(#p6798107027)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p9f0b68ea11)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 273.049062 21.06 
 L 312.109062 21.06 
 L 312.109062 34.92 
 L 273.049062 34.92 
 L 273.049062 21.06 
-" clip-path="url(#p6798107027)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p9f0b68ea11)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 273.049062 34.92 
 L 312.109062 34.92 
 L 312.109062 48.78 
 L 273.049062 48.78 
 L 273.049062 34.92 
-" clip-path="url(#p6798107027)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p9f0b68ea11)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
    </g>
    <g id="matplotlib.axis_8">
     <g id="xtick_4">
      <g id="line2d_7">
       <g>
-       <use xlink:href="#m8bef1b1429" x="312.109062" y="48.78" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#mda3e2a0fdc" x="312.109062" y="48.78" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_25">
@@ -1230,19 +1230,19 @@ L 351.169062 7.2
 L 351.169062 21.06 
 L 312.109062 21.06 
 L 312.109062 7.2 
-" clip-path="url(#pe7e1992012)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#pb9f83615f7)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 312.109062 21.06 
 L 351.169062 21.06 
 L 351.169062 34.92 
 L 312.109062 34.92 
 L 312.109062 21.06 
-" clip-path="url(#pe7e1992012)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#pb9f83615f7)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 312.109062 34.92 
 L 351.169062 34.92 
 L 351.169062 48.78 
 L 312.109062 48.78 
 L 312.109062 34.92 
-" clip-path="url(#pe7e1992012)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#pb9f83615f7)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
    </g>
    <g id="matplotlib.axis_9"/>
    <g id="patch_38">
@@ -1299,25 +1299,25 @@ L 390.229062 7.2
 L 390.229062 21.06 
 L 351.169062 21.06 
 L 351.169062 7.2 
-" clip-path="url(#p6e687adcec)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#pf035c3da71)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 351.169062 21.06 
 L 390.229062 21.06 
 L 390.229062 34.92 
 L 351.169062 34.92 
 L 351.169062 21.06 
-" clip-path="url(#p6e687adcec)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#pf035c3da71)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 351.169062 34.92 
 L 390.229062 34.92 
 L 390.229062 48.78 
 L 351.169062 48.78 
 L 351.169062 34.92 
-" clip-path="url(#p6e687adcec)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#pf035c3da71)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
    </g>
    <g id="matplotlib.axis_10">
     <g id="xtick_5">
      <g id="line2d_8">
       <g>
-       <use xlink:href="#m8bef1b1429" x="390.229062" y="48.78" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#mda3e2a0fdc" x="390.229062" y="48.78" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_32">
@@ -1408,19 +1408,19 @@ L 429.289062 7.2
 L 429.289062 21.06 
 L 390.229062 21.06 
 L 390.229062 7.2 
-" clip-path="url(#pf3a5e7fa5e)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p16cc4e4417)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 390.229062 21.06 
 L 429.289062 21.06 
 L 429.289062 34.92 
 L 390.229062 34.92 
 L 390.229062 21.06 
-" clip-path="url(#pf3a5e7fa5e)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p16cc4e4417)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 390.229062 34.92 
 L 429.289062 34.92 
 L 429.289062 48.78 
 L 390.229062 48.78 
 L 390.229062 34.92 
-" clip-path="url(#pf3a5e7fa5e)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p16cc4e4417)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
    </g>
    <g id="matplotlib.axis_11"/>
    <g id="patch_48">
@@ -1477,25 +1477,25 @@ L 468.349063 7.2
 L 468.349063 21.06 
 L 429.289062 21.06 
 L 429.289062 7.2 
-" clip-path="url(#p2fe8c4493f)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p7d55752498)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 429.289062 21.06 
 L 468.349063 21.06 
 L 468.349063 34.92 
 L 429.289062 34.92 
 L 429.289062 21.06 
-" clip-path="url(#p2fe8c4493f)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p7d55752498)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 429.289062 34.92 
 L 468.349063 34.92 
 L 468.349063 48.78 
 L 429.289062 48.78 
 L 429.289062 34.92 
-" clip-path="url(#p2fe8c4493f)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p7d55752498)" style="fill: #f7fbff; stroke: #000000; stroke-width: 0.25"/>
    </g>
    <g id="matplotlib.axis_12">
     <g id="xtick_6">
      <g id="line2d_9">
       <g>
-       <use xlink:href="#m8bef1b1429" x="468.349063" y="48.78" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#mda3e2a0fdc" x="468.349063" y="48.78" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_39">
@@ -1626,19 +1626,19 @@ L 507.409062 7.2
 L 507.409062 21.06 
 L 468.349063 21.06 
 L 468.349063 7.2 
-" clip-path="url(#pbd0a3ec7e4)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p0bedde6446)" style="fill: #67000d; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 468.349063 21.06 
 L 507.409062 21.06 
 L 507.409062 34.92 
 L 468.349063 34.92 
 L 468.349063 21.06 
-" clip-path="url(#pbd0a3ec7e4)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p0bedde6446)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
     <path d="M 468.349063 34.92 
 L 507.409062 34.92 
 L 507.409062 48.78 
 L 468.349063 48.78 
 L 468.349063 34.92 
-" clip-path="url(#pbd0a3ec7e4)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
+" clip-path="url(#p0bedde6446)" style="fill: #fff5f0; stroke: #000000; stroke-width: 0.25"/>
    </g>
    <g id="matplotlib.axis_13"/>
    <g id="patch_58">
@@ -1682,40 +1682,40 @@ L 507.409062 7.2
   </g>
  </g>
  <defs>
-  <clipPath id="p203cde9780">
+  <clipPath id="p091fc078b9">
    <rect x="38.689063" y="7.2" width="39.06" height="41.58"/>
   </clipPath>
-  <clipPath id="p2fb462145f">
+  <clipPath id="p93e49dce7d">
    <rect x="77.749062" y="7.2" width="39.06" height="41.58"/>
   </clipPath>
-  <clipPath id="pab9f41f811">
+  <clipPath id="pd24c69412a">
    <rect x="116.809062" y="7.2" width="39.06" height="41.58"/>
   </clipPath>
-  <clipPath id="p14338531ba">
+  <clipPath id="p473383cee9">
    <rect x="155.869063" y="7.2" width="39.06" height="41.58"/>
   </clipPath>
-  <clipPath id="pa265d8593a">
+  <clipPath id="p91dea85256">
    <rect x="194.929063" y="7.2" width="39.06" height="41.58"/>
   </clipPath>
-  <clipPath id="p29f6f2d701">
+  <clipPath id="p62b63ccfdf">
    <rect x="233.989062" y="7.2" width="39.06" height="41.58"/>
   </clipPath>
-  <clipPath id="p6798107027">
+  <clipPath id="p9f0b68ea11">
    <rect x="273.049062" y="7.2" width="39.06" height="41.58"/>
   </clipPath>
-  <clipPath id="pe7e1992012">
+  <clipPath id="pb9f83615f7">
    <rect x="312.109062" y="7.2" width="39.06" height="41.58"/>
   </clipPath>
-  <clipPath id="p6e687adcec">
+  <clipPath id="pf035c3da71">
    <rect x="351.169062" y="7.2" width="39.06" height="41.58"/>
   </clipPath>
-  <clipPath id="pf3a5e7fa5e">
+  <clipPath id="p16cc4e4417">
    <rect x="390.229062" y="7.2" width="39.06" height="41.58"/>
   </clipPath>
-  <clipPath id="p2fe8c4493f">
+  <clipPath id="p7d55752498">
    <rect x="429.289062" y="7.2" width="39.06" height="41.58"/>
   </clipPath>
-  <clipPath id="pbd0a3ec7e4">
+  <clipPath id="p0bedde6446">
    <rect x="468.349063" y="7.2" width="39.06" height="41.58"/>
   </clipPath>
  </defs>

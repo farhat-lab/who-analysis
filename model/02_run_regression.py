@@ -38,6 +38,7 @@ tracemalloc.start()
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
 parser.add_argument('-d', "--drug", dest='drug', type=str, required=True)
+parser.add_argument('--tier2', dest='include_tier2', action='store_true', help='If specified, include tiuer 2 genes in the models')
 parser.add_argument('--MIC-single-medium', dest='keep_single_medium', action='store_true', help='If specified, keep only the most common media for the MIC models')
 parser.add_argument('--PC', dest='num_PCs', type=int, default=50)
 parser.add_argument('--N', dest='num_reps', type=int, default=1000, help='Number of replicates for the permutation test and bootstrapping of odds ratios')
@@ -45,6 +46,7 @@ parser.add_argument('--N', dest='num_reps', type=int, default=1000, help='Number
 cmd_line_args = parser.parse_args()
 config_file = cmd_line_args.config_file
 drug = cmd_line_args.drug
+include_tier2 = cmd_line_args.include_tier2
 keep_single_medium = cmd_line_args.keep_single_medium
 num_PCs = cmd_line_args.num_PCs
 num_reps = cmd_line_args.num_reps
@@ -52,7 +54,11 @@ num_reps = cmd_line_args.num_reps
 drug_WHO_abbr = drug_abbr_dict[drug]
 kwargs = yaml.safe_load(open(config_file))
 
-tiers_lst = kwargs["tiers_lst"]
+if include_tier2:
+    tiers_lst = ["1", "2"]
+else:
+    tiers_lst = ["1"]
+
 binary = kwargs["binary"]
 atu_analysis = kwargs["atu_analysis"]
 pool_type = kwargs["pool_type"]

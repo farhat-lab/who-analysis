@@ -9,7 +9,7 @@ import statsmodels
 import statsmodels.api as sm
 from functools import reduce
 
-import glob, os, yaml, subprocess, itertools, sparse, sys, statsmodels, shutil
+import glob, os, yaml, subprocess, itertools, sparse, sys, statsmodels, shutil, argparse
 from sklearn.model_selection import train_test_split, KFold, GridSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
@@ -44,7 +44,14 @@ drug_abbr_dict = {"Delamanid": "DLM",
                  }
 
 cc_df = pd.read_csv("../data/drug_CC.csv")
-results_final = pd.read_csv("../results/Regression_Final_June2024_Tier1.csv")
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-i', dest='input_file', type=str, required=True, help='Catalog file to get mutations from')
+
+cmd_line_args = parser.parse_args()
+input_file = cmd_line_args.input_file 
+results_final = pd.read_csv(input_file)
+
 drug_gene_mapping = pd.read_csv("../data/drug_gene_mapping.csv")
 
 silent_lst = ['synonymous_variant', 'initiator_codon_variant', 'stop_retained_variant']
@@ -52,8 +59,7 @@ lof_lst = ["frameshift", "start_lost", "stop_gained", "feature_ablation"]
 
 regression_upgrades = results_final.loc[(~results_final['REGRESSION FINAL CONFIDENCE GRADING'].isin(['3) Uncertain significance'])) & (results_final['SOLO FINAL CONFIDENCE GRADING']=='3) Uncertain significance')]
 
-print(f"Getting lineage distributions of {len(regression_upgrades)} mutations")
-
+print(f"Getting lineage distributions of {len(regression_upgrades)} (drug, mutation) pairs")
 
 lineage_dist_table = []
 

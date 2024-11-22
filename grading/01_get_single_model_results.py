@@ -202,6 +202,8 @@ def export_binary_analyses(drugs_lst, read_folder, write_folder, analyses_lst, p
 
 
 parser = argparse.ArgumentParser()
+
+# need the config file just to get the kwargs, so doesn't matter which one you pass in
 parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
 
 cmd_line_args = parser.parse_args()
@@ -223,6 +225,6 @@ binary_analyses_lst = [
                         "tiers=1/phenos=ALL/dropAF_withSyn_unpooled",
                       ]
 
-drugs_lst = os.listdir(analysis_dir)
+drugs_lst = list(set(os.listdir(analysis_dir)) - set(['Pretomanid']))
 print(f"Grading mutations for {len(drugs_lst)} drugs: {','.join(drugs_lst)}")
 export_binary_analyses(drugs_lst, "BINARY", "BINARY", binary_analyses_lst, pooled_model_variants=False)

@@ -1,16 +1,27 @@
-#!/usr/bin/env bash
-set -ex
+#!/bin/bash 
+#SBATCH -c 1
+#SBATCH -t 0-04:00
+#SBATCH -p short
+#SBATCH --mem=150G
+#SBATCH -o /home/sak0914/Errors/zerrors_%j.out 
+#SBATCH -e /home/sak0914/Errors/zerrors_%j.err 
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=skulkarni@g.harvard.edu
 
 # conda install --file requirements.txt -c conda-forge -c bioconda
 # pip install fast-lineage-caller==0.3.1
+
+source activate who-analysis
+
+# python3 -u preprocessing/02_samples_summary_andPCA.py -i /home/sak0914 --PC 500
 
 drug_array=(
  # "Amikacin"
  # "Bedaquiline"
  # "Capreomycin"
  # "Clofazimine"
- "Delamanid"
- # "Ethambutol"
+ # "Delamanid"
+ "Ethambutol"
  # "Ethionamide"
  # "Isoniazid"
  # "Kanamycin"
@@ -35,21 +46,49 @@ config_array=(
  "mic_03.yaml"
 )
 
-# Iterate through each drug, then each config file
-for drug in "${drug_array[@]}"; do
+# # Iterate through each drug, then each config file
+# for drug in "${drug_array[@]}"; do
     
-    for config in "${config_array[@]}"; do
-        # model fitting scripts
-        python3 -u model/01_make_model_inputs.py -c "config_files/$config" -d $drug
-        python3 -u model/02_run_regression.py -c "config_files/$config" -d $drug
-        python3 -u model/03_likelihood_ratio_test.py -c "config_files/$config" -d $drug
-    done
+#     # for config in "${config_array[@]}"; do
+#     #     # model fitting scripts
+#     #     python3 -u model/01_make_model_inputs.py -c "config_files/$config" -d $drug
+#     #     python3 -u model/02_run_regression.py -c "config_files/$config" -d $drug --PC 100
+#     #     python3 -u model/03_likelihood_ratio_test.py -c "config_files/$config" -d $drug --PC 100
+#     # done
 
-    # this script only needs to be run once for each drug because it looks for all available model results
-    python3 -u model/04_compute_univariate_stats.py -c "config_files/$config" -d $drug
+#     # this script only needs to be run once for each drug because it looks for all available model results. Just needs the output directory from any of the config files
+#     python3 -u model/04_compute_univariate_stats.py -c "config_files/binary_01.yaml" -d $drug
+    
+# done
+
+# # grading scripts -- don't need to be run on every config file or every drug. Just need a single config file to get the output directory
+# python3 -u grading/01_get_single_model_results.py -c "config_files/binary_01.yaml"
+# python3 -u grading/02_combine_WHO_ALL_results.py -c "config_files/binary_01.yaml" -o results/Regression_Final_Aug2024_Tier1.csv
+
+
+for drug in "${drug_array[@]}"; do
+
+    # python3 -u prediction/catalog_model_SOLO.py -d $drug
+    # python3 -u prediction/catalog_model_SOLO.py -d $drug --AF 0.25
+
+    # base prediction model
+    python3 -u prediction/catalog_model.py -d $drug -i "results/Nov2024_Tier1_V2.csv"
+
+    # with grading rules
+    python3 -u prediction/catalog_model.py -d $drug --grading-rules -i "results/Nov2024_Tier1_V2.csv"
+
+    # AF = 0.25
+    python3 -u prediction/catalog_model.py -d $drug -i "results/Nov2024_Tier1_V2.csv" --AF 0.25
+
+    # remove any discrepancies
+    python3 -u prediction/catalog_model.py -d $drug -i "results/Nov2024_Tier1_V2.csv" --remove-mut
+    
+    # python3 -u prediction/catalog_model.py -d $drug --grading-rules
+    # python3 -u prediction/catalog_model.py -d $drug --AF 0.25
+    # python3 -u prediction/catalog_model.py -d $drug --AF 0.25 --grading-rules
+    # python3 -u grading/01_get_single_model_results.py -c "config_files/binary_01.yaml"
     
 done
 
-# grading scripts -- don't need to be run on every config file or every drug. Just need a single config file to get the output directory
-python3 -u grading/01_get_single_model_results.py -c "config.yaml"
-python3 -u grading/02_combine_WHO_ALL_results.py -c "config.yaml" -o results/regression_mutation_classifications.csv
+# cd lineages
+# python3 -u get_lineages_isolates_withMut.py -i ../results/Nov2024_Tier1.csv

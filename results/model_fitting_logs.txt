@@ -1,0 +1,244 @@
+Saving model input matrix to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+    575/575 isolates have both genotypes and phenotypes
+    Dropped 2/575 isolates with with any AFs in the range (0.25, 0.75]. Remainder are binary
+Initially 573 isolates and 1527 features
+    Dropped 1459/1527 features with no signal
+    Dropped 12/573 isolates with missingness and 4/68 associated features
+Final: 561 isolates and 64 variants
+    5.687403462 GB
+
+Saving model results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+561 samples and 64 genotypic features in the model
+561 samples and 114 variables in the model
+Regularization parameter: 0.01
+Peforming permutation test with 1000 replicates
+Fitting permuted models using OLS and regularization parameter 0.01
+0.048289805 GB
+
+Saving results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=WHO/dropAF_noSyn_unpooled
+561 samples and 64 variants in the largest model
+Regularization parameter: 0.01
+Creating LRT results dataframe
+Performing LRT for 64 mutations
+
+Finished Rv2983_p.Ala107Val
+0.044253462 GB
+
+
+Saving model input matrix to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=WHO/dropAF_noSyn_poolLoF
+    575/575 isolates have both genotypes and phenotypes
+Pooling LoF mutations into a single feature
+    Dropped 2/575 isolates with with any AFs in the range (0.25, 0.75]. Remainder are binary
+Initially 573 isolates and 1472 features
+    Dropped 1411/1472 features with no signal
+    Dropped 10/573 isolates with missingness and 4/61 associated features
+Final: 563 isolates and 57 variants
+    5.687402624 GB
+
+Saving model results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=WHO/dropAF_noSyn_poolLoF
+563 samples and 57 genotypic features in the model
+563 samples and 107 variables in the model
+Regularization parameter: 0.01
+Peforming permutation test with 1000 replicates
+Fitting permuted models using OLS and regularization parameter 0.01
+0.048159246 GB
+
+Saving results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=WHO/dropAF_noSyn_poolLoF
+563 samples and 57 variants in the largest model
+Regularization parameter: 0.01
+Creating LRT results dataframe
+Performing LRT for 57 mutations
+
+Finished Rv2983_p.Ala107Val
+0.044253641 GB
+
+
+Saving model input matrix to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=WHO/dropAF_withSyn_unpooled
+    575/575 isolates have both genotypes and phenotypes
+    Dropped 2/575 isolates with with any AFs in the range (0.25, 0.75]. Remainder are binary
+Initially 573 isolates and 2737 features
+    Dropped 2633/2737 features with no signal
+    Dropped 13/573 isolates with missingness and 6/104 associated features
+Final: 560 isolates and 98 variants
+    5.687402879 GB
+
+Saving model results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=WHO/dropAF_withSyn_unpooled
+560 samples and 98 genotypic features in the model
+560 samples and 148 variables in the model
+Regularization parameter: 0.01
+Peforming permutation test with 1000 replicates
+Fitting permuted models using OLS and regularization parameter 0.01
+0.048843358 GB
+
+Saving results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=WHO/dropAF_withSyn_unpooled
+560 samples and 98 variants in the largest model
+Regularization parameter: 0.01
+Creating LRT results dataframe
+Performing LRT for 98 mutations
+
+Finished Rv2983_c.216G>A
+0.044253913 GB
+
+
+Saving model input matrix to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=ALL/dropAF_noSyn_unpooled
+    11803/11803 isolates have both genotypes and phenotypes
+    Dropped 37/11803 isolates with with any AFs in the range (0.25, 0.75]. Remainder are binary
+Initially 11766 isolates and 1527 features
+    Dropped 1017/1527 features with no signal
+    Dropped 197/11766 isolates with missingness and 22/510 associated features
+Final: 11569 isolates and 488 variants
+    5.687769256 GB
+
+Saving model results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=ALL/dropAF_noSyn_unpooled
+11569 samples and 488 genotypic features in the model
+11569 samples and 538 variables in the model
+Regularization parameter: 0.001
+Peforming permutation test with 1000 replicates
+Fitting permuted models using OLS and regularization parameter 0.001
+0.379938319 GB
+
+Saving results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=ALL/dropAF_noSyn_unpooled
+11569 samples and 488 variants in the largest model
+Regularization parameter: 0.001
+Creating LRT results dataframe
+Performing LRT for 488 mutations
+
+Finished Rv2983_c.-1C>A
+Finished ddn_p.Tyr122_Met129del
+Finished fbiA_p.Val47Ile
+Finished fbiC_c.-89_-88insACTGTTGCGC
+Finished fbiC_p.Pro234Leu
+0.381543305 GB
+
+
+Saving model input matrix to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=ALL/dropAF_noSyn_poolLoF
+    11803/11803 isolates have both genotypes and phenotypes
+Pooling LoF mutations into a single feature
+    Dropped 37/11803 isolates with with any AFs in the range (0.25, 0.75]. Remainder are binary
+Initially 11766 isolates and 1472 features
+    Dropped 979/1472 features with no signal
+    Dropped 187/11766 isolates with missingness and 21/493 associated features
+Final: 11579 isolates and 472 variants
+    5.687769445 GB
+
+Saving model results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=ALL/dropAF_noSyn_poolLoF
+11579 samples and 472 genotypic features in the model
+11579 samples and 522 variables in the model
+Regularization parameter: 0.001
+Peforming permutation test with 1000 replicates
+Fitting permuted models using OLS and regularization parameter 0.001
+0.369733527 GB
+
+Saving results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=ALL/dropAF_noSyn_poolLoF
+11579 samples and 472 variants in the largest model
+Regularization parameter: 0.001
+Creating LRT results dataframe
+Performing LRT for 472 mutations
+
+Finished Rv2983_c.-1C>A
+Finished fbiA_c.-115C>G
+Finished fbiB_p.Ala82Thr
+Finished fbiC_p.Ala469Pro
+Finished fbiC_p.Thr687Met
+0.371250408 GB
+
+
+Saving model input matrix to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=ALL/dropAF_withSyn_unpooled
+    11803/11803 isolates have both genotypes and phenotypes
+    Dropped 62/11803 isolates with with any AFs in the range (0.25, 0.75]. Remainder are binary
+Initially 11741 isolates and 2737 features
+    Dropped 1940/2737 features with no signal
+    Dropped 207/11741 isolates with missingness and 39/797 associated features
+Final: 11534 isolates and 758 variants
+    9.61411282 GB
+
+Saving model results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=ALL/dropAF_withSyn_unpooled
+11534 samples and 758 genotypic features in the model
+11534 samples and 808 variables in the model
+Regularization parameter: 0.001
+Peforming permutation test with 1000 replicates
+Fitting permuted models using OLS and regularization parameter 0.001
+0.38409811 GB
+
+Saving results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/BINARY/tiers=1/phenos=ALL/dropAF_withSyn_unpooled
+11534 samples and 758 variants in the largest model
+Regularization parameter: 0.001
+Creating LRT results dataframe
+Performing LRT for 758 mutations
+
+Finished Rv2983_c.-1C>A
+Finished ddn_p.Arg72Trp
+Finished fbiA_c.816G>A
+Finished fbiB_c.198C>T
+Finished fbiB_p.Thr374Lys
+Finished fbiC_c.24G>A
+Finished fbiC_p.His300Tyr
+Finished fgd1_c.960T>C
+0.334571568 GB
+
+
+Saving model input matrix to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/MIC/tiers=1/dropAF_noSyn_unpooled
+    Dropped 72/11326 isolates in ['7H9', 'REMA'] without critical concentrations
+    Min MIC: 0.003, Max MIC: 1.0 in UKMYC5
+    11254/11254 isolates have both genotypes and phenotypes
+    Dropped 35/11254 isolates with with any AFs in the range (0.25, 0.75]. Remainder are binary
+Initially 11219 isolates and 1527 features
+    Dropped 1047/1527 features with no signal
+    Dropped 185/11219 isolates with missingness and 24/480 associated features
+Final: 11034 isolates and 456 variants
+    5.688490275 GB
+
+Saving model results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/MIC/tiers=1/dropAF_noSyn_unpooled
+    Dropped 72/11326 isolates in ['7H9', 'REMA'] without critical concentrations
+    Min MIC: 0.003, Max MIC: 1.0 in UKMYC5
+11034 samples and 456 genotypic features in the model
+11034 samples and 506 variables in the model
+Regularization parameter: 1000.0
+Peforming permutation test with 1000 replicates
+Fitting permuted models using OLS and regularization parameter 1000.0
+0.199913172 GB
+
+
+Saving model input matrix to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/MIC/tiers=1/dropAF_noSyn_poolLoF
+    Dropped 72/11326 isolates in ['7H9', 'REMA'] without critical concentrations
+    Min MIC: 0.003, Max MIC: 1.0 in UKMYC5
+    11254/11254 isolates have both genotypes and phenotypes
+Pooling LoF mutations into a single feature
+    Dropped 35/11254 isolates with with any AFs in the range (0.25, 0.75]. Remainder are binary
+Initially 11219 isolates and 1472 features
+    Dropped 1004/1472 features with no signal
+    Dropped 177/11219 isolates with missingness and 22/468 associated features
+Final: 11042 isolates and 446 variants
+    5.688491166 GB
+
+Saving model results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/MIC/tiers=1/dropAF_noSyn_poolLoF
+    Dropped 72/11326 isolates in ['7H9', 'REMA'] without critical concentrations
+    Min MIC: 0.003, Max MIC: 1.0 in UKMYC5
+11042 samples and 446 genotypic features in the model
+11042 samples and 496 variables in the model
+Regularization parameter: 1000.0
+Peforming permutation test with 1000 replicates
+Fitting permuted models using OLS and regularization parameter 1000.0
+0.196517005 GB
+
+
+Saving model input matrix to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/MIC/tiers=1/dropAF_withSyn_unpooled
+    Dropped 72/11326 isolates in ['7H9', 'REMA'] without critical concentrations
+    Min MIC: 0.003, Max MIC: 1.0 in UKMYC5
+    11254/11254 isolates have both genotypes and phenotypes
+    Dropped 60/11254 isolates with with any AFs in the range (0.25, 0.75]. Remainder are binary
+Initially 11194 isolates and 2737 features
+    Dropped 1983/2737 features with no signal
+    Dropped 195/11194 isolates with missingness and 41/754 associated features
+Final: 10999 isolates and 713 variants
+    9.167633801 GB
+
+Saving model results to /n/data1/hms/dbmi/farhat/Sanjana/who-mutation-catalogue/Delamanid/MIC/tiers=1/dropAF_withSyn_unpooled
+    Dropped 72/11326 isolates in ['7H9', 'REMA'] without critical concentrations
+    Min MIC: 0.003, Max MIC: 1.0 in UKMYC5
+10999 samples and 713 genotypic features in the model
+10999 samples and 763 variables in the model
+Regularization parameter: 1000.0
+Peforming permutation test with 1000 replicates
+Fitting permuted models using OLS and regularization parameter 1000.0
+0.290568047 GB

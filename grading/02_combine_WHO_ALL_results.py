@@ -121,7 +121,6 @@ def combine_WHO_ALL_results_write_to_csv(drug, in_folder, out_folder, tiers_lst=
     '''
 
     df_phenos = pd.read_csv(os.path.join(analysis_dir, drug, "phenos_binary.csv"))
-    WHO_ALL_R_difference = np.abs(df_phenos.query("phenotypic_category=='WHO'").phenotype.mean() - df_phenos.phenotype.mean())
     
     WHO_results_single_drug, ALL_results_single_drug = get_results_single_pheno_group(drug, in_folder)
 
@@ -362,6 +361,25 @@ results_all_drugs['REGRESSION FINAL CONFIDENCE GRADING'] = results_all_drugs['RE
                                                                                                                          'Not assoc w R': '5) Not assoc w R'
                                                                                                                         })
 
+# finally, downgrade variants that are in Groups 1-2, but have high susceptible PPV values in both WHO and ALL datasets
+results_all_drugs.loc[(results_all_drugs['REGRESSION FINAL CONFIDENCE GRADING'].str.contains('Assoc w R')) &
+                      (results_all_drugs['WHO_S_PPV_LB'] >= 0.5) &
+                      (results_all_drugs['ALL_S_PPV_LB'] >= 0.5),
+                        ['Reason', 'REGRESSION FINAL CONFIDENCE GRADING']
+                     ] = ['Downgrade to Uncertain due to PPV discrepancy', '3) Uncertain significance']
+
+
+# do the same thing for Not assoc w R variants, but exclude variants that are neutral. Just want to find the variants that are graded Not assoc w R in either dataset,
+# leading to a final Not assoc w R grading (meaning S-associated) but have high R_PPV lower bound
+results_all_drugs.loc[(results_all_drugs['REGRESSION FINAL CONFIDENCE GRADING'].str.contains('Not assoc w R')) &
+                      ((results_all_drugs['Initial confidence grading WHO dataset']=='Not assoc w R') | 
+                       (results_all_drugs['Initial confidence grading ALL dataset']=='Not assoc w R')
+                      ) &
+                      (results_all_drugs['WHO_R_PPV_LB'] >= 0.5) &
+                      (results_all_drugs['ALL_R_PPV_LB'] >= 0.5),
+                        ['Reason', 'REGRESSION FINAL CONFIDENCE GRADING']
+                     ] = ['Downgrade to Uncertain due to PPV discrepancy', '3) Uncertain significance']
+
 # upgrade LoF component variants if the pooled LoF variant for a given gene to the pooled grading
 results_all_drugs['gene'] = results_all_drugs['mutation'].str.split('_').str[0]
 
@@ -370,6 +388,7 @@ lof_lst = ["frameshift", "start_lost", "stop_gained", "feature_ablation"]
 lof_gradings = results_all_drugs.loc[(results_all_drugs["predicted_effect"] == 'LoF') & (results_all_drugs['REGRESSION FINAL CONFIDENCE GRADING'] != '3) Uncertain significance')][['Drug', 'gene', 'mutation', 'REGRESSION FINAL CONFIDENCE GRADING']].reset_index(drop=True)
 
 for i, row in lof_gradings.iterrows():
+    
     drug = row['Drug']
     gene = row['gene']
     grading = row['REGRESSION FINAL CONFIDENCE GRADING']

@@ -15,8 +15,8 @@ genos_dir = os.path.join(input_data_dir, "full_genotypes")
 phenos_dir = os.path.join(input_data_dir, "phenotypes")
 mic_dir = os.path.join(input_data_dir, "mic")
 
-pheno_drugs = os.listdir(phenos_dir)
 geno_drugs = os.listdir(genos_dir)
+pheno_drugs = os.listdir(phenos_dir)
 mic_drugs = os.listdir(mic_dir)
 
 drugs_lst = np.sort(list(set(geno_drugs).intersection(set(pheno_drugs)).intersection(set(mic_drugs))))

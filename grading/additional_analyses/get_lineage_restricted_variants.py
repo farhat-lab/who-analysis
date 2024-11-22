@@ -77,6 +77,8 @@ for drug in os.listdir(analysis_dir):
     if not os.path.isfile(os.path.join(analysis_dir, drug, "single_lineage_mutations.csv")):
     
         genos_files = glob.glob(os.path.join(analysis_dir, drug, "genos*.csv.gz"))
+        genos_files = glob.glob(os.path.join(analysis_dir, drug, "genos_1.csv.gz"))
+        
         print(f"{len(genos_files)} genotypes files for {drug}")
         df_genos = pd.concat([pd.read_csv(fName, compression="gzip", low_memory=False, 
                                           usecols=["sample_id", "resolved_symbol", "variant_category", "variant_binary_status"]

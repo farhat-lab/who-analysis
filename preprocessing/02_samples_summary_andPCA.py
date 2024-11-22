@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import glob, os, yaml, tracemalloc, itertools, sys, argparse
+import glob, os, yaml, tracemalloc, itertools, sys, argparse, pickle
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from Bio import Seq, SeqIO
@@ -37,17 +37,17 @@ if mixed_sites_prop_thresh > 1:
 ################## STEP 1: CREATE THE MINOR ALLELE COUNTS DATAFRAME ##################
 
 
-snp_dir = os.path.join(input_data_dir, "grm")
-genos_dir = os.path.join(input_data_dir, "full_genotypes")
-phenos_dir = os.path.join(input_data_dir, "phenotypes")
-mic_dir = os.path.join(input_data_dir, "mic")
+# snp_dir = os.path.join(input_data_dir, "grm")
+# genos_dir = os.path.join(input_data_dir, "full_genotypes")
+# phenos_dir = os.path.join(input_data_dir, "phenotypes")
+# mic_dir = os.path.join(input_data_dir, "mic")
 
-pheno_drugs = os.listdir(phenos_dir)
-geno_drugs = os.listdir(genos_dir)
-mic_drugs = os.listdir(mic_dir)
+# pheno_drugs = os.listdir(phenos_dir)
+# geno_drugs = os.listdir(genos_dir)
+# mic_drugs = os.listdir(mic_dir)
 
-drugs_for_analysis = list(set(geno_drugs).intersection(set(pheno_drugs)).intersection(set(mic_drugs)))
-print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
+# drugs_for_analysis = list(set(geno_drugs).intersection(set(pheno_drugs)).intersection(set(mic_drugs)))
+# print(len(drugs_for_analysis), "drugs with phenotypes and genotypes")
 minor_alleles_file = "PCA/minor_allele_counts.pkl.gz"
 
 if not os.path.isfile(minor_alleles_file):
@@ -130,28 +130,32 @@ homoplasic_sites = set(homoplasy["H37Rv Position"].values.astype(int))
 keep_sites = list(set(minor_allele_counts.columns) - homoplasic_sites)
 print(f"Keeping {len(keep_sites)}/{minor_allele_counts.shape[1]} sites that are not homoplasic")
 minor_allele_counts = minor_allele_counts[keep_sites]
-print(minor_allele_counts.shape)
+print(f"Final SNP matrix shape: {minor_allele_counts.shape}")
 
 
 ############################## STEP 2: COMPUTE THE GENETIC RELATEDNESS MATRIX, WHICH IS THE COVARIANCE OF THE MINOR ALLELE COUNTS DATAFRAME. SAVE EIGENVECTORS ##############################
 
 
-grm = np.cov(minor_allele_counts.values)
-grm = pd.DataFrame(grm)
-print(f"GRM shape: {grm.shape}. Performing PCA with {num_PCs} principal components")
+scaler = StandardScaler()
+
+pca = PCA(n_components=num_PCs)
+
+# standard-scale the minor alleles matrix first, then perform PCA
+# PCA will compute the covariance matrix (the genetic relatedness matrix), of which the eigenvectors are the principal components
+pca.fit(scaler.fit_transform(minor_allele_counts.values).T)
+
+# very large, don't save
+# # Open the file in binary write mode
+# with open("PCA/model.sav", 'wb') as file:
+#     # Use pickle.dump to write the object to the file
+#     pickle.dump(pca, file)
 
 minor_allele_counts_samples = minor_allele_counts.index.values
 del minor_allele_counts
 
-# scale the covariance matrix before fitting PCA because the different pairs of SNPs will have very different variances. 
-scaler = StandardScaler()
-pca = PCA(n_components=num_PCs)
-pca.fit(scaler.fit_transform(grm))
-del grm
-
 print(f"Sum of explained variance ratios: {np.sum(pca.explained_variance_ratio_)}")
-np.save("PCA/pca_explained_var", pca.explained_variance_)
-np.save("PCA/pca_explained_var_ratio", pca.explained_variance_ratio_)
+np.save("PCA/explained_var", pca.explained_variance_)
+np.save("PCA/explained_var_ratio", pca.explained_variance_ratio_)
 
 eigenvec = pca.components_.T
 eigenvec_df = pd.DataFrame(eigenvec)
