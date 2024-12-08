@@ -174,7 +174,7 @@ def export_binary_analyses(drugs_lst, read_folder, write_folder, analyses_lst):
                     except:
                         pass
                             
-                add_analysis = add_analysis.query("mutation not in @exclude_mutations")
+                # add_analysis = add_analysis.query("mutation not in @exclude_mutations")
 
                 add_analysis.rename(columns={"Num_Isolates": "Present_SR",
                                              "Mut_R": "Present_R",
@@ -247,7 +247,7 @@ def export_MIC_analyses(drugs_lst, read_folder, write_folder, analyses_lst):
                     except:
                         pass
                             
-                add_analysis = add_analysis.query("mutation not in @exclude_mutations")
+                # add_analysis = add_analysis.query("mutation not in @exclude_mutations")
 
                 if len(add_analysis) > 0:
                     all_analyses[model_path.replace("phenos=", "").replace("/", ",").replace("tiers=", "T").replace("dropAF_", "").replace("encodeAF_", "").replace("binarizeAF", "")] = add_analysis
