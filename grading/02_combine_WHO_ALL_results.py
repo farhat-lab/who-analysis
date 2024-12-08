@@ -370,7 +370,7 @@ results_all_drugs.loc[(results_all_drugs['REGRESSION FINAL CONFIDENCE GRADING'].
 
 
 # do the same thing for Not assoc w R variants, but exclude variants that are neutral. Just want to find the variants that are graded Not assoc w R in either dataset,
-# leading to a final Not assoc w R grading (meaning S-associated) but have high R_PPV lower bound
+# leading to a final Not assoc w R grading (meaning potentially S-associated) but have high R_PPV lower bound
 results_all_drugs.loc[(results_all_drugs['REGRESSION FINAL CONFIDENCE GRADING'].str.contains('Not assoc w R')) &
                       ((results_all_drugs['Initial confidence grading WHO dataset']=='Not assoc w R') | 
                        (results_all_drugs['Initial confidence grading ALL dataset']=='Not assoc w R')

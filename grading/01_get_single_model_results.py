@@ -51,6 +51,7 @@ def get_single_model_results(drug, tiers_lst, folder, model_prefix):
     LRT_results = pd.read_csv(os.path.join(analysis_dir, drug, folder, model_prefix, "LRT_results.csv"))
 
     # because the p-values are NaN for the FULL model row, they will be removed, so then the dataframes can be merged using inner
+    # compute p-values first while PCs are still in the dataframe because they all need to be considered, then merge inner later will drop them
     LRT_results = add_pval_corrections(LRT_results.iloc[1:, ])
 
     # check that all mutations are represented in both the LRT results and regression model results
@@ -127,11 +128,8 @@ def add_significance_category(df, drug, model_path):
 
 
 
-def export_binary_analyses(drugs_lst, read_folder, write_folder, analyses_lst, pooled_model_variants=False):
-    '''
-    pooled_model_variants boolean indicates whether to get the statistics for the non-lof, non-inframe mutations from the unpooled models or the pooled models
-    '''
-    
+def export_binary_analyses(drugs_lst, read_folder, write_folder, analyses_lst):
+
     if not os.path.isdir(f"./results/{write_folder}"):
         os.mkdir(f"./results/{write_folder}")
     
@@ -147,12 +145,12 @@ def export_binary_analyses(drugs_lst, read_folder, write_folder, analyses_lst, p
                 tiers_lst = [["1", "2"] if "1+2" in model_path else ["1"]][0]
                 phenos_name = ["ALL" if "phenos=ALL" in model_path else "WHO"][0]
                 
-                # if "dropAF_withSyn_unpooled" in model_path:
-                phenos_name = ["ALL" if "ALL" in model_path else "WHO"][0]
                 add_analysis = get_single_model_results(drug, tiers_lst, read_folder, model_path)
                 
                 add_analysis["pool_type"] = model_path.split("_")[-1]
                 add_analysis["silent"] = int("withSyn" in model_path)
+                add_analysis['Phenos'] = phenos_name
+                add_analysis["Tier"] = int(tiers_lst[-1])
                 
                 add_analysis = add_analysis[add_analysis.columns[~add_analysis.columns.str.contains("|".join(["coef", "Bonferroni"]))]]
                 add_analysis = add_significance_category(add_analysis, drug, model_path)
@@ -178,10 +176,6 @@ def export_binary_analyses(drugs_lst, read_folder, write_folder, analyses_lst, p
                             
                 add_analysis = add_analysis.query("mutation not in @exclude_mutations")
 
-                # the phenotype category is only relevant for the binary analysis
-                if read_folder == "BINARY":
-                    add_analysis["Phenos"] = ["ALL" if "phenos=ALL" in model_path else "WHO"][0]
-
                 add_analysis.rename(columns={"Num_Isolates": "Present_SR",
                                              "Mut_R": "Present_R",
                                              "NoMut_R": "Absent_R",
@@ -199,6 +193,73 @@ def export_binary_analyses(drugs_lst, read_folder, write_folder, analyses_lst, p
                     val.to_excel(file, sheet_name=key, index=False)
                     
         print(f"Finished {len(all_analyses)} analyses for {drug}")
+
+
+
+def export_MIC_analyses(drugs_lst, read_folder, write_folder, analyses_lst):
+    '''
+    This function just reads the MIC analyses and combines them into a single Excel file
+    '''
+    
+    if not os.path.isdir(f"./results/{write_folder}"):
+        os.mkdir(f"./results/{write_folder}")
+    
+    for drug in np.sort(drugs_lst):
+        
+        all_analyses = {}
+
+        for i, model_path in enumerate(analyses_lst):
+            
+            # some may not be there. Usually this is Pretomanid because there are no tier 2 genes or WHO phenotypes
+            if os.path.isfile(os.path.join(analysis_dir, drug, read_folder, model_path, "model_analysis.csv")):
+                            
+                tiers_lst = [["1", "2"] if "1+2" in model_path else ["1"]][0]
+
+                # read in the model analysis file and remove the principal components
+                add_analysis = pd.read_csv(os.path.join(analysis_dir, drug, read_folder, model_path, "model_analysis.csv")).query("~mutation.str.startswith('PC')")
+                add_analysis = add_analysis[add_analysis.columns[~add_analysis.columns.str.contains("|".join(["Bonferroni"]))]]
+
+                add_analysis["pool_type"] = model_path.split("_")[-1]
+                add_analysis["silent"] = int("withSyn" in model_path)                
+                add_analysis["Tier"] = int(tiers_lst[-1])
+            
+                # columns to return, in the desired order
+                keep_cols = ['mutation', 'Tier', 'coef', 'pval', 'BH_pval', 'neutral_pval', 'BH_neutral_pval']
+
+                add_analysis = add_analysis[keep_cols]
+
+                # exclude mutations that are already covered in earlier models
+                exclude_mutations = []
+                
+                # for models with synonymous mutations, keep only the results for the synonymous ones
+                # the data for nonsyn mutations will come from the noSyn models
+                if "withSyn" in model_path:
+                    try:
+                        exclude_mutations += list(pd.read_pickle(os.path.join(analysis_dir, drug, read_folder, model_path.replace("withSyn", "noSyn"), "model_matrix.pkl")).columns)
+                    except:
+                        pass
+
+                # for models with LoF pooling, keep only the results for the pooled mutations
+                # the data for unpooled mutations will come from the unpooled models
+                if "poolLoF" in model_path:
+                    try:
+                        exclude_mutations += list(pd.read_pickle(os.path.join(analysis_dir, drug, read_folder, model_path.replace("poolLoF", "unpooled"), "model_matrix.pkl")).columns)
+                    except:
+                        pass
+                            
+                add_analysis = add_analysis.query("mutation not in @exclude_mutations")
+
+                if len(add_analysis) > 0:
+                    all_analyses[model_path.replace("phenos=", "").replace("/", ",").replace("tiers=", "T").replace("dropAF_", "").replace("encodeAF_", "").replace("binarizeAF", "")] = add_analysis
+
+        if len(all_analyses) > 0:
+            
+            with pd.ExcelWriter(f"./results/{write_folder}/{drug}.xlsx") as file:
+                for key, val in all_analyses.items():
+                    val.to_excel(file, sheet_name=key, index=False)
+                    
+        print(f"Finished {len(all_analyses)} analyses for {drug}")
+            
 
 
 parser = argparse.ArgumentParser()
@@ -225,6 +286,16 @@ binary_analyses_lst = [
                         "tiers=1/phenos=ALL/dropAF_withSyn_unpooled",
                       ]
 
+mic_analyses_lst = [
+                    ########### Tier 1, MICs ###########
+                    "tiers=1/dropAF_noSyn_unpooled",
+                    "tiers=1/dropAF_noSyn_poolLoF",
+                    "tiers=1/dropAF_withSyn_unpooled",
+                    ]
+
 drugs_lst = list(set(os.listdir(analysis_dir)) - set(['Pretomanid']))
 print(f"Grading mutations for {len(drugs_lst)} drugs: {','.join(drugs_lst)}")
-export_binary_analyses(drugs_lst, "BINARY", "BINARY", binary_analyses_lst, pooled_model_variants=False)
+export_binary_analyses(drugs_lst, "BINARY", "BINARY", binary_analyses_lst)
+
+# export the MIC models as well to a separate folder
+export_MIC_analyses(drugs_lst, "MIC", "MIC", mic_analyses_lst)

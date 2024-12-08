@@ -142,7 +142,7 @@ tracemalloc.start()
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--config", dest='config_file', default='config.ini', type=str, required=True)
 parser.add_argument('-d', "--drug", dest='drug', type=str, required=True)
-parser.add_argument('--tier2', dest='include_tier2', action='store_true', help='If specified, include tiuer 2 genes in the models')
+parser.add_argument('--tier2', dest='include_tier2', action='store_true', help='If specified, include tier 2 genes in the models')
     
 cmd_line_args = parser.parse_args()
 config_file = cmd_line_args.config_file
@@ -193,7 +193,7 @@ for tier in os.listdir(os.path.join(analysis_dir, drug, folder)):
                         
 phenos_file = os.path.join(analysis_dir, drug, f"phenos_{folder.lower()}.csv")    
 df_phenos = pd.read_csv(phenos_file)
-annotated_genos = get_annotated_genos(analysis_dir, drug)
+annotated_genos = get_annotated_genos(analysis_dir, drug, include_tier2=include_tier2)
     
 for model_path in analysis_paths:
     
