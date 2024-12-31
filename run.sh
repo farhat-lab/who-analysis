@@ -16,21 +16,21 @@ source activate who-analysis
 # python3 -u preprocessing/02_samples_summary_andPCA.py -i /home/sak0914 --PC 500
 
 drug_array=(
- # "Amikacin"
- # "Bedaquiline"
- # "Capreomycin"
- # "Clofazimine"
+ "Amikacin"
+ "Bedaquiline"
+ "Capreomycin"
+ "Clofazimine"
  # "Delamanid"
  "Ethambutol"
- # "Ethionamide"
- # "Isoniazid"
- # "Kanamycin"
- # "Levofloxacin"
- # "Linezolid"
- # "Moxifloxacin"
- # "Pyrazinamide"
- # "Rifampicin"
- # "Streptomycin"
+ "Ethionamide"
+ "Isoniazid"
+ "Kanamycin"
+ "Levofloxacin"
+ "Linezolid"
+ "Moxifloxacin"
+ "Pyrazinamide"
+ "Rifampicin"
+ "Streptomycin"
 )
 
 # Define the array
@@ -57,38 +57,40 @@ config_array=(
 #     # done
 
 #     # this script only needs to be run once for each drug because it looks for all available model results. Just needs the output directory from any of the config files
-#     python3 -u model/04_compute_univariate_stats.py -c "config_files/binary_01.yaml" -d $drug
+#     python3 -u model/04_compute_univariate_stats.py -c "config_files/mic_01.yaml" -d $drug
     
 # done
+
+python3 -u prediction/catalog_model.py -d Isoniazid --remove-mut -i results/Nov2024_Tier1.csv
 
 # # grading scripts -- don't need to be run on every config file or every drug. Just need a single config file to get the output directory
 # python3 -u grading/01_get_single_model_results.py -c "config_files/binary_01.yaml"
 # python3 -u grading/02_combine_WHO_ALL_results.py -c "config_files/binary_01.yaml" -o results/Regression_Final_Aug2024_Tier1.csv
 
 
-for drug in "${drug_array[@]}"; do
+# for drug in "${drug_array[@]}"; do
 
-    # python3 -u prediction/catalog_model_SOLO.py -d $drug
-    # python3 -u prediction/catalog_model_SOLO.py -d $drug --AF 0.25
+#     # python3 -u prediction/catalog_model_SOLO.py -d $drug
+#     # python3 -u prediction/catalog_model_SOLO.py -d $drug --AF 0.25
 
-    # base prediction model
-    python3 -u prediction/catalog_model.py -d $drug -i "results/Nov2024_Tier1_V2.csv"
+#     # base prediction model
+#     python3 -u prediction/catalog_model.py -d $drug -i "results/Nov2024_Tier1.csv"
 
-    # with grading rules
-    python3 -u prediction/catalog_model.py -d $drug --grading-rules -i "results/Nov2024_Tier1_V2.csv"
+#     # with grading rules
+#     python3 -u prediction/catalog_model.py -d $drug --grading-rules -i "results/Nov2024_Tier1.csv"
 
-    # AF = 0.25
-    python3 -u prediction/catalog_model.py -d $drug -i "results/Nov2024_Tier1_V2.csv" --AF 0.25
+#     # AF = 0.25
+#     python3 -u prediction/catalog_model.py -d $drug -i "results/Nov2024_Tier1.csv" --AF 0.25
 
-    # remove any discrepancies
-    python3 -u prediction/catalog_model.py -d $drug -i "results/Nov2024_Tier1_V2.csv" --remove-mut
+#     # remove any discrepancies
+#     python3 -u prediction/catalog_model.py -d $drug -i "results/Nov2024_Tier1.csv" --remove-mut
     
-    # python3 -u prediction/catalog_model.py -d $drug --grading-rules
-    # python3 -u prediction/catalog_model.py -d $drug --AF 0.25
-    # python3 -u prediction/catalog_model.py -d $drug --AF 0.25 --grading-rules
-    # python3 -u grading/01_get_single_model_results.py -c "config_files/binary_01.yaml"
+#     # python3 -u prediction/catalog_model.py -d $drug --grading-rules
+#     # python3 -u prediction/catalog_model.py -d $drug --AF 0.25
+#     # python3 -u prediction/catalog_model.py -d $drug --AF 0.25 --grading-rules
+#     # python3 -u grading/01_get_single_model_results.py -c "config_files/binary_01.yaml"
     
-done
+# done
 
-# cd lineages
-# python3 -u get_lineages_isolates_withMut.py -i ../results/Nov2024_Tier1.csv
+# # cd lineages
+# # python3 -u get_lineages_isolates_withMut.py -i ../results/Nov2024_Tier1.csv

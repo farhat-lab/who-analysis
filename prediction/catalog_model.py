@@ -81,20 +81,13 @@ if remove_mut:
     R_assoc = list(set(R_assoc) - set(remove_muts_lst))
     model_suffix += '_remove_discrepancies'
 
-# only apply epistasis to these drugs because LoF mutations in mmpL5 and eis were found to be negatively associated with R in the data.
-# in theory, this would hold for Clofazimine too, but the data doesn't support an association between mmpL5 LoF and CFZ S (yet)    
-if drug in ['Bedaquiline', 'Amikacin', 'Kanamycin']:
+# mutations that abrogate the effects of an R-associated mutation: only for BDQ, CFZ, AMK, and KAN. Checked that they have "Abrogates" in the Comment column
+negating_muts = who_variants.dropna(subset="Comment").query("drug==@drug & Comment.str.contains('Abrogates')").variant.values
 
-    # mutations that abrogate the effects of an R-associated mutation: only for BDQ, CFZ, AMK, and KAN. Checked that they have "Abrogates" in the Comment column
-    negating_muts = who_variants.dropna(subset="Comment").query("drug==@drug & Comment.str.contains('Abrogates')").variant.values
-    assert len(negating_muts) != 0
-    
+if len(negating_muts) != 0:
     print(f"{len(negating_muts)} resistance-abrogating mutations for {drug}")
-    
 else:
     print(f"No epistasis for {drug}")
-    negating_muts = []
-        
 
 if len(R_assoc) == 0:
     print("There are no significant R-associated mutations for this model\n")
@@ -246,7 +239,7 @@ def get_stats_with_CI(df, pred_col, true_col):
 
 catalog_results = get_stats_with_CI(catalog_pred_df, "y_pred", "phenotype")
 catalog_results["Model"] = "Regression"
-catalog_results.set_index("Model").to_csv(os.path.join(out_dir, f"model_stats_AF{int(AF_thresh*100)}{model_suffix}_V2.csv"))
+catalog_results.set_index("Model").to_csv(os.path.join(out_dir, f"model_stats_AF{int(AF_thresh*100)}{model_suffix}.csv"))
 
 # returns a tuple: current, peak memory in bytes 
 script_memory = tracemalloc.get_traced_memory()[1] / 1e9

@@ -56,19 +56,13 @@ if len(R_assoc) == 0:
     print("There are no significant R-associated mutations for this model\n")
     exit()
 
-# only apply epistasis to these drugs because LoF mutations in mmpL5 and eis were found to be negatively associated with R in the data.
-# in theory, this would hold for Clofazimine too, but the data doesn't support an association between mmpL5 LoF and CFZ S (yet)    
-if drug in ['Bedaquiline', 'Amikacin', 'Kanamycin']:
+# mutations that abrogate the effects of an R-associated mutation: only for BDQ, CFZ, AMK, and KAN. Checked that they have "Abrogates" in the Comment column
+negating_muts = who_variants.dropna(subset="Comment").query("drug==@drug & Comment.str.contains('Abrogates')").variant.values
 
-    # mutations that abrogate the effects of an R-associated mutation: only for BDQ, CFZ, AMK, and KAN. Checked that they have "Abrogates" in the Comment column
-    negating_muts = who_variants.dropna(subset="Comment").query("drug==@drug & Comment.str.contains('Abrogates')").variant.values
-    assert len(negating_muts) != 0
-    
+if len(negating_muts) != 0:
     print(f"{len(negating_muts)} resistance-abrogating mutations for {drug}")
-    
 else:
     print(f"No epistasis for {drug}")
-    negating_muts = []
 
 
 #################################################### STEP 1: GET GENOTYPES, CREATE LOF AND INFRAME FEATURES ####################################################

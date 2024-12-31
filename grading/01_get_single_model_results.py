@@ -174,7 +174,7 @@ def export_binary_analyses(drugs_lst, read_folder, write_folder, analyses_lst):
                     except:
                         pass
                             
-                # add_analysis = add_analysis.query("mutation not in @exclude_mutations")
+                add_analysis = add_analysis.query("mutation not in @exclude_mutations")
 
                 add_analysis.rename(columns={"Num_Isolates": "Present_SR",
                                              "Mut_R": "Present_R",
@@ -227,27 +227,6 @@ def export_MIC_analyses(drugs_lst, read_folder, write_folder, analyses_lst):
                 keep_cols = ['mutation', 'Tier', 'coef', 'pval', 'BH_pval', 'neutral_pval', 'BH_neutral_pval']
 
                 add_analysis = add_analysis[keep_cols]
-
-                # exclude mutations that are already covered in earlier models
-                exclude_mutations = []
-                
-                # for models with synonymous mutations, keep only the results for the synonymous ones
-                # the data for nonsyn mutations will come from the noSyn models
-                if "withSyn" in model_path:
-                    try:
-                        exclude_mutations += list(pd.read_pickle(os.path.join(analysis_dir, drug, read_folder, model_path.replace("withSyn", "noSyn"), "model_matrix.pkl")).columns)
-                    except:
-                        pass
-
-                # for models with LoF pooling, keep only the results for the pooled mutations
-                # the data for unpooled mutations will come from the unpooled models
-                if "poolLoF" in model_path:
-                    try:
-                        exclude_mutations += list(pd.read_pickle(os.path.join(analysis_dir, drug, read_folder, model_path.replace("poolLoF", "unpooled"), "model_matrix.pkl")).columns)
-                    except:
-                        pass
-                            
-                # add_analysis = add_analysis.query("mutation not in @exclude_mutations")
 
                 if len(add_analysis) > 0:
                     all_analyses[model_path.replace("phenos=", "").replace("/", ",").replace("tiers=", "T").replace("dropAF_", "").replace("encodeAF_", "").replace("binarizeAF", "")] = add_analysis

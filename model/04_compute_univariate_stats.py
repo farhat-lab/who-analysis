@@ -7,8 +7,8 @@ warnings.filterwarnings("ignore")
 
 # utils files are in a separate folder
 sys.path.append("utils")
+from data_utils import *
 from stats_utils import *
-
 
 
 def get_annotated_genos(analysis_dir, drug, include_tier2=False):
@@ -63,7 +63,7 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
     for col in del_cols:
         if col in res_df.columns:
             del res_df[col]
-        
+    
     # add sample IDs and phenotypes to the matrix
     matrix = matrix.merge(df_phenos[["sample_id", "phenotype"]], left_index=True, right_on="sample_id", how="inner").reset_index(drop=True)
 
@@ -125,10 +125,15 @@ def compute_statistics_single_model(model_analysis_file, df_phenos, annotated_ge
         width = res_df[f"{var}_UB"] - res_df[f"{var}_LB"]
         assert np.min(width) > 0
 
-    res_df = res_df.sort_values("Odds_Ratio", ascending=False).drop_duplicates("mutation", keep="first")
+    if binary:
+        pheno_col = 'Odds_Ratio'
+    else:
+        pheno_col = 'coef'
+    
+    res_df = res_df.sort_values(pheno_col, ascending=False).drop_duplicates("mutation", keep="first")
     del matrix
 
-    res_df[['mutation', 'predicted_effect', 'position', 'coef', 'Odds_Ratio', 'pval', 'BH_pval',
+    res_df[['mutation', 'predicted_effect', 'position', pheno_col, 'pval', 'BH_pval',
        'Bonferroni_pval', 'neutral_pval', 'BH_neutral_pval', 'Bonferroni_neutral_pval', 'Num_Isolates', "Mut_R", "Mut_S", "NoMut_S", "NoMut_R", 'R_PPV', 'S_PPV', 'NPV', 'Sens', 'Spec',
        'LR+', 'LR-', 'R_PPV_LB', 'R_PPV_UB', 'S_PPV_LB', 'S_PPV_UB', 'NPV_LB', 'NPV_UB', 'Sens_LB',
        'Sens_UB', 'Spec_LB', 'Spec_UB', 'LR+_LB', 'LR+_UB', 'LR-_LB', 'LR-_UB',
@@ -155,8 +160,9 @@ binary = kwargs["binary"]
 atu_analysis = kwargs["atu_analysis"]
 
 if not binary:
-    print("There are no univariate statistics to add for MIC models. Quitting this script")
-    exit()
+    folder = 'MIC'
+    # print("There are no univariate statistics to add for MIC models. Quitting this script")
+    # exit()
 else:
     if atu_analysis:
         folder = "ATU"
@@ -190,9 +196,14 @@ for tier in os.listdir(os.path.join(analysis_dir, drug, folder)):
                     if os.path.isfile(os.path.join(level2_path, "model_matrix.pkl")):
                         analysis_paths.append(level2_path)
                             
-                        
-phenos_file = os.path.join(analysis_dir, drug, f"phenos_{folder.lower()}.csv")    
+
+if atu_analysis:
+    phenos_file = os.path.join(analysis_dir, drug, f"phenos_{folder.lower()}.csv")    
+else:
+    phenos_file = os.path.join(analysis_dir, drug, f"phenos_binary.csv") 
+
 df_phenos = pd.read_csv(phenos_file)
+
 annotated_genos = get_annotated_genos(analysis_dir, drug, include_tier2=include_tier2)
     
 for model_path in analysis_paths:
