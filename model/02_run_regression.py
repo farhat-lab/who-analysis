@@ -120,11 +120,11 @@ if atu_analysis:
     print(f"Running model on {model_suffix} phenotypes")
     model_suffix = "_" + model_suffix.replace('-', '_')
 
-if os.path.isfile(os.path.join(out_dir, f"model_analysis{model_suffix}.csv")):
-    print("Regression was already run for this model\n")
-    exit()
-else:
-    print(f"Saving model results to {out_dir}")
+# if os.path.isfile(os.path.join(out_dir, f"model_analysis{model_suffix}.csv")):
+#     print("Regression was already run for this model\n")
+#     exit()
+# else:
+#     print(f"Saving model results to {out_dir}")
     
 # keep only unique MICs. Many samples have MICs tested in different media, so prioritize them according to the model hierarchy
 if not binary:
@@ -233,11 +233,23 @@ if not os.path.isfile(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv
 else:
     permute_df = pd.read_csv(os.path.join(out_dir, f"coef_permutation{model_suffix}.csv"))
 
+
+########################## STEP 5: PERFORM BOOTSTRAPPING TO GET CONFIDENCE INTERVALS FOR EACH VARIABLE ##########################
+
+
+if not os.path.isfile(os.path.join(out_dir, f"coef_bootstrap{model_suffix}.csv")):
+    print(f"Peforming bootstrapping for confidence intervals with {num_reps} replicates")
+    bootstrap_df = perform_bootstrapping(model, X, y, num_reps, binary=binary, fit_type="OLS", progress_bar=True)
+    bootstrap_df.columns = matrix.columns
+    bootstrap_df.to_csv(os.path.join(out_dir, f"coef_bootstrap{model_suffix}.csv"), index=False)
+else:
+    bootstrap_df = pd.read_csv(os.path.join(out_dir, f"coef_bootstrap{model_suffix}.csv"))
+
     
-########################## STEP 4: ADD PERMUTATION TEST P-VALUES TO THE MAIN COEF DATAFRAME ##########################
+########################## STEP 6: MERGE WITH THE MAIN COEF DATAFRAME AND SAVE ##########################
     
     
-final_df = get_coef_and_confidence_intervals(binary, drug_WHO_abbr, coef_df, permute_df, bootstrap_df=None)
+final_df = get_coef_and_confidence_intervals(binary, drug_WHO_abbr, coef_df, permute_df, bootstrap_df=bootstrap_df)
 final_df.sort_values("coef", ascending=False).to_csv(os.path.join(out_dir, f"model_analysis{model_suffix}.csv"), index=False) 
 
 # returns a tuple: current, peak memory in bytes 

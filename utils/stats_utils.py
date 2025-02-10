@@ -71,7 +71,7 @@ def get_threshold_val_and_classes(y_prob, y_test, spec_thresh=None):
 
 
 # use the regularization parameter determined above
-def perform_bootstrapping(model, X, y, num_bootstrap, binary=True):
+def perform_bootstrapping(model, X, y, num_bootstrap, binary=True, fit_type="SGD", progress_bar=False):
     
     if type(model) == float or type(model) == int:
         reg_param = model
@@ -92,47 +92,58 @@ def perform_bootstrapping(model, X, y, num_bootstrap, binary=True):
         X_bs = scaler.fit_transform(X[sample_idx, :])
         y_bs = y[sample_idx]
 
-        # if binary:
-        #     if reg_param == 0:
-        #         bs_model = LogisticRegression(penalty='none', max_iter=100000, multi_class='ovr', class_weight='balanced', n_jobs=-1)
-        #     else:
-        #         bs_model = LogisticRegression(C=reg_param, penalty='l2', max_iter=100000, multi_class='ovr', class_weight='balanced', n_jobs=-1)
-        # else:
-        #     if reg_param == 0:
-        #         bs_model = LinearRegression(n_jobs=-1)
-        #     else:
-        #         bs_model = Ridge(alpha=reg_param, max_iter=100000, n_jobs=-1)
-        if binary:
-            bs_model = SGDClassifier(loss='log_loss', 
-                                      penalty='l2', 
-                                      alpha=reg_param, 
-                                      l1_ratio=0,
-                                      fit_intercept=True,
-                                      max_iter=1000000,
-                                      n_jobs=-1,
-                                      tol=0,
-                                      n_iter_no_change=100,
-                                      learning_rate='optimal', 
-                                      early_stopping=True, 
-                                      validation_fraction=0.25, 
-                                      class_weight="balanced"
-                                     )
+        if fit_type == "SGD":
+            if binary:
+                bs_model = SGDClassifier(loss='log_loss', 
+                                          penalty='l2', 
+                                          alpha=reg_param, 
+                                          l1_ratio=0,
+                                          fit_intercept=True,
+                                          max_iter=1000000,
+                                          n_jobs=-1,
+                                          tol=0,
+                                          n_iter_no_change=100,
+                                          learning_rate='optimal', 
+                                          early_stopping=True, 
+                                          validation_fraction=0.25, 
+                                          class_weight="balanced"
+                                         )
+            else:
+                bs_model = SGDRegressor(loss='squared_error', 
+                                         penalty='l2', 
+                                         alpha=reg_param, 
+                                         l1_ratio=0,
+                                         fit_intercept=True,
+                                         max_iter=1000000,
+                                         tol=1e-6,
+                                         n_iter_no_change=100,
+                                         learning_rate='optimal', 
+                                         early_stopping=True, 
+                                         validation_fraction=0.25, 
+                                        )
+                
+        elif fit_type == 'OLS':
+            if binary:
+                if reg_param == 0:
+                    bs_model = LogisticRegression(penalty='none', max_iter=100000, multi_class='ovr', class_weight='balanced')
+                else:
+                    bs_model = LogisticRegression(C=reg_param, penalty='l2', max_iter=100000, multi_class='ovr', class_weight='balanced')
+            else:
+                if reg_param == 0:
+                    bs_model = LinearRegression()
+                else:
+                    bs_model = Ridge(alpha=reg_param, max_iter=100000)
+
+
         else:
-            bs_model = SGDRegressor(loss='squared_error', 
-                                     penalty='l2', 
-                                     alpha=reg_param, 
-                                     l1_ratio=0,
-                                     fit_intercept=True,
-                                     max_iter=1000000,
-                                     tol=1e-6,
-                                     n_iter_no_change=100,
-                                     learning_rate='optimal', 
-                                     early_stopping=True, 
-                                     validation_fraction=0.25, 
-                                    )
+            raise ValueError(f"{fit_type} is not a valid regression fitting mode!")
         
         bs_model.fit(X_bs, y_bs)
         coefs.append(np.squeeze(bs_model.coef_))
+
+        if progress_bar:
+            if i % int(num_bootstrap / 10) == 0:
+                print(i)
         
     return pd.DataFrame(coefs)
 
