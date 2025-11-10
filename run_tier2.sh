@@ -16,31 +16,31 @@ source activate who-analysis
 # python3 -u preprocessing/02_samples_summary_andPCA.py -i /home/sak0914 --PC 500
 
 drug_array=(
- # "Amikacin"
- # "Bedaquiline"
- # "Capreomycin"
- # "Clofazimine"
- # "Delamanid"
- # "Ethambutol"
- # "Ethionamide"
+ "Amikacin"
+ "Bedaquiline"
+ "Capreomycin"
+ "Clofazimine"
+ "Delamanid"
+ "Ethambutol"
+ "Ethionamide"
  "Isoniazid"
- # "Kanamycin"
- # "Levofloxacin"
- # "Linezolid"
- # "Moxifloxacin"
- # "Pyrazinamide"
- # "Rifampicin"
- # "Streptomycin"
+ "Kanamycin"
+ "Levofloxacin"
+ "Linezolid"
+ "Moxifloxacin"
+ "Pyrazinamide"
+ "Rifampicin"
+ "Streptomycin"
 )
 
 # Define the array
 config_array=(
- # "binary_01.yaml" 
- # "binary_02.yaml" 
- # "binary_03.yaml"
+ "binary_01.yaml" 
+ "binary_02.yaml" 
+ "binary_03.yaml"
  "binary_04.yaml"
- # "binary_05.yaml"
- # "binary_06.yaml"
+ "binary_05.yaml"
+ "binary_06.yaml"
  # "mic_01.yaml"
  # "mic_02.yaml"
  # "mic_03.yaml"
@@ -61,19 +61,19 @@ for drug in "${drug_array[@]}"; do
     
 done
 
-# # grading scripts -- don't need to be run on every config file or every drug. Just need a single config file to get the output directory
-# python3 -u grading/01_get_single_model_results.py -c "config_files/binary_01.yaml"
-# python3 -u grading/02_combine_WHO_ALL_results.py -c "config_files/binary_01.yaml" -o results/Regression_Final_Aug2024_Tier1.csv
+# grading scripts -- don't need to be run on every config file or every drug. Just need a single config file to get the output directory
+python3 -u grading/01_get_single_model_results.py -c "config_files/binary_01.yaml"
+python3 -u grading/02_combine_WHO_ALL_results.py -c "config_files/binary_01.yaml" -o results/Regression_Final_Aug2024_Tier1.csv
 
 
-# for drug in "${drug_array[@]}"; do
+for drug in "${drug_array[@]}"; do
 
-#     python3 -u prediction/catalog_model_SOLO.py -d $drug
-#     python3 -u prediction/catalog_model_SOLO.py -d $drug --AF 0.25
+    python3 -u prediction/catalog_model_SOLO.py -d $drug
+    python3 -u prediction/catalog_model_SOLO.py -d $drug --AF 0.25
 
-#     python3 -u prediction/catalog_model.py -d $drug -i "results/Nov2024_Tier1.csv"
-#     python3 -u prediction/catalog_model.py -d $drug --grading-rules -i "results/Nov2024_Tier1.csv"
-#     python3 -u prediction/catalog_model.py -d $drug --AF 0.25 -i "results/Nov2024_Tier1.csv"
-#     python3 -u prediction/catalog_model.py -d $drug --AF 0.25 --grading-rules -i "results/Nov2024_Tier1.csv"
+    python3 -u prediction/catalog_model.py -d $drug -i "results/Nov2024_Tier1.csv"
+    python3 -u prediction/catalog_model.py -d $drug --grading-rules -i "results/Nov2024_Tier1.csv"
+    python3 -u prediction/catalog_model.py -d $drug --AF 0.25 -i "results/Nov2024_Tier1.csv"
+    python3 -u prediction/catalog_model.py -d $drug --AF 0.25 --grading-rules -i "results/Nov2024_Tier1.csv"
     
-# done
+done
